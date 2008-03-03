@@ -1,0 +1,14 @@
+#!/bin/bash
+
+#
+#	Stage-2 post-commit hook
+#	Author: Chris Forbes
+#
+
+echo Commit notification for $1 rev $2 on lift-plus.ijw.co.nz
+echo ---- Author:
+svnlook author $1
+echo ---- Log Message:
+svnlook log $1
+echo ---- Changes:
+svnlook diff $1
