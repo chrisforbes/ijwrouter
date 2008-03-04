@@ -8,7 +8,7 @@ typedef struct ip_header
 	u16 totalLength;
 	u16 id;
 	u16 flags:3;
-	u16 fragOffest:13;
+	u16 fragOffset:13;
 	u08 ttl;
 	u08 protocol;
 	u16 checksum;
