@@ -18,10 +18,10 @@ typedef signed __int64 i64;
 /* on win32, hal declarations are function pointers.
    on arm9 target, hal declarations are just normal functions. */
 
-#ifdef WIN32
-#define HAL(f)	(*f)
+/*#ifdef WIN32
+#define HAL(f)	(* f)
 #else
 #define HAL(f)	f
-#endif
+#endif	*/
 
 #endif

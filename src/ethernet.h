@@ -8,16 +8,16 @@
 typedef struct mac_address
 {
 	u08 bytes[6];
-};
+} mac_address;
 
 typedef struct mac_header
 {
 	mac_address dest;
 	mac_address src;
 	u16 ethertype;	
-};
+} mac_header;
 
-enum
+typedef enum ethertype
 {
 	ethertype_ipv4	= 0x0800,
 	ethertype_arp	= 0x0806,
@@ -38,6 +38,6 @@ enum
 	ethertype_ethercat	= 0x88a4,
 	ethertype_mac_security	= 0x88e5,		// 802.1AE
 	ethertype_llt	= 0xcafe,				// veritas low-latency transport
-};
+} ethertype;
 
 #endif
