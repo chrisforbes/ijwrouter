@@ -1,0 +1,20 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 10.00
+# Visual Studio 2008
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ijw-router-win32", "ijw-router-win32.vcproj", "{CB83CA7D-E156-498C-AFC0-D58B68A80C16}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Win32 = Debug|Win32
+		Release|Win32 = Release|Win32
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{CB83CA7D-E156-498C-AFC0-D58B68A80C16}.Debug|Win32.ActiveCfg = Debug|Win32
+		{CB83CA7D-E156-498C-AFC0-D58B68A80C16}.Debug|Win32.Build.0 = Debug|Win32
+		{CB83CA7D-E156-498C-AFC0-D58B68A80C16}.Release|Win32.ActiveCfg = Release|Win32
+		{CB83CA7D-E156-498C-AFC0-D58B68A80C16}.Release|Win32.Build.0 = Release|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
