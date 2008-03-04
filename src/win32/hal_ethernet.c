@@ -5,6 +5,11 @@
 #include "../ethernet.h"
 #include "../hal_ethernet.h"
 
+u08 eth_init( void )
+{
+	return 0;
+}
+
 u08 eth_getpacket( eth_packet * p )
 {
 	return 0;	// no packet

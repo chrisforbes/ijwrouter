@@ -177,6 +177,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\src\hal_debug.h"
+				>
+			</File>
+			<File
 				RelativePath="..\src\hal_ethernet.h"
 				>
 			</File>
@@ -195,6 +199,10 @@
 			<Filter
 				Name="win32"
 				>
+				<File
+					RelativePath="..\src\win32\hal_debug.c"
+					>
+				</File>
 				<File
 					RelativePath="..\src\win32\hal_ethernet.c"
 					>

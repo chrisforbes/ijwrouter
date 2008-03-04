@@ -7,8 +7,9 @@ typedef struct eth_packet
 	mac_header * packet;
 } eth_packet;
 
-u08 eth_getpacket( eth_packet * p );
-u08 eth_discard( eth_packet * p );
-u08 eth_forward( eth_packet * p );
+u08 eth_init( void );	// returns number of usable interfaces (0 = failure)
+u08 eth_getpacket( eth_packet * p );	// 0 = failure
+u08 eth_discard( eth_packet * p );		// 0 = failure
+u08 eth_forward( eth_packet * p );		// 0 = failure
 
 #endif
