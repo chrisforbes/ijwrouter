@@ -24,3 +24,8 @@ u08 eth_forward( eth_packet * p )
 {
 	return 0;	// didnt work
 }
+
+u08 eth_inject( eth_packet * p )
+{
+	return 0;	// didnt work
+}

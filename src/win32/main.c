@@ -5,7 +5,31 @@
 #include "../hal_ethernet.h"
 #include "../hal_debug.h"
 
+#include <memory.h>
+
 #define IFACE_WAN	0
+
+u08 mac_equal( mac_address const * a, mac_address const * b )
+{
+	return 0 == memcmp( a, b, sizeof(mac_address) );
+}
+
+static mac_address router_address;
+
+u08 handle_packet( eth_packet * p )
+{
+	if (p->iface == IFACE_WAN)
+	{
+		// Don't worry sir! I'm from the Internet!
+		return eth_discard( p );	// do not want.
+	}
+
+	if (!mac_equal( &router_address, &p->packet->dest ))
+		return eth_forward( p );	// destined for another lan port
+
+	// todo:
+	return eth_discard( p );
+}
 
 int main( int argc, char ** argv )
 {
@@ -16,21 +40,8 @@ int main( int argc, char ** argv )
 
 	for(;;)
 	{
-		// simple test code - discards all incoming packets
 		eth_packet p;
 		if (eth_getpacket( &p ))
-		{
-			// todo: decide whether to forward it
-			if (p.iface == IFACE_WAN)
-			{
-				// its from the internet (or from our local router)
-			}
-			else
-			{
-				// its from the lan side
-			}
-
-			eth_discard( &p );
-		}
+			handle_packet( &p );
 	}
 }
