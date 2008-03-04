@@ -1,5 +1,6 @@
 #ifndef IP_H
 #define IP_H
+//As defined by RFC 791
 typedef struct ip_header
 {
 	u08 version:4;
