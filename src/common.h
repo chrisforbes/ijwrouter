@@ -1,3 +1,6 @@
+#ifndef COMMON_H
+#define COMMON_H
+
 /*
 	defines core types & macros
 */
@@ -21,3 +24,4 @@ typedef signed __int64 i64;
 #define HAL(f)	f
 #endif
 
+#endif
