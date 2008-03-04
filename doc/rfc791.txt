@@ -1,33 +1,3 @@
-<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML//EN">
-<HTML>
-<HEAD>
-<TITLE>RFC 791 (rfc791) - Internet Protocol</TITLE>
-<META  name="description" content="RFC 791 - Internet Protocol">
-<META  name="obsoletes" content="RFC0760">
-<META  name="also" content="STD0005">
-<script language="JavaScript1.2">
-function erfc(s)
-{document.write("<A href=\"/rfccomment.php?rfcnum="+s+"\" target=\"_blank\" onclick=\"window.open('/rfccomment.php?rfcnum="+s+"','Popup','toolbar=no,location=no,status=no,menubar=no,scrollbars=yes,resizable=yes,width=680,height=530,left=30,top=43'); return false;\")>Comment on RFC "+s+"</A>\n");}
-//-->
-</script>
-</HEAD>
-<BODY BGCOLOR="#ffffff" TEXT="#000000">
-<P ALIGN=CENTER><IMG SRC="/images/library.jpg" HEIGHT=62 WIDTH=150 BORDER="0" ALIGN="MIDDLE" ALT=""></P>
-<H1 ALIGN=CENTER>RFC 791 (RFC791)</H1>
-<P ALIGN=CENTER>Internet RFC/STD/FYI/BCP Archives</P>
-
-<DIV ALIGN=CENTER>[ <a href="/rfcs/">RFC Index</a> | <A HREF="/rfcs/rfcsearch.html">RFC Search</A> | <a href="/faqs/">Usenet FAQs</a> | <a href="/contrib/">Web FAQs</a> | <a href="/docs/">Documents</a> | <a href="http://www.city-data.com/">Cities</a> ]
-<P>
-<STRONG>Alternate Formats:</STRONG>
- <A HREF="/ftp/rfc/rfc791.txt">rfc791.txt</A> |
- <A HREF="/ftp/rfc/pdf/rfc791.txt.pdf">rfc791.txt.pdf</A></DIV>
-<p align=center><script language="JavaScript"><!--
-erfc("791");
-// --></script></p>
-<h3 align=center>RFC 791 - Internet Protocol</h3>
-<HR SIZE=2 NOSHADE>
-<PRE>
-
 RFC:  791
 
                            INTERNET PROTOCOL
@@ -79,7 +49,7 @@ September 1981
   3.2  Discussion ................................................... 23
   3.3  Interfaces ................................................... 31
 
-APPENDIX A:  Examples &amp; Scenarios ................................... 34
+APPENDIX A:  Examples & Scenarios ................................... 34
 APPENDIX B:  Data Transmission Order ................................ 39
 
 GLOSSARY ............................................................ 41
@@ -113,7 +83,7 @@ handling restriction features of the internet protocol.
                                                           September 1981
 
 RFC:  791
-Replaces:  <A HREF="/rfcs/rfc760.html">RFC 760</A>
+Replaces:  RFC 760
 IENs 128, 123, 111,
 80, 54, 44, 41, 28, 26
 
@@ -268,7 +238,7 @@ September 1981
                       +-----+     +-----+     +-----+  
                          |           |           |     
                       +--------------------------+----+
-                      |    Internet Protocol &amp; ICMP   |
+                      |    Internet Protocol & ICMP   |
                       +--------------------------+----+
                                      |                 
                         +---------------------------+  
@@ -495,7 +465,7 @@ September 1981
   the GGP functions are added to the IP module.
 
                    +-------------------------------+   
-                   | Internet Protocol &amp; ICMP &amp; GGP|   
+                   | Internet Protocol & ICMP & GGP|   
                    +-------------------------------+   
                            |                 |         
                  +---------------+   +---------------+ 
@@ -1325,16 +1295,16 @@ Specification
 
       Procedure:
 
-        IF TL =&lt; MTU THEN Submit this datagram to the next step
+        IF TL =< MTU THEN Submit this datagram to the next step
              in datagram processing ELSE IF DF = 1 THEN discard the
         datagram ELSE
         To produce the first fragment:
         (1)  Copy the original internet header;
-        (2)  OIHL &lt;- IHL; OTL &lt;- TL; OFO &lt;- FO; OMF &lt;- MF;
-        (3)  NFB &lt;- (MTU-IHL*4)/8;
+        (2)  OIHL <- IHL; OTL <- TL; OFO <- FO; OMF <- MF;
+        (3)  NFB <- (MTU-IHL*4)/8;
         (4)  Attach the first NFB*8 data octets;
         (5)  Correct the header:
-             MF &lt;- 1;  TL &lt;- (IHL*4)+(NFB*8);
+             MF <- 1;  TL <- (IHL*4)+(NFB*8);
              Recompute Checksum;
         (6)  Submit this fragment to the next step in
              datagram processing;
@@ -1343,7 +1313,7 @@ Specification
              are not copied, see option definitions);
         (8)  Append the remaining data;
         (9)  Correct the header:
-             IHL &lt;- (((OIHL*4)-(length of options not copied))+3)/4;
+             IHL <- (((OIHL*4)-(length of options not copied))+3)/4;
 
 [Page 26]                                                               
 
@@ -1351,8 +1321,8 @@ September 1981
                                                        Internet Protocol
                                                            Specification
 
-             TL &lt;- OTL - NFB*8 - (OIHL-IHL)*4);
-             FO &lt;- OFO + NFB;  MF &lt;- OMF;  Recompute Checksum;
+             TL <- OTL - NFB*8 - (OIHL-IHL)*4);
+             FO <- OFO + NFB;  MF <- OMF;  Recompute Checksum;
         (10) Submit this fragment to the fragmentation test; DONE.
 
       In the above procedure each fragment (except the last) was made
@@ -1426,7 +1396,7 @@ Specification
 
       Procedure:
 
-        (1)  BUFID &lt;- source|destination|protocol|identification;
+        (1)  BUFID <- source|destination|protocol|identification;
         (2)  IF FO = 0 AND MF = 0
         (3)     THEN IF buffer with BUFID is allocated
         (4)             THEN flush all reassembly for this BUFID;
@@ -1434,22 +1404,22 @@ Specification
         (6)     ELSE IF no buffer with BUFID is allocated
         (7)             THEN allocate reassembly resources
                              with BUFID;
-                             TIMER &lt;- TLB; TDL &lt;- 0;
+                             TIMER <- TLB; TDL <- 0;
         (8)          put data from fragment into data buffer with
                      BUFID from octet FO*8 to
                                          octet (TL-(IHL*4))+FO*8;
         (9)          set RCVBT bits from FO
                                         to FO+((TL-(IHL*4)+7)/8);
-        (10)         IF MF = 0 THEN TDL &lt;- TL-(IHL*4)+(FO*8)
+        (10)         IF MF = 0 THEN TDL <- TL-(IHL*4)+(FO*8)
         (11)         IF FO = 0 THEN put header in header buffer
         (12)         IF TDL # 0
         (13)          AND all RCVBT bits from 0
                                              to (TDL+7)/8 are set
-        (14)            THEN TL &lt;- TDL+(IHL*4)
+        (14)            THEN TL <- TDL+(IHL*4)
         (15)                 Submit datagram to next step;
         (16)                 free all reassembly resources
                              for this BUFID; DONE.
-        (17)         TIMER &lt;- MAX(TIMER,TTL);
+        (17)         TIMER <- MAX(TIMER,TTL);
         (18)         give up until next fragment or timer expires;
         (19) timer expires: flush all reassembly with this BUFID; DONE.
 
@@ -1632,9 +1602,9 @@ Specification
   An Example Upper Level Interface
 
   The following two example calls satisfy the requirements for the user
-  to internet protocol module communication ("=&gt;" means returns):
+  to internet protocol module communication ("=>" means returns):
 
-  SEND (src, dst, prot, TOS, TTL, BufPTR, len, Id, DF, opt =&gt; result)
+  SEND (src, dst, prot, TOS, TTL, BufPTR, len, Id, DF, opt => result)
 
     where:
 
@@ -1655,7 +1625,7 @@ Specification
     Note that the precedence is included in the TOS and the
     security/compartment is passed as an option.
 
-  RECV (BufPTR, prot, =&gt; result, src, dst, TOS, len, opt)
+  RECV (BufPTR, prot, => result, src, dst, TOS, len, opt)
 
     where:
 
@@ -2148,13 +2118,13 @@ September 1981
      a Host and an IMP," BBN Technical Report 1822, Revised May 1978.
 
 [3]  Postel, J., "Internet Control Message Protocol - DARPA Internet
-     Program Protocol Specification," <A HREF="/rfcs/rfc792.html">RFC 792</A>, USC/Information Sciences
+     Program Protocol Specification," RFC 792, USC/Information Sciences
      Institute, September 1981.
 
 [4]  Shoch, J., "Inter-Network Naming, Addressing, and Routing,"
      COMPCON, IEEE Computer Society, Fall 1978.
 
-[5]  Postel, J., "Address Mappings," <A HREF="/rfcs/rfc796.html">RFC 796</A>, USC/Information Sciences
+[5]  Postel, J., "Address Mappings," RFC 796, USC/Information Sciences
      Institute, September 1981.
 
 [6]  Shoch, J., "Packet Fragmentation in Inter-Network Protocols,"
@@ -2163,47 +2133,8 @@ September 1981
 [7]  Strazisar, V., "How to Build a Gateway", IEN 109, Bolt Beranek and
      Newman, August 1979.
 
-[8]  Postel, J., "Service Mappings," <A HREF="/rfcs/rfc795.html">RFC 795</A>, USC/Information Sciences
+[8]  Postel, J., "Service Mappings," RFC 795, USC/Information Sciences
      Institute, September 1981.
 
-[9]  Postel, J., "Assigned Numbers," <A HREF="/rfcs/rfc790.html">RFC 790</A>, USC/Information Sciences
+[9]  Postel, J., "Assigned Numbers," RFC 790, USC/Information Sciences
      Institute, September 1981.
-
-</PRE>
-<p align=center><script language="JavaScript"><!--
-erfc("791");
-// --></script></p>
-&nbsp;<br>
-<div align="center">
-<center>
-<table border="0" cellpadding="4" cellspacing="4" width="100%">
-<tr><td width="100%" bgcolor="#D6D6C0">
-<p><font face="Arial">Comments about this RFC:</font></p>
-<ul>
-<li><font face="Arial"><a href="/qa/rfcc-2228.html">RFC 791: im learning all about this and the more info i can get the better </a> by red33 (7/10/2005)</font></li>
-<li><font face="Arial"><a href="/qa/rfcc-1513.html">RFC 791: why no port in ip datagram? </a> by xlmg (12/14/2004)</font></li>
-<li><font face="Arial"><a href="/qa/rfcc-628.html">RFC 791: RFC791 was analyzed by me including an assortment of conjectures from laplace...</a> by Mark(god of waq) (3/1/2004)</font></li>
-<li><font face="Arial"><a href="/qa/rfcc-2285.html">RFC 791: je veux plus d'info sur les cours </a> by cheikhndao (7/26/2005)</font></li>
-</ul>
-</td></tr></table> <br></center></div>
-<div align="center">
-<table border="0" cellpadding="3" width="100%" cellspacing="3">
-<tr><td width="45%">
-<p align="left">Previous: <a href="/rfcs/rfc790.html">RFC 0790 - Assigned numbers</a>
-</p></td><td width="10%">&nbsp;</td><td width="45%">
-<p align="right">Next: <a href="/rfcs/rfc792.html">RFC 0792 - Internet Control Message Protocol</a>
-</p></td></tr></table></div><p align="right">&nbsp;</p>
-<HR SIZE=2 NOSHADE>
-<DIV ALIGN=CENTER>[ <a href="/rfcs/">RFC Index</a> | <A HREF="/rfcs/rfcsearch.html">RFC Search</A> | <a href="/faqs/">Usenet FAQs</a> | <a href="/contrib/">Web FAQs</a> | <a href="/docs/">Documents</a> | <a href="http://www.city-data.com/">Cities</a> ]
-<P>
-</DIV>
-<SMALL>
-<ADDRESS>
-<P ALIGN=CENTER>
- 
-</P>
-</ADDRESS>
-</SMALL>
-</BODY>
-</HTML>
-

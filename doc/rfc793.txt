@@ -1,32 +1,3 @@
-<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML//EN">
-<HTML>
-<HEAD>
-<TITLE>RFC 793 (rfc793) - Transmission Control Protocol</TITLE>
-<META  name="description" content="RFC 793 - Transmission Control Protocol">
-<META  name="also" content="STD0007">
-<script language="JavaScript1.2">
-function erfc(s)
-{document.write("<A href=\"/rfccomment.php?rfcnum="+s+"\" target=\"_blank\" onclick=\"window.open('/rfccomment.php?rfcnum="+s+"','Popup','toolbar=no,location=no,status=no,menubar=no,scrollbars=yes,resizable=yes,width=680,height=530,left=30,top=43'); return false;\")>Comment on RFC "+s+"</A>\n");}
-//-->
-</script>
-</HEAD>
-<BODY BGCOLOR="#ffffff" TEXT="#000000">
-<P ALIGN=CENTER><IMG SRC="/images/library.jpg" HEIGHT=62 WIDTH=150 BORDER="0" ALIGN="MIDDLE" ALT=""></P>
-<H1 ALIGN=CENTER>RFC 793 (RFC793)</H1>
-<P ALIGN=CENTER>Internet RFC/STD/FYI/BCP Archives</P>
-
-<DIV ALIGN=CENTER>[ <a href="/rfcs/">RFC Index</a> | <A HREF="/rfcs/rfcsearch.html">RFC Search</A> | <a href="/faqs/">Usenet FAQs</a> | <a href="/contrib/">Web FAQs</a> | <a href="/docs/">Documents</a> | <a href="http://www.city-data.com/">Cities</a> ]
-<P>
-<STRONG>Alternate Formats:</STRONG>
- <A HREF="/ftp/rfc/rfc793.txt">rfc793.txt</A> |
- <A HREF="/ftp/rfc/pdf/rfc793.txt.pdf">rfc793.txt.pdf</A></DIV>
-<p align=center><script language="JavaScript"><!--
-erfc("793");
-// --></script></p>
-<h3 align=center>RFC 793 - Transmission Control Protocol</h3>
-<HR SIZE=2 NOSHADE>
-<PRE>
-
 RFC: 793
 
                      TRANSMISSION CONTROL PROTOCOL
@@ -120,7 +91,7 @@ and redescribes the letter mechanism as a push function.
                                                            Editor
 
 RFC:  793
-Replaces: <A HREF="/rfcs/rfc761.html">RFC 761</A>
+Replaces: RFC 761
 IENs:  129, 124, 112, 81,
 55, 44, 40, 27, 21, 5
 
@@ -523,7 +494,7 @@ September 1981
             +-----+     +-----+       +-----+                    
                |           |             |                       
             +-------------------------------+                    
-            |    Internet Protocol &amp; ICMP   |  Gateway Level     
+            |    Internet Protocol & ICMP   |  Gateway Level     
             +-------------------------------+                    
                            |                                     
               +---------------------------+                      
@@ -1146,7 +1117,7 @@ September 1981
 
                               +---------+ ---------\      active OPEN  
                               |  CLOSED |            \    -----------  
-                              +---------+&lt;---------\   \   create TCB  
+                              +---------+<---------\   \   create TCB  
                                 |     ^              \   \  snd SYN    
                    passive OPEN |     |   CLOSE        \   \           
                    ------------ |     | ----------       \   \         
@@ -1158,9 +1129,9 @@ September 1981
                    rcv SYN      |     |     SEND              |     |  
                   -----------   |     |    -------            |     V  
  +---------+      snd SYN,ACK  /       \   snd SYN          +---------+
- |         |&lt;-----------------           ------------------&gt;|         |
+ |         |<-----------------           ------------------>|         |
  |   SYN   |                    rcv SYN                     |   SYN   |
- |   RCVD  |&lt;-----------------------------------------------|   SENT  |
+ |   RCVD  |<-----------------------------------------------|   SENT  |
  |         |                    snd ACK                     |         |
  |         |------------------           -------------------|         |
  +---------+   rcv ACK of SYN  \       /  rcv SYN,ACK       +---------+
@@ -1173,7 +1144,7 @@ September 1981
    |                   CLOSE    |     |    rcv FIN                     
    V                  -------   |     |    -------                     
  +---------+          snd FIN  /       \   snd ACK          +---------+
- |  FIN    |&lt;-----------------           ------------------&gt;|  CLOSE  |
+ |  FIN    |<-----------------           ------------------>|  CLOSE  |
  | WAIT-1  |------------------                              |   WAIT  |
  +---------+          rcv FIN  \                            +---------+
    | rcv ACK of FIN   -------   |                            CLOSE  |  
@@ -1186,7 +1157,7 @@ September 1981
    |  rcv FIN       -------------- |    Timeout=2MSL -------------- |  
    |  -------              x       V    ------------        x       V  
     \ snd ACK                 +---------+delete TCB         +---------+
-     ------------------------&gt;|TIME WAIT|------------------&gt;| CLOSED  |
+     ------------------------>|TIME WAIT|------------------>| CLOSED  |
                               +---------+                   +---------+
 
                       TCP Connection State Diagram
@@ -1218,7 +1189,7 @@ Functional Specification
   preserves the relationship of sequence numbers as they cycle from
   2**32 - 1 to 0 again.  There are some subtleties to computer modulo
   arithmetic, so great care should be taken in programming the
-  comparison of such values.  The symbol "=&lt;" means "less than or equal"
+  comparison of such values.  The symbol "=<" means "less than or equal"
   (modulo 2**32).
 
   The typical kinds of sequence number comparisons which the TCP must
@@ -1261,7 +1232,7 @@ September 1981
   A new acknowledgment (called an "acceptable ack"), is one for which
   the inequality below holds:
 
-    SND.UNA &lt; SEG.ACK =&lt; SND.NXT
+    SND.UNA < SEG.ACK =< SND.NXT
 
   A segment on the retransmission queue is fully acknowledged if the sum
   of its sequence number and length is less or equal than the
@@ -1283,11 +1254,11 @@ September 1981
   A segment is judged to occupy a portion of valid receive sequence
   space if
 
-    RCV.NXT =&lt; SEG.SEQ &lt; RCV.NXT+RCV.WND
+    RCV.NXT =< SEG.SEQ < RCV.NXT+RCV.WND
 
   or
 
-    RCV.NXT =&lt; SEG.SEQ+SEG.LEN-1 &lt; RCV.NXT+RCV.WND
+    RCV.NXT =< SEG.SEQ+SEG.LEN-1 < RCV.NXT+RCV.WND
 
                                                                [Page 25]
 
@@ -1310,12 +1281,12 @@ Functional Specification
 
        0       0     SEG.SEQ = RCV.NXT
 
-       0      &gt;0     RCV.NXT =&lt; SEG.SEQ &lt; RCV.NXT+RCV.WND
+       0      >0     RCV.NXT =< SEG.SEQ < RCV.NXT+RCV.WND
 
-      &gt;0       0     not acceptable
+      >0       0     not acceptable
 
-      &gt;0      &gt;0     RCV.NXT =&lt; SEG.SEQ &lt; RCV.NXT+RCV.WND
-                  or RCV.NXT =&lt; SEG.SEQ+SEG.LEN-1 &lt; RCV.NXT+RCV.WND
+      >0      >0     RCV.NXT =<; SEG.SEQ <; RCV.NXT+RCV.WND
+                  or RCV.NXT =<; SEG.SEQ+SEG.LEN-1 < RCV.NXT+RCV.WND
 
   Note that when the receive window is zero no segments should be
   acceptable except ACK segments.  Thus, it is be possible for a TCP to
@@ -1388,10 +1359,10 @@ September 1981
   from the other side.  Each side must also receive the other side's
   initial sequence number and send a confirming acknowledgment.
 
-    1) A --&gt; B  SYN my sequence number is X
-    2) A &lt;-- B  ACK your sequence number is X
-    3) A &lt;-- B  SYN my sequence number is Y
-    4) A --&gt; B  ACK your sequence number is Y
+    1) A -->; B  SYN my sequence number is X
+    2) A <-- B  ACK your sequence number is X
+    3) A <-- B  SYN my sequence number is Y
+    4) A --> B  ACK your sequence number is Y
 
                                                                [Page 27]
 
@@ -1568,9 +1539,9 @@ September 1981
 
   The simplest three-way handshake is shown in figure 7 below.  The
   figures should be interpreted in the following way.  Each line is
-  numbered for reference purposes.  Right arrows (--&gt;) indicate
+  numbered for reference purposes.  Right arrows (-->) indicate
   departure of a TCP segment from TCP A to TCP B, or arrival of a
-  segment at B from A.  Left arrows (&lt;--), indicate the reverse.
+  segment at B from A.  Left arrows (<--), indicate the reverse.
   Ellipsis (...) indicates a segment which is still in the network
   (delayed).  An "XXX" indicates a segment which is lost or rejected.
   Comments appear in parentheses.  TCP states represent the state AFTER
@@ -1584,13 +1555,13 @@ September 1981
 
   1.  CLOSED                                               LISTEN
 
-  2.  SYN-SENT    --&gt; &lt;SEQ=100&gt;&lt;CTL=SYN&gt;               --&gt; SYN-RECEIVED
+  2.  SYN-SENT    --> <SEQ=100><CTL=SYN>               --> SYN-RECEIVED
 
-  3.  ESTABLISHED &lt;-- &lt;SEQ=300&gt;&lt;ACK=101&gt;&lt;CTL=SYN,ACK&gt;  &lt;-- SYN-RECEIVED
+  3.  ESTABLISHED <-- <SEQ=300><ACK=101><CTL=SYN,ACK>  <-- SYN-RECEIVED
 
-  4.  ESTABLISHED --&gt; &lt;SEQ=101&gt;&lt;ACK=301&gt;&lt;CTL=ACK&gt;       --&gt; ESTABLISHED
+  4.  ESTABLISHED --> <SEQ=101><ACK=301><CTL=ACK>       --> ESTABLISHED
 
-  5.  ESTABLISHED --&gt; &lt;SEQ=101&gt;&lt;ACK=301&gt;&lt;CTL=ACK&gt;&lt;DATA&gt; --&gt; ESTABLISHED
+  5.  ESTABLISHED --> <SEQ=101><ACK=301><CTL=ACK><DATA> --> ESTABLISHED
 
           Basic 3-Way Handshake for Connection Synchronization
 
@@ -1623,17 +1594,17 @@ Functional Specification
 
   1.  CLOSED                                           CLOSED
 
-  2.  SYN-SENT     --&gt; &lt;SEQ=100&gt;&lt;CTL=SYN&gt;              ...
+  2.  SYN-SENT     --> <SEQ=100><CTL=SYN>              ...
 
-  3.  SYN-RECEIVED &lt;-- &lt;SEQ=300&gt;&lt;CTL=SYN&gt;              &lt;-- SYN-SENT
+  3.  SYN-RECEIVED <-- <SEQ=300><CTL=SYN>              <-- SYN-SENT
 
-  4.               ... &lt;SEQ=100&gt;&lt;CTL=SYN&gt;              --&gt; SYN-RECEIVED
+  4.               ... <SEQ=100><CTL=SYN>              --> SYN-RECEIVED
 
-  5.  SYN-RECEIVED --&gt; &lt;SEQ=100&gt;&lt;ACK=301&gt;&lt;CTL=SYN,ACK&gt; ...
+  5.  SYN-RECEIVED --> <SEQ=100><ACK=301><CTL=SYN,ACK> ...
 
-  6.  ESTABLISHED  &lt;-- &lt;SEQ=300&gt;&lt;ACK=101&gt;&lt;CTL=SYN,ACK&gt; &lt;-- SYN-RECEIVED
+  6.  ESTABLISHED  <-- <SEQ=300><ACK=101><CTL=SYN,ACK> <-- SYN-RECEIVED
 
-  7.               ... &lt;SEQ=101&gt;&lt;ACK=301&gt;&lt;CTL=ACK&gt;     --&gt; ESTABLISHED
+  7.               ... <SEQ=101><ACK=301><CTL=ACK>     --> ESTABLISHED
 
                 Simultaneous Connection Synchronization
 
@@ -1659,19 +1630,19 @@ September 1981
 
   1.  CLOSED                                               LISTEN
 
-  2.  SYN-SENT    --&gt; &lt;SEQ=100&gt;&lt;CTL=SYN&gt;               ...
+  2.  SYN-SENT    --> <SEQ=100><CTL=SYN>               ...
 
-  3.  (duplicate) ... &lt;SEQ=90&gt;&lt;CTL=SYN&gt;               --&gt; SYN-RECEIVED
+  3.  (duplicate) ... <SEQ=90><CTL=SYN>               --> SYN-RECEIVED
 
-  4.  SYN-SENT    &lt;-- &lt;SEQ=300&gt;&lt;ACK=91&gt;&lt;CTL=SYN,ACK&gt;  &lt;-- SYN-RECEIVED
+  4.  SYN-SENT    <-- <SEQ=300><ACK=91><CTL=SYN,ACK>  <-- SYN-RECEIVED
 
-  5.  SYN-SENT    --&gt; &lt;SEQ=91&gt;&lt;CTL=RST&gt;               --&gt; LISTEN
+  5.  SYN-SENT    --> <SEQ=91><CTL=RST>               --> LISTEN
 
-  6.              ... &lt;SEQ=100&gt;&lt;CTL=SYN&gt;               --&gt; SYN-RECEIVED
+  6.              ... <SEQ=100><CTL=SYN>               --> SYN-RECEIVED
 
-  7.  SYN-SENT    &lt;-- &lt;SEQ=400&gt;&lt;ACK=101&gt;&lt;CTL=SYN,ACK&gt;  &lt;-- SYN-RECEIVED
+  7.  SYN-SENT    <-- <SEQ=400><ACK=101><CTL=SYN,ACK>  <-- SYN-RECEIVED
 
-  8.  ESTABLISHED --&gt; &lt;SEQ=101&gt;&lt;ACK=401&gt;&lt;CTL=ACK&gt;      --&gt; ESTABLISHED
+  8.  ESTABLISHED --> <SEQ=101><ACK=401><CTL=ACK>      --> ESTABLISHED
 
                     Recovery from Old Duplicate SYN
 
@@ -1732,15 +1703,15 @@ Functional Specification
 
   2.  CLOSED                                           ESTABLISHED
 
-  3.  SYN-SENT --&gt; &lt;SEQ=400&gt;&lt;CTL=SYN&gt;              --&gt; (??)
+  3.  SYN-SENT --> <SEQ=400><CTL=SYN>              --> (??)
 
-  4.  (!!)     &lt;-- &lt;SEQ=300&gt;&lt;ACK=100&gt;&lt;CTL=ACK&gt;     &lt;-- ESTABLISHED
+  4.  (!!)     <-- <SEQ=300><ACK=100><CTL=ACK>     <-- ESTABLISHED
 
-  5.  SYN-SENT --&gt; &lt;SEQ=100&gt;&lt;CTL=RST&gt;              --&gt; (Abort!!)
+  5.  SYN-SENT --> <SEQ=100><CTL=RST>              --> (Abort!!)
 
   6.  SYN-SENT                                         CLOSED
 
-  7.  SYN-SENT --&gt; &lt;SEQ=400&gt;&lt;CTL=SYN&gt;              --&gt;
+  7.  SYN-SENT --> <SEQ=400><CTL=SYN>              -->
 
                      Half-Open Connection Discovery
 
@@ -1773,9 +1744,9 @@ September 1981
 
   1.  (CRASH)                                   (send 300,receive 100)
 
-  2.  (??)    &lt;-- &lt;SEQ=300&gt;&lt;ACK=100&gt;&lt;DATA=10&gt;&lt;CTL=ACK&gt; &lt;-- ESTABLISHED
+  2.  (??)    <-- <SEQ=300><ACK=100><DATA=10><CTL=ACK> <-- ESTABLISHED
 
-  3.          --&gt; &lt;SEQ=100&gt;&lt;CTL=RST&gt;                   --&gt; (ABORT!!)
+  3.          --> <SEQ=100><CTL=RST>                   --> (ABORT!!)
 
            Active Side Causes Half-Open Connection Discovery
 
@@ -1791,11 +1762,11 @@ September 1981
 
   1.  LISTEN                                        LISTEN
 
-  2.       ... &lt;SEQ=Z&gt;&lt;CTL=SYN&gt;                --&gt;  SYN-RECEIVED
+  2.       ... <SEQ=Z><CTL=SYN>                -->  SYN-RECEIVED
 
-  3.  (??) &lt;-- &lt;SEQ=X&gt;&lt;ACK=Z+1&gt;&lt;CTL=SYN,ACK&gt;   &lt;--  SYN-RECEIVED
+  3.  (??) <-- <SEQ=X><ACK=Z+1><CTL=SYN,ACK>   <--  SYN-RECEIVED
 
-  4.       --&gt; &lt;SEQ=Z+1&gt;&lt;CTL=RST&gt;              --&gt;  (return to LISTEN!)
+  4.       --> <SEQ=Z+1><CTL=RST>              -->  (return to LISTEN!)
 
   5.  LISTEN                                        LISTEN
 
@@ -1966,14 +1937,14 @@ September 1981
   1.  ESTABLISHED                                          ESTABLISHED
 
   2.  (Close)
-      FIN-WAIT-1  --&gt; &lt;SEQ=100&gt;&lt;ACK=300&gt;&lt;CTL=FIN,ACK&gt;  --&gt; CLOSE-WAIT
+      FIN-WAIT-1  --> <SEQ=100><ACK=300><CTL=FIN,ACK>  --> CLOSE-WAIT
 
-  3.  FIN-WAIT-2  &lt;-- &lt;SEQ=300&gt;&lt;ACK=101&gt;&lt;CTL=ACK&gt;      &lt;-- CLOSE-WAIT
+  3.  FIN-WAIT-2  <-- <SEQ=300><ACK=101><CTL=ACK>      <-- CLOSE-WAIT
 
   4.                                                       (Close)
-      TIME-WAIT   &lt;-- &lt;SEQ=300&gt;&lt;ACK=101&gt;&lt;CTL=FIN,ACK&gt;  &lt;-- LAST-ACK
+      TIME-WAIT   <-- <SEQ=300><ACK=101><CTL=FIN,ACK>  <-- LAST-ACK
 
-  5.  TIME-WAIT   --&gt; &lt;SEQ=101&gt;&lt;ACK=301&gt;&lt;CTL=ACK&gt;      --&gt; CLOSED
+  5.  TIME-WAIT   --> <SEQ=101><ACK=301><CTL=ACK>      --> CLOSED
 
   6.  (2 MSL)
       CLOSED                                                      
@@ -1987,13 +1958,13 @@ September 1981
   1.  ESTABLISHED                                          ESTABLISHED
 
   2.  (Close)                                              (Close)
-      FIN-WAIT-1  --&gt; &lt;SEQ=100&gt;&lt;ACK=300&gt;&lt;CTL=FIN,ACK&gt;  ... FIN-WAIT-1
-                  &lt;-- &lt;SEQ=300&gt;&lt;ACK=100&gt;&lt;CTL=FIN,ACK&gt;  &lt;--
-                  ... &lt;SEQ=100&gt;&lt;ACK=300&gt;&lt;CTL=FIN,ACK&gt;  --&gt;
+      FIN-WAIT-1  --> <SEQ=100><ACK=300><CTL=FIN,ACK>  ... FIN-WAIT-1
+                  <-- <SEQ=300><ACK=100><CTL=FIN,ACK>  <--
+                  ... <SEQ=100><ACK=300><CTL=FIN,ACK>  -->
 
-  3.  CLOSING     --&gt; &lt;SEQ=101&gt;&lt;ACK=301&gt;&lt;CTL=ACK&gt;      ... CLOSING
-                  &lt;-- &lt;SEQ=301&gt;&lt;ACK=101&gt;&lt;CTL=ACK&gt;      &lt;--
-                  ... &lt;SEQ=101&gt;&lt;ACK=301&gt;&lt;CTL=ACK&gt;      --&gt;
+  3.  CLOSING     --> <SEQ=101><ACK=301><CTL=ACK>      ... CLOSING
+                  <-- <SEQ=301><ACK=101><CTL=ACK>      <--
+                  ... <SEQ=101><ACK=301><CTL=ACK>      -->
 
   4.  TIME-WAIT                                            TIME-WAIT
       (2 MSL)                                              (2 MSL)
@@ -2295,7 +2266,7 @@ September 1981
 
         Format:  OPEN (local port, foreign socket, active/passive
         [, timeout] [, precedence] [, security/compartment] [, options])
-        -&gt; local connection name
+        -> local connection name
 
         We assume that the local TCP is aware of the identity of the
         processes it serves and will check the authority of the process
@@ -2356,7 +2327,7 @@ Functional Specification
 
         A local connection name will be returned to the user by the TCP.
         The local connection name can then be used as a short hand term
-        for the connection defined by the &lt;local socket, foreign socket&gt;
+        for the connection defined by the <local socket, foreign socket>
         pair.
 
       Send
@@ -2454,7 +2425,7 @@ Functional Specification
       Receive
 
         Format:  RECEIVE (local connection name, buffer address, byte
-        count) -&gt; byte count, urgent flag, push flag
+        count) -> byte count, urgent flag, push flag
 
         This command allocates a receiving buffer associated with the
         specified connection.  If no OPEN precedes this command or the
@@ -2538,7 +2509,7 @@ September 1981
 
       Status
 
-        Format:  STATUS (local connection name) -&gt; status data
+        Format:  STATUS (local connection name) -> status data
 
         This is an implementation dependent user command and could be
         excluded without adverse effect.  Information returned would
@@ -2599,7 +2570,7 @@ Functional Specification
 
         Local Connection Name                    Always
         Response String                          Always
-        Buffer Address                           Send &amp; Receive
+        Buffer Address                           Send & Receive
         Byte count (counts bytes received)       Receive
         Push flag                                Receive
         Urgent flag                              Receive
@@ -2694,7 +2665,7 @@ Functional Specification
 
   Please note in the following that all arithmetic on sequence numbers,
   acknowledgment numbers, windows, et cetera, is modulo 2**32 the size
-  of the sequence number space.  Also note that "=&lt;" means less than or
+  of the sequence number space.  Also note that "=<" means less than or
   equal to (modulo 2**32).
 
 [Page 52]                                                               
@@ -2739,7 +2710,7 @@ Functional Specification
       active and the foreign socket is unspecified, return "error:
       foreign socket unspecified"; if active and the foreign socket is
       specified, issue a SYN segment.  An initial send sequence number
-      (ISS) is selected.  A SYN segment of the form &lt;SEQ=ISS&gt;&lt;CTL=SYN&gt;
+      (ISS) is selected.  A SYN segment of the form <SEQ=ISS><CTL=SYN>
       is sent.  Set SND.UNA to ISS, SND.NXT to ISS+1, enter SYN-SENT
       state, and return.
 
@@ -2824,7 +2795,7 @@ Functional Specification
       insufficient space to remember this buffer, simply return "error:
       insufficient resources".
 
-      If the urgent flag is set, then SND.UP &lt;- SND.NXT-1 and set the
+      If the urgent flag is set, then SND.UP <- SND.NXT-1 and set the
       urgent pointer in the outgoing segments.
 
 [Page 56]                                                               
@@ -3007,7 +2978,7 @@ Functional Specification
 
       Send a reset segment:
 
-        &lt;SEQ=SND.NXT&gt;&lt;CTL=RST&gt;
+        <SEQ=SND.NXT><CTL=RST>
 
       All queued SENDs and RECEIVEs should be given "connection reset"
       notification; all segments queued for transmission (except for the
@@ -3104,11 +3075,11 @@ SEGMENT ARRIVES
 
       If the ACK bit is off, sequence number zero is used,
 
-        &lt;SEQ=0&gt;&lt;ACK=SEG.SEQ+SEG.LEN&gt;&lt;CTL=RST,ACK&gt;
+        <SEQ=0><ACK=SEG.SEQ+SEG.LEN><CTL=RST,ACK>
 
       If the ACK bit is on,
 
-        &lt;SEQ=SEG.ACK&gt;&lt;CTL=RST&gt;
+        <SEQ=SEG.ACK><CTL=RST>
 
       Return.
 
@@ -3125,7 +3096,7 @@ SEGMENT ARRIVES
         for any arriving ACK-bearing segment.  The RST should be
         formatted as follows:
 
-          &lt;SEQ=SEG.ACK&gt;&lt;CTL=RST&gt;
+          <SEQ=SEG.ACK><CTL=RST>
 
         Return.
 
@@ -3136,7 +3107,7 @@ SEGMENT ARRIVES
         match the security/compartment in the TCB then send a reset and
         return.
 
-          &lt;SEQ=SEG.ACK&gt;&lt;CTL=RST&gt;
+          <SEQ=SEG.ACK><CTL=RST>
 
                                                                [Page 65]
 
@@ -3146,10 +3117,10 @@ Functional Specification
                                                          SEGMENT ARRIVES
 
         If the SEG.PRC is greater than the TCB.PRC then if allowed by
-        the user and the system set TCB.PRC&lt;-SEG.PRC, if not allowed
+        the user and the system set TCB.PRC<-SEG.PRC, if not allowed
         send a reset and return.
 
-          &lt;SEQ=SEG.ACK&gt;&lt;CTL=RST&gt;
+          <SEQ=SEG.ACK><CTL=RST>
 
         If the SEG.PRC is less than the TCB.PRC then continue.
 
@@ -3157,7 +3128,7 @@ Functional Specification
         control or text should be queued for processing later.  ISS
         should be selected and a SYN segment sent of the form:
 
-          &lt;SEQ=ISS&gt;&lt;ACK=RCV.NXT&gt;&lt;CTL=SYN,ACK&gt;
+          <SEQ=ISS><ACK=RCV.NXT><CTL=SYN,ACK>
 
         SND.NXT is set to ISS+1 and SND.UNA to ISS.  The connection
         state should be changed to SYN-RECEIVED.  Note that any other
@@ -3182,14 +3153,14 @@ Functional Specification
 
         If the ACK bit is set
 
-          If SEG.ACK =&lt; ISS, or SEG.ACK &gt; SND.NXT, send a reset (unless
+          If SEG.ACK =< ISS, or SEG.ACK > SND.NXT, send a reset (unless
           the RST bit is set, if so drop the segment and return)
 
-            &lt;SEQ=SEG.ACK&gt;&lt;CTL=RST&gt;
+            <SEQ=SEG.ACK><CTL=RST>
 
           and discard the segment.  Return.
 
-          If SND.UNA =&lt; SEG.ACK =&lt; SND.NXT then the ACK is acceptable.
+          If SND.UNA =< SEG.ACK =< SND.NXT then the ACK is acceptable.
 
       second check the RST bit
 
@@ -3214,18 +3185,18 @@ SEGMENT ARRIVES
 
           If there is an ACK
 
-            &lt;SEQ=SEG.ACK&gt;&lt;CTL=RST&gt;
+            <SEQ=SEG.ACK><CTL=RST>
 
           Otherwise
 
-            &lt;SEQ=0&gt;&lt;ACK=SEG.SEQ+SEG.LEN&gt;&lt;CTL=RST,ACK&gt;
+            <SEQ=0><ACK=SEG.SEQ+SEG.LEN><CTL=RST,ACK>
 
         If there is an ACK
 
           The precedence in the segment must match the precedence in the
           TCB, if not, send a reset
 
-            &lt;SEQ=SEG.ACK&gt;&lt;CTL=RST&gt;
+            <SEQ=SEG.ACK><CTL=RST>
 
         If there is no ACK
 
@@ -3234,7 +3205,7 @@ SEGMENT ARRIVES
           the precedence in the TCB to that in the segment, if not
           allowed to raise the prec then send a reset.
 
-            &lt;SEQ=0&gt;&lt;ACK=SEG.SEQ+SEG.LEN&gt;&lt;CTL=RST,ACK&gt;
+            <SEQ=0><ACK=SEG.SEQ+SEG.LEN><CTL=RST,ACK>
 
           If the precedence in the segment is lower than the precedence
           in the TCB continue.
@@ -3260,10 +3231,10 @@ Functional Specification
         is an ACK), and any segments on the retransmission queue which
         are thereby acknowledged should be removed.
 
-        If SND.UNA &gt; ISS (our SYN has been ACKed), change the connection
+        If SND.UNA > ISS (our SYN has been ACKed), change the connection
         state to ESTABLISHED, form an ACK segment
 
-          &lt;SEQ=SND.NXT&gt;&lt;ACK=RCV.NXT&gt;&lt;CTL=ACK&gt;
+          <SEQ=SND.NXT><ACK=RCV.NXT><CTL=ACK>
 
         and send it.  Data or controls which were queued for
         transmission may be included.  If there are other controls or
@@ -3272,7 +3243,7 @@ Functional Specification
 
         Otherwise enter SYN-RECEIVED, form a SYN,ACK segment
 
-          &lt;SEQ=ISS&gt;&lt;ACK=RCV.NXT&gt;&lt;CTL=SYN,ACK&gt;
+          <SEQ=ISS><ACK=RCV.NXT><CTL=SYN,ACK>
 
         and send it.  If there are other controls or text in the
         segment, queue them for processing after the ESTABLISHED state
@@ -3316,12 +3287,12 @@ SEGMENT ARRIVES
 
            0       0     SEG.SEQ = RCV.NXT
 
-           0      &gt;0     RCV.NXT =&lt; SEG.SEQ &lt; RCV.NXT+RCV.WND
+           0      >0     RCV.NXT =< SEG.SEQ < RCV.NXT+RCV.WND
 
-          &gt;0       0     not acceptable
+          >0       0     not acceptable
 
-          &gt;0      &gt;0     RCV.NXT =&lt; SEG.SEQ &lt; RCV.NXT+RCV.WND
-                      or RCV.NXT =&lt; SEG.SEQ+SEG.LEN-1 &lt; RCV.NXT+RCV.WND
+          >0      >0     RCV.NXT =< SEG.SEQ < RCV.NXT+RCV.WND
+                      or RCV.NXT =< SEG.SEQ+SEG.LEN-1 < RCV.NXT+RCV.WND
 
         If the RCV.WND is zero, no segments will be acceptable, but
         special allowance should be made to accept valid ACKs, URGs and
@@ -3331,7 +3302,7 @@ SEGMENT ARRIVES
         should be sent in reply (unless the RST bit is set, if so drop
         the segment and return):
 
-          &lt;SEQ=SND.NXT&gt;&lt;ACK=RCV.NXT&gt;&lt;CTL=ACK&gt;
+          <SEQ=SND.NXT><ACK=RCV.NXT><CTL=ACK>
 
         After sending the acknowledgment, drop the unacceptable segment
         and return.
@@ -3451,32 +3422,32 @@ Functional Specification
 
         SYN-RECEIVED STATE
 
-          If SND.UNA =&lt; SEG.ACK =&lt; SND.NXT then enter ESTABLISHED state
+          If SND.UNA =< SEG.ACK =< SND.NXT then enter ESTABLISHED state
           and continue processing.
 
             If the segment acknowledgment is not acceptable, form a
             reset segment,
 
-              &lt;SEQ=SEG.ACK&gt;&lt;CTL=RST&gt;
+              <SEQ=SEG.ACK><CTL=RST>
 
             and send it.
 
         ESTABLISHED STATE
 
-          If SND.UNA &lt; SEG.ACK =&lt; SND.NXT then, set SND.UNA &lt;- SEG.ACK.
+          If SND.UNA < SEG.ACK =< SND.NXT then, set SND.UNA <- SEG.ACK.
           Any segments on the retransmission queue which are thereby
           entirely acknowledged are removed.  Users should receive
           positive acknowledgments for buffers which have been SENT and
           fully acknowledged (i.e., SEND buffer should be returned with
           "ok" response).  If the ACK is a duplicate
-          (SEG.ACK &lt; SND.UNA), it can be ignored.  If the ACK acks
-          something not yet sent (SEG.ACK &gt; SND.NXT) then send an ACK,
+          (SEG.ACK < SND.UNA), it can be ignored.  If the ACK acks
+          something not yet sent (SEG.ACK > SND.NXT) then send an ACK,
           drop the segment, and return.
 
-          If SND.UNA &lt; SEG.ACK =&lt; SND.NXT, the send window should be
-          updated.  If (SND.WL1 &lt; SEG.SEQ or (SND.WL1 = SEG.SEQ and
-          SND.WL2 =&lt; SEG.ACK)), set SND.WND &lt;- SEG.WND, set
-          SND.WL1 &lt;- SEG.SEQ, and set SND.WL2 &lt;- SEG.ACK.
+          If SND.UNA < SEG.ACK =< SND.NXT, the send window should be
+          updated.  If (SND.WL1 < SEG.SEQ or (SND.WL1 = SEG.SEQ and
+          SND.WL2 =< SEG.ACK)), set SND.WND <- SEG.WND, set
+          SND.WL1 <- SEG.SEQ, and set SND.WL2 <- SEG.ACK.
 
           Note that SND.WND is an offset from SND.UNA, that SND.WL1
           records the sequence number of the last segment used to update
@@ -3531,7 +3502,7 @@ SEGMENT ARRIVES
       FIN-WAIT-1 STATE
       FIN-WAIT-2 STATE
 
-        If the URG bit is set, RCV.UP &lt;- max(RCV.UP,SEG.UP), and signal
+        If the URG bit is set, RCV.UP <- max(RCV.UP,SEG.UP), and signal
         the user that the remote side has urgent data if the urgent
         pointer (RCV.UP) is in advance of the data consumed.  If the
         user has already been signaled (or is still in the "urgent
@@ -3578,7 +3549,7 @@ Functional Specification
 
         Send an acknowledgment of the form:
 
-          &lt;SEQ=SND.NXT&gt;&lt;ACK=RCV.NXT&gt;&lt;CTL=ACK&gt;
+          <SEQ=SND.NXT><ACK=RCV.NXT><CTL=ACK>
 
         This acknowledgment should be piggybacked on a segment being
         transmitted if possible without incurring undue delay.
@@ -4011,48 +3982,12 @@ September 1981
      Vol. COM-22, No. 5, pp 637-648, May 1974.
 
 [2]  Postel, J. (ed.), "Internet Protocol - DARPA Internet Program
-     Protocol Specification", <A HREF="/rfcs/rfc791.html">RFC 791</A>, USC/Information Sciences
+     Protocol Specification", RFC 791, USC/Information Sciences
      Institute, September 1981.
 
 [3]  Dalal, Y. and C. Sunshine, "Connection Management in Transport
      Protocols", Computer Networks, Vol. 2, No. 6, pp. 454-473,
      December 1978.
 
-[4]  Postel, J., "Assigned Numbers", <A HREF="/rfcs/rfc790.html">RFC 790</A>, USC/Information Sciences
+[4]  Postel, J., "Assigned Numbers", RFC 790, USC/Information Sciences
      Institute, September 1981.
-
-</PRE>
-<p align=center><script language="JavaScript"><!--
-erfc("793");
-// --></script></p>
-&nbsp;<br>
-<div align="center">
-<center>
-<table border="0" cellpadding="4" cellspacing="4" width="100%">
-<tr><td width="100%" bgcolor="#D6D6C0">
-<p><font face="Arial">Comments about this RFC:</font></p>
-<ul>
-<li><font face="Arial"><a href="/qa/rfcc-1892.html">RFC 793: what do you mean by RFC ? </a> by hari (4/13/2005)</font></li>
-</ul>
-</td></tr></table> <br></center></div>
-<div align="center">
-<table border="0" cellpadding="3" width="100%" cellspacing="3">
-<tr><td width="45%">
-<p align="left">Previous: <a href="/rfcs/rfc792.html">RFC 0792 - Internet Control Message Protocol</a>
-</p></td><td width="10%">&nbsp;</td><td width="45%">
-<p align="right">Next: <a href="/rfcs/rfc794.html">RFC 0794 - Pre-emption</a>
-</p></td></tr></table></div><p align="right">&nbsp;</p>
-<HR SIZE=2 NOSHADE>
-<DIV ALIGN=CENTER>[ <a href="/rfcs/">RFC Index</a> | <A HREF="/rfcs/rfcsearch.html">RFC Search</A> | <a href="/faqs/">Usenet FAQs</a> | <a href="/contrib/">Web FAQs</a> | <a href="/docs/">Documents</a> | <a href="http://www.city-data.com/">Cities</a> ]
-<P>
-</DIV>
-<SMALL>
-<ADDRESS>
-<P ALIGN=CENTER>
- 
-</P>
-</ADDRESS>
-</SMALL>
-</BODY>
-</HTML>
-
