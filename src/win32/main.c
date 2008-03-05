@@ -16,19 +16,18 @@ u08 mac_equal( mac_address const * a, mac_address const * b )
 
 static mac_address router_address;
 
+u08 charge_for_packet( eth_packet * p )
+{
+	// todo: users, etc
+	return eth_discard( p );	// do not want
+}
+
 u08 handle_packet( eth_packet * p )
 {
-	if (p->iface == IFACE_WAN)
-	{
-		// Don't worry sir! I'm from the Internet!
-		return eth_discard( p );	// do not want.
-	}
-
-	if (!mac_equal( &router_address, &p->packet->dest ))
-		return eth_forward( p );	// destined for another lan port
-
-	// todo:
-	return eth_discard( p );
+	if ((p->src_iface == IFACE_WAN) ^ (p->dest_iface == IFACE_WAN))
+		return charge_for_packet( p );
+	
+	return eth_forward( p );	// not crossing from lan <-> wan
 }
 
 int main( int argc, char ** argv )

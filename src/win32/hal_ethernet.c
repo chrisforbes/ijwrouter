@@ -29,3 +29,8 @@ u08 eth_inject( eth_packet * p )
 {
 	return 0;	// didnt work
 }
+
+u08 eth_find_interface( mac_address const * dest )
+{
+	return 0;	// hax
+}

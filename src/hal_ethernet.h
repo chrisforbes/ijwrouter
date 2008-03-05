@@ -3,7 +3,8 @@
 
 typedef struct eth_packet
 {
-	u08 iface;
+	u08 src_iface;
+	u08 dest_iface;
 	mac_header * packet;
 } eth_packet;
 
