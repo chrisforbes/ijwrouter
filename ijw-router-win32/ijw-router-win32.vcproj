@@ -46,7 +46,8 @@
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="3"
 				UsePrecompiledHeader="0"
-				WarningLevel="3"
+				WarningLevel="4"
+				WarnAsError="true"
 				DebugInformationFormat="4"
 			/>
 			<Tool
@@ -194,6 +195,14 @@
 			</File>
 			<File
 				RelativePath="..\src\udp.h"
+				>
+			</File>
+			<File
+				RelativePath="..\src\user.c"
+				>
+			</File>
+			<File
+				RelativePath="..\src\user.h"
 				>
 			</File>
 			<Filter

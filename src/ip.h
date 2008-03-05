@@ -1,5 +1,8 @@
 #ifndef IP_H
 #define IP_H
+
+#pragma warning( disable: 4214 )
+
 //As defined by RFC 791
 typedef struct ip_header
 {
@@ -15,5 +18,8 @@ typedef struct ip_header
 	u16 checksum;
 	u32 sourceAddr;
 	u32 destAddr;
-};
+} ip_header;
+
+#pragma warning( default: 4214 )
+
 #endif
