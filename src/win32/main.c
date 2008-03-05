@@ -27,6 +27,9 @@ u08 handle_packet( eth_packet * p )
 	if ((p->src_iface == IFACE_WAN) ^ (p->dest_iface == IFACE_WAN))
 		return charge_for_packet( p );
 	
+	if ((p->src_iface == IFACE_WAN) && (p->dest_iface == IFACE_WAN))
+		return eth_discard( p );
+
 	return eth_forward( p );	// not crossing from lan <-> wan
 }
 
