@@ -9,15 +9,13 @@
 
 #include <memory.h>
 
-#define IFACE_WAN		0x00
-#define IFACE_BROADCAST	0xff
-
 u08 mac_equal( mac_address const * a, mac_address const * b )
 {
 	return 0 == memcmp( a, b, sizeof(mac_address) );
 }
 
 static mac_address router_address;
+mac_address my_address;
 
 u16 packet_size( eth_packet * p )
 {
@@ -45,17 +43,32 @@ u08 charge_for_packet( eth_packet * p )
 	return eth_discard( p );	// do not want
 }
 
+void dump_packet( eth_packet * p )
+{
+	u08 i;
+	logf( "%d->%d ", p->src_iface, p->dest_iface );
+	for( i = 0; i < sizeof( mac_header ) + sizeof( ip_header ); i++ )
+		logf( "%02x", ((u08 *) p->packet)[i] );
+
+	logf( "\n" );
+}
+
+#define htons(x) ( (x<<8) | (x>>8) )
+
 u08 handle_packet( eth_packet * p )
 {
-	if (p->packet->ethertype == ethertype_arp)
+	u16 ethertype = htons(p->packet->ethertype);
+	dump_packet( p );
+
+	if (ethertype == ethertype_arp)
 	{
 		logf( "+ arp\n" );
 		return eth_forward( p );
 	}
 
-	if (p->packet->ethertype != ethertype_ipv4 )
+	if (ethertype != ethertype_ipv4 )
 	{
-		logf( "- non-ip\n" );
+		logf( "- non-ip (ethertype=%x)\n", ethertype );
 		return eth_discard( p );
 	}
 

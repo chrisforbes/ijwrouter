@@ -15,6 +15,8 @@
 static pcap_t * dev;
 u08 buf[2048];
 
+extern mac_address my_address;
+
 u08 eth_init( void )
 {
 	pcap_if_t * alldevs;
@@ -52,8 +54,8 @@ u08 eth_getpacket( eth_packet * p )
 	if (!data)
 		return 0;	// no packet
 
-	p->src_iface = 0;	// we have only one
-	p->dest_iface = 0;	// todo
+	p->src_iface = IFACE_WAN;	// we have only one
+	p->dest_iface = IFACE_INTERNAL;	// todo
 
 	memcpy( buf, data, h.len );
 	p->packet = (mac_header *) buf;

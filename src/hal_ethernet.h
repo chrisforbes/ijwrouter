@@ -17,4 +17,8 @@ u08 eth_discard( eth_packet * p );
 u08 eth_forward( eth_packet * p );	
 u08 eth_inject( eth_packet * p );	
 
+#define IFACE_WAN		0x00
+#define IFACE_BROADCAST	0xff
+#define IFACE_INTERNAL	0xfe
+
 #endif
