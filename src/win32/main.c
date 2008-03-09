@@ -7,6 +7,8 @@
 #include "../hal_debug.h"
 #include "../user.h"
 
+#include <uip/uip.h>
+
 #include <memory.h>
 
 static mac_address router_address;
@@ -44,7 +46,7 @@ u08 charge_for_packet( eth_packet * p )
 }
 
 #define htons(x) ( (u16) (x<<8) | (x>>8) )
-#define ntohs(x) ( (u16) (x<<8) | (x>>8) )
+//#define ntohs(x) ( (u16) (x<<8) | (x>>8) )
 
 void dump_packet( eth_packet * p )
 {
