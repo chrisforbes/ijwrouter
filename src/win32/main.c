@@ -60,28 +60,115 @@ void dump_packet( eth_packet * p )
 	mac_to_str( destbuf, &p->packet->dest );
 
 	logf( "src=%s@%02x dest=%s@%02x ethertype=%04x\n", srcbuf, p->src_iface, destbuf, p->dest_iface, ntohs(p->packet->ethertype) );
-	for( i = 0; i < sizeof( ip_header ); i++ )
-		logf( "%02x", ((u08 *) (p->packet + 1))[i] );
+	for( i = 0; i < p->len; i++ )
+		logf( "%02x", ((u08 *) (p->packet))[i] );
 
 	logf( "\n" );
 }
+
+	u08 arp_reply[] = { 0x00, 0xa0, 0xd1, 0x65, 0x30, 0xe7,	// beedee's MAC
+		0x00, 0x19, 0xe0, 0xff, 0x09, 0x08,		// router MAC
+		0x08, 0x06,		// ethertype
+
+		// arp packet
+		0x00, 0x01, // tos	
+		0x08, 0x00,	// ip	
+		0x06, 0x04, 
+		0x00, 0x02,	// reply
+
+		0x00, 0x19, 0xe0, 0xff, 0x09, 0x08,		// sender mac
+		192, 168, 2, 253,
+
+		0x00, 0xa0, 0xd1, 0x65, 0x30, 0xe7,		// dest mac
+		192, 168, 2, 10,
+	
+		0, 0, 0, 0,		0, 0, 0, 0,		0, 0, 0, 0,		0, 0, 0, 0,		0, 0 };	
+
+
+// glue code between ethernet hal and uip ////
+
+void eth_uip_send(void)
+{
+	u08 buf[2048];
+	eth_packet p;
+
+//	uip_arp_out();
+
+	if (uip_len == 0)
+		return;
+
+	memcpy( buf, uip_buf, uip_len );
+
+	p.packet = (mac_header *) buf;
+	p.src_iface = IFACE_INTERNAL;
+	p.dest_iface = eth_find_interface( &p.packet->dest );
+	p.len = uip_len;
+	uip_len = 0;
+
+	logf( "sendlen=%d\n", p.len );
+
+	dump_packet( &p );
+
+/*	memcpy( buf, arp_reply, sizeof(arp_reply) );
+	p.len = sizeof(arp_reply);
+
+	dump_packet( &p );	*/
+
+	eth_inject( &p );
+}
+
+u08 uip_feed( eth_packet * p, u08 isarp )
+{
+	u08 const * data = (u08 const *)p->packet;
+	
+	memcpy( uip_buf, data, p->len );
+	uip_len = p->len;
+
+	if (isarp)
+		uip_arp_arpin();
+	else
+	{
+		uip_arp_ipin();
+		uip_input();
+	}
+
+	if (uip_len == 0)
+		return 0;	// do not want
+
+	eth_uip_send();
+	return 1;
+}
+
+// end of glue ////
 
 u08 handle_packet( eth_packet * p )
 {
 	u16 ethertype = ntohs(p->packet->ethertype);
 
+	if (mac_equal( &p->packet->src, &my_address ))
+		return eth_discard( p );
+
 	dump_packet( p );
 
 	if (p->dest_iface == IFACE_INTERNAL)
 	{
-		// TODO: feed the packet to uIP
+		uip_feed( p, (ethertype == ethertype_arp) ? 1 : 0 );
 		return eth_discard( p );	// dont want to forward it
 	}
 
 	if (ethertype == ethertype_arp)
 	{
-		logf( "+ arp\n" );
-		return eth_forward( p );
+		// ask uip whether it wants this packet
+		if (uip_feed( p, 1 ))
+		{
+			logf( "+ arp (eaten by uip)\n" );
+			return eth_discard( p );
+		}
+		else
+		{
+			logf( "+ arp (forwarded)\n" );
+			return eth_forward( p );
+		}
 	}
 
 	if (ethertype != ethertype_ipv4 )
@@ -92,7 +179,7 @@ u08 handle_packet( eth_packet * p )
 
 	if (p->src_iface == p->dest_iface)
 	{
-		logf( "- self-route\n" );
+//		logf( "- self-route\n" );
 		return eth_discard( p );
 	}
 
@@ -100,25 +187,7 @@ u08 handle_packet( eth_packet * p )
 		return charge_for_packet( p );
 
 	logf( "+ pure lan\n" );
-	return eth_forward( p );	// not crossing from lan <-> wan
-}
-
-void eth_uip_send(void)
-{
-	u08 buf[2048];
-	eth_packet p;
-
-	uip_arp_out();
-
-	memcpy( buf, uip_buf, 40 + UIP_LLH_LEN );
-	memcpy( buf + 40 + UIP_LLH_LEN, uip_appdata, uip_len - 40 - UIP_LLH_LEN );
-
-	p.packet = (mac_header *) buf;
-	p.src_iface = IFACE_INTERNAL;
-	p.dest_iface = eth_find_interface( &p.packet->dest );
-	p.len = uip_len;
-
-	eth_inject( &p );
+	return eth_forward( p );	// not crossing from lan <-> wan	*/
 }
 
 void do_timeouts( void )
@@ -147,17 +216,21 @@ void do_timeouts( void )
 
 int main( void )
 {
+	uip_eth_addr e;
 	u08 interfaces = eth_init();
 	uip_init();
 
 #pragma warning( disable: 4310 )
 	uip_ipaddr( ipaddr, 192, 168, 2, 253 );
-	uip_ipaddr( netmask, 255, 255, 255, 0 );
-	uip_ipaddr( default_router, 192, 168, 2, 1 );
+	uip_ipaddr( netmask, 255, 0, 0, 0 );
+	uip_ipaddr( default_router, 192, 168, 2, 10 );
 
 	uip_sethostaddr( ipaddr );
 	uip_setnetmask( netmask );
 	uip_setdraddr( default_router );
+
+	e = *( uip_eth_addr * ) &my_address;
+	uip_setethaddr( e );
 
 	if (!interfaces)
 		logf( "! no interfaces available\n" );

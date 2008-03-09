@@ -1539,9 +1539,9 @@ extern uip_ipaddr_t uip_hostaddr, uip_netmask, uip_draddr;
 /**
  * Representation of a 48-bit Ethernet address.
  */
-struct uip_eth_addr {
+typedef struct uip_eth_addr {
   u8_t addr[6];
-};
+} uip_eth_addr;
 
 /**
  * Calculate the Internet checksum over a buffer.

@@ -68,7 +68,7 @@ u08 eth_getpacket( eth_packet * p )
 	memcpy( buf, data, h.len );
 	p->packet = (mac_header *) buf;
 	p->src_iface = IFACE_WAN;	// we have only one
-	p->dest_iface = eth_find_interface( &p->packet->dest );	// todo
+	p->dest_iface = eth_find_interface( &p->packet->dest );
 	p->len = (u16)h.len;
 
 	return 1;
