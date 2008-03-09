@@ -48,17 +48,27 @@ u08 charge_for_packet( eth_packet * p )
 u08 handle_packet( eth_packet * p )
 {
 	if (p->packet->ethertype == ethertype_arp)
+	{
+		logf( "+ arp\n" );
 		return eth_forward( p );
+	}
 
 	if (p->packet->ethertype != ethertype_ipv4 )
+	{
+		logf( "- non-ip\n" );
 		return eth_discard( p );
+	}
 
 	if (p->src_iface == p->dest_iface)
+	{
+		logf( "- self-route\n" );
 		return eth_discard( p );
+	}
 
 	if ((p->src_iface == IFACE_WAN) || (p->dest_iface == IFACE_WAN))
 		return charge_for_packet( p );
 
+	logf( "+ pure lan\n" );
 	return eth_forward( p );	// not crossing from lan <-> wan
 }
 
