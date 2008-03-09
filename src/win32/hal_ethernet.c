@@ -17,6 +17,8 @@ u08 buf[2048];
 
 extern mac_address my_address;
 
+#define MAXBLOCKTIME	10
+
 u08 eth_init( void )
 {
 	pcap_if_t * alldevs;
@@ -31,7 +33,7 @@ u08 eth_init( void )
 
 	d = alldevs->next;	// ethernet interface on odd-socks
 
-	dev = pcap_open_live( d->name, 65536, 1, 1000, errbuf );
+	dev = pcap_open_live( d->name, 65536, 1, MAXBLOCKTIME, errbuf );
 
 	if (!dev)
 	{
@@ -40,6 +42,9 @@ u08 eth_init( void )
 	}
 	else
 		logf( "opened interface %s\n", d->name );
+
+	//if (-1 == pcap_setnonblock( dev, 1, errbuf ))
+	//	logf( "failed setting interface to nonblocking mode\n" );
 
 	pcap_freealldevs( alldevs );
 
@@ -64,6 +69,7 @@ u08 eth_getpacket( eth_packet * p )
 	p->packet = (mac_header *) buf;
 	p->src_iface = IFACE_WAN;	// we have only one
 	p->dest_iface = eth_find_interface( &p->packet->dest );	// todo
+	p->len = (u16)h.len;
 
 	return 1;
 }
@@ -82,8 +88,10 @@ u08 eth_forward( eth_packet * p )
 
 u08 eth_inject( eth_packet * p )
 {
-	p;
-	return 0;	// didnt work
+	if (-1 == pcap_sendpacket( dev, (u08 const *)p->packet, p->len ))
+		return 0;
+
+	return 1;
 }
 
 static const mac_address broadcast_mac = { { 0xff, 0xff, 0xff, 0xff, 0xff, 0xff } };

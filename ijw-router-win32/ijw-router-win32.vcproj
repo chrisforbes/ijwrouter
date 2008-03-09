@@ -215,6 +215,10 @@
 					>
 				</File>
 				<File
+					RelativePath="..\src\win32\hal_time.c"
+					>
+				</File>
+				<File
 					RelativePath="..\src\win32\main.c"
 					>
 				</File>
@@ -224,6 +228,10 @@
 				>
 				<File
 					RelativePath="..\src\win32\clock-arch.c"
+					>
+				</File>
+				<File
+					RelativePath="..\src\hal_time.h"
 					>
 				</File>
 				<File

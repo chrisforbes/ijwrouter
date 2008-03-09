@@ -5,6 +5,7 @@ typedef struct eth_packet
 {
 	u08 src_iface;
 	u08 dest_iface;
+	u16 len;
 	mac_header * packet;
 } eth_packet;
 
