@@ -256,7 +256,7 @@ time_exceeded(void)
      IP header (20) = 56. */
   uip_len = 56;
   ICMPBUF->len[0] = 0;
-  ICMPBUF->len[1] = uip_len;
+  ICMPBUF->len[1] = (u8_t)uip_len;
 
   /* Fill in the other fields in the IP header. */
   ICMPBUF->vhl = 0x45;

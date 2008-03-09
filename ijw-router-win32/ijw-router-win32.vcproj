@@ -196,18 +196,6 @@
 				>
 			</File>
 			<File
-				RelativePath="..\src\ip.h"
-				>
-			</File>
-			<File
-				RelativePath="..\src\tcp.h"
-				>
-			</File>
-			<File
-				RelativePath="..\src\udp.h"
-				>
-			</File>
-			<File
 				RelativePath="..\src\user.c"
 				>
 			</File>
@@ -230,8 +218,104 @@
 					RelativePath="..\src\win32\main.c"
 					>
 				</File>
+			</Filter>
+			<Filter
+				Name="uip"
+				>
+				<File
+					RelativePath="..\src\win32\clock-arch.c"
+					>
+				</File>
+				<File
+					RelativePath="..\include\uip\lc-addrlabels.h"
+					>
+				</File>
+				<File
+					RelativePath="..\include\uip\lc-switch.h"
+					>
+				</File>
+				<File
+					RelativePath="..\include\uip\lc.h"
+					>
+				</File>
+				<File
+					RelativePath="..\include\uip\pt.h"
+					>
+				</File>
+				<File
+					RelativePath="..\include\uip\timer.c"
+					>
+					<FileConfiguration
+						Name="Debug|Win32"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+							WarnAsError="false"
+						/>
+					</FileConfiguration>
+				</File>
+				<File
+					RelativePath="..\include\uip\timer.h"
+					>
+				</File>
 				<File
 					RelativePath="..\src\win32\uip-conf.h"
+					>
+				</File>
+				<File
+					RelativePath="..\include\uip\uip.c"
+					>
+					<FileConfiguration
+						Name="Debug|Win32"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+							WarnAsError="false"
+						/>
+					</FileConfiguration>
+				</File>
+				<File
+					RelativePath="..\include\uip\uip.h"
+					>
+				</File>
+				<File
+					RelativePath="..\include\uip\uip_arch.h"
+					>
+				</File>
+				<File
+					RelativePath="..\include\uip\uip_arp.c"
+					>
+					<FileConfiguration
+						Name="Debug|Win32"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+							WarnAsError="false"
+						/>
+					</FileConfiguration>
+				</File>
+				<File
+					RelativePath="..\include\uip\uip_arp.h"
+					>
+				</File>
+				<File
+					RelativePath="..\include\uip\uiplib.c"
+					>
+					<FileConfiguration
+						Name="Debug|Win32"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+							WarnAsError="false"
+						/>
+					</FileConfiguration>
+				</File>
+				<File
+					RelativePath="..\include\uip\uiplib.h"
+					>
+				</File>
+				<File
+					RelativePath="..\include\uip\uipopt.h"
 					>
 				</File>
 			</Filter>

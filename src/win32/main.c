@@ -9,8 +9,6 @@
 
 #include <uip/uip.h>
 
-#include <memory.h>
-
 static mac_address router_address;
 mac_address my_address = { { 0x00, 0x19, 0xe0, 0xff, 0x09, 0x08 } };
 
@@ -46,7 +44,6 @@ u08 charge_for_packet( eth_packet * p )
 }
 
 #define htons(x) ( (u16) (x<<8) | (x>>8) )
-//#define ntohs(x) ( (u16) (x<<8) | (x>>8) )
 
 void dump_packet( eth_packet * p )
 {
@@ -68,6 +65,12 @@ u08 handle_packet( eth_packet * p )
 	u16 ethertype = ntohs(p->packet->ethertype);
 
 	dump_packet( p );
+
+	if (p->dest_iface == IFACE_INTERNAL)
+	{
+		// TODO: feed the packet to uIP
+		return eth_discard( p );	// dont want to forward it
+	}
 
 	if (ethertype == ethertype_arp)
 	{
@@ -97,6 +100,7 @@ u08 handle_packet( eth_packet * p )
 int main( void )
 {
 	u08 interfaces = eth_init();
+	uip_init();
 
 	if (!interfaces)
 		logf( "! no interfaces available\n" );

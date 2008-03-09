@@ -112,7 +112,11 @@ uip_neighbor_add(uip_ipaddr_t ipaddr, struct uip_neighbor_addr *addr)
   /* Use the oldest or first free entry (either pointed to by the
      "oldest" variable). */
   entries[oldest].time = 0;
+
+#pragma warning( disable: 4127 )
   uip_ipaddr_copy(entries[oldest].ipaddr, ipaddr);
+#pragma warning( default: 4127 )
+
   memcpy(&entries[oldest].addr, addr, sizeof(struct uip_neighbor_addr));
 }
 /*---------------------------------------------------------------------------*/

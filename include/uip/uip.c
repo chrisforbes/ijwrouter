@@ -79,6 +79,9 @@
  * the packet back to the peer.
 */
 
+#pragma warning( disable: 4310 )
+#pragma warning( disable: 4127 )
+
 #include "uip.h"
 #include "uipopt.h"
 #include "uip_arch.h"
@@ -462,8 +465,11 @@ uip_connect(uip_ipaddr_t *ripaddr, u16_t rport)
   conn->sv = 16;   /* Initial value of the RTT variance. */
   conn->lport = htons(lastport);
   conn->rport = rport;
+
+  #pragma warning( disable: 4127 )
   uip_ipaddr_copy(&conn->ripaddr, ripaddr);
-  
+  #pragma warning( default: 4127 )
+
   return conn;
 }
 #endif /* UIP_ACTIVE_OPEN */
@@ -1888,7 +1894,7 @@ void
 uip_send(const void *data, int len)
 {
   if(len > 0) {
-    uip_slen = len;
+    uip_slen = (u16_t)len;
     if(data != uip_sappdata) {
       memcpy(uip_sappdata, (data), uip_slen);
     }
