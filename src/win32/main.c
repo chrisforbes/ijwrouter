@@ -66,33 +66,15 @@ void dump_packet( eth_packet * p )
 	logf( "\n" );
 }
 
-	u08 arp_reply[] = { 0x00, 0xa0, 0xd1, 0x65, 0x30, 0xe7,	// beedee's MAC
-		0x00, 0x19, 0xe0, 0xff, 0x09, 0x08,		// router MAC
-		0x08, 0x06,		// ethertype
-
-		// arp packet
-		0x00, 0x01, // tos	
-		0x08, 0x00,	// ip	
-		0x06, 0x04, 
-		0x00, 0x02,	// reply
-
-		0x00, 0x19, 0xe0, 0xff, 0x09, 0x08,		// sender mac
-		192, 168, 2, 253,
-
-		0x00, 0xa0, 0xd1, 0x65, 0x30, 0xe7,		// dest mac
-		192, 168, 2, 10,
-	
-		0, 0, 0, 0,		0, 0, 0, 0,		0, 0, 0, 0,		0, 0, 0, 0,		0, 0 };	
-
-
 // glue code between ethernet hal and uip ////
 
-void eth_uip_send(void)
+void eth_uip_send( u08 isarp )
 {
 	u08 buf[2048];
 	eth_packet p;
 
-//	uip_arp_out();
+	if (!isarp)
+		uip_arp_out();
 
 	if (uip_len == 0)
 		return;
@@ -105,14 +87,7 @@ void eth_uip_send(void)
 	p.len = uip_len;
 	uip_len = 0;
 
-	logf( "sendlen=%d\n", p.len );
-
 	dump_packet( &p );
-
-/*	memcpy( buf, arp_reply, sizeof(arp_reply) );
-	p.len = sizeof(arp_reply);
-
-	dump_packet( &p );	*/
 
 	eth_inject( &p );
 }
@@ -135,7 +110,7 @@ u08 uip_feed( eth_packet * p, u08 isarp )
 	if (uip_len == 0)
 		return 0;	// do not want
 
-	eth_uip_send();
+	eth_uip_send( isarp );
 	return 1;
 }
 
@@ -179,12 +154,14 @@ u08 handle_packet( eth_packet * p )
 
 	if (p->src_iface == p->dest_iface)
 	{
-//		logf( "- self-route\n" );
+		logf( "- self-route\n" );
 		return eth_discard( p );
 	}
 
-	if ((p->src_iface == IFACE_WAN) || (p->dest_iface == IFACE_WAN))
-		return charge_for_packet( p );
+	// todo: re-enable this when we have an actual WAN interface
+
+//	if ((p->src_iface == IFACE_WAN) || (p->dest_iface == IFACE_WAN))
+//		return charge_for_packet( p );
 
 	logf( "+ pure lan\n" );
 	return eth_forward( p );	// not crossing from lan <-> wan	*/
@@ -202,7 +179,7 @@ void do_timeouts( void )
 		uip_periodic( i );
 
 		if (uip_len > 0)
-			eth_uip_send();
+			eth_uip_send( 0 );
 	}
 
 	// todo: udp
