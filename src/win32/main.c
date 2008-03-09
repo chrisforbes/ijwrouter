@@ -9,11 +9,6 @@
 
 #include <memory.h>
 
-u08 mac_equal( mac_address const * a, mac_address const * b )
-{
-	return 0 == memcmp( a, b, sizeof(mac_address) );
-}
-
 static mac_address router_address;
 mac_address my_address;
 
@@ -43,21 +38,28 @@ u08 charge_for_packet( eth_packet * p )
 	return eth_discard( p );	// do not want
 }
 
+#define htons(x) ( (u16) (x<<8) | (x>>8) )
+#define ntohs(x) ( (u16) (x<<8) | (x>>8) )
+
 void dump_packet( eth_packet * p )
 {
+	static char srcbuf[64], destbuf[64];
 	u08 i;
-	logf( "%d->%d ", p->src_iface, p->dest_iface );
-	for( i = 0; i < sizeof( mac_header ) + sizeof( ip_header ); i++ )
-		logf( "%02x", ((u08 *) p->packet)[i] );
+
+	mac_to_str( srcbuf, &p->packet->src );
+	mac_to_str( destbuf, &p->packet->dest );
+
+	logf( "src=%s@%02x dest=%s@%02x ethertype=%04x\n", srcbuf, p->src_iface, destbuf, p->dest_iface, ntohs(p->packet->ethertype) );
+	for( i = 0; i < sizeof( ip_header ); i++ )
+		logf( "%02x", ((u08 *) (p->packet + 1))[i] );
 
 	logf( "\n" );
 }
 
-#define htons(x) ( (x<<8) | (x>>8) )
-
 u08 handle_packet( eth_packet * p )
 {
-	u16 ethertype = htons(p->packet->ethertype);
+	u16 ethertype = ntohs(p->packet->ethertype);
+
 	dump_packet( p );
 
 	if (ethertype == ethertype_arp)

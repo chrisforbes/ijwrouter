@@ -40,4 +40,17 @@ typedef enum ethertype
 	ethertype_llt	= 0xcafe,				// veritas low-latency transport
 } ethertype;
 
+__inline u08 mac_equal( mac_address const * a, mac_address const * b )
+{
+	return 0 == memcmp( a, b, sizeof(mac_address) );
+}
+
+__inline char * mac_to_str( char * buf, mac_address const * a )
+{
+	sprintf( buf, "%02x-%02x-%02x-%02x-%02x-%02x", 
+		a->bytes[0], a->bytes[1], a->bytes[2],
+		a->bytes[3], a->bytes[4], a->bytes[5] );
+	return buf;
+}
+
 #endif

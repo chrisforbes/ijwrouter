@@ -16,6 +16,7 @@ u08 eth_getpacket( eth_packet * p );
 u08 eth_discard( eth_packet * p );	
 u08 eth_forward( eth_packet * p );	
 u08 eth_inject( eth_packet * p );	
+u08 eth_find_interface( mac_address const * dest );
 
 #define IFACE_WAN		0x00
 #define IFACE_BROADCAST	0xff

@@ -24,4 +24,8 @@ typedef signed __int64 i64;
 #define HAL(f)	f
 #endif	*/
 
+#include <stdlib.h>
+#include <stdio.h>
+#include <memory.h>
+
 #endif

@@ -54,11 +54,11 @@ u08 eth_getpacket( eth_packet * p )
 	if (!data)
 		return 0;	// no packet
 
-	p->src_iface = IFACE_WAN;	// we have only one
-	p->dest_iface = IFACE_INTERNAL;	// todo
-
 	memcpy( buf, data, h.len );
 	p->packet = (mac_header *) buf;
+	p->src_iface = IFACE_WAN;	// we have only one
+	p->dest_iface = eth_find_interface( &p->packet->dest );	// todo
+
 	return 1;
 }
 
@@ -80,8 +80,15 @@ u08 eth_inject( eth_packet * p )
 	return 0;	// didnt work
 }
 
+static const mac_address broadcast_mac = { { 0xff, 0xff, 0xff, 0xff, 0xff, 0xff } };
+
 u08 eth_find_interface( mac_address const * dest )
 {
-	dest;
-	return 0;	// hax
+	if (mac_equal( dest, &my_address ))
+		return IFACE_INTERNAL;
+
+	if (mac_equal( dest, &broadcast_mac ))
+		return IFACE_BROADCAST;
+
+	return IFACE_WAN;	// hack hack hack
 }
