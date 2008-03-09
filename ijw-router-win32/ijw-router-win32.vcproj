@@ -184,15 +184,11 @@
 				>
 			</File>
 			<File
+				RelativePath="..\src\ethernet.c"
+				>
+			</File>
+			<File
 				RelativePath="..\src\ethernet.h"
-				>
-			</File>
-			<File
-				RelativePath="..\src\hal_debug.h"
-				>
-			</File>
-			<File
-				RelativePath="..\src\hal_ethernet.h"
 				>
 			</File>
 			<File
@@ -226,46 +222,6 @@
 			<Filter
 				Name="uip"
 				>
-				<File
-					RelativePath="..\src\win32\clock-arch.c"
-					>
-				</File>
-				<File
-					RelativePath="..\src\hal_time.h"
-					>
-				</File>
-				<File
-					RelativePath="..\include\uip\lc-addrlabels.h"
-					>
-				</File>
-				<File
-					RelativePath="..\include\uip\lc-switch.h"
-					>
-				</File>
-				<File
-					RelativePath="..\include\uip\lc.h"
-					>
-				</File>
-				<File
-					RelativePath="..\include\uip\pt.h"
-					>
-				</File>
-				<File
-					RelativePath="..\include\uip\timer.c"
-					>
-					<FileConfiguration
-						Name="Debug|Win32"
-						>
-						<Tool
-							Name="VCCLCompilerTool"
-							WarnAsError="false"
-						/>
-					</FileConfiguration>
-				</File>
-				<File
-					RelativePath="..\include\uip\timer.h"
-					>
-				</File>
 				<File
 					RelativePath="..\src\win32\uip-conf.h"
 					>
@@ -307,23 +263,23 @@
 					>
 				</File>
 				<File
-					RelativePath="..\include\uip\uiplib.c"
-					>
-					<FileConfiguration
-						Name="Debug|Win32"
-						>
-						<Tool
-							Name="VCCLCompilerTool"
-							WarnAsError="false"
-						/>
-					</FileConfiguration>
-				</File>
-				<File
-					RelativePath="..\include\uip\uiplib.h"
-					>
-				</File>
-				<File
 					RelativePath="..\include\uip\uipopt.h"
+					>
+				</File>
+			</Filter>
+			<Filter
+				Name="hals"
+				>
+				<File
+					RelativePath="..\src\hal_debug.h"
+					>
+				</File>
+				<File
+					RelativePath="..\src\hal_ethernet.h"
+					>
+				</File>
+				<File
+					RelativePath="..\src\hal_time.h"
 					>
 				</File>
 			</Filter>

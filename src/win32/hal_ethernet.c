@@ -15,7 +15,7 @@
 static pcap_t * dev;
 u08 buf[2048];
 
-extern mac_address my_address;
+extern uip_eth_addr my_address;
 
 #define MAXBLOCKTIME	10
 
@@ -94,9 +94,9 @@ u08 eth_inject( eth_packet * p )
 	return 1;
 }
 
-static const mac_address broadcast_mac = { { 0xff, 0xff, 0xff, 0xff, 0xff, 0xff } };
+static const uip_eth_addr broadcast_mac = { { 0xff, 0xff, 0xff, 0xff, 0xff, 0xff } };
 
-u08 eth_find_interface( mac_address const * dest )
+u08 eth_find_interface( uip_eth_addr const * dest )
 {
 	if (mac_equal( dest, &my_address ))
 		return IFACE_INTERNAL;

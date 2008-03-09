@@ -17,10 +17,14 @@ u08 eth_getpacket( eth_packet * p );
 u08 eth_discard( eth_packet * p );	
 u08 eth_forward( eth_packet * p );	
 u08 eth_inject( eth_packet * p );	
-u08 eth_find_interface( mac_address const * dest );
+u08 eth_find_interface( uip_eth_addr const * dest );
 
 #define IFACE_WAN		0x00
 #define IFACE_BROADCAST	0xff
 #define IFACE_INTERNAL	0xfe
+
+u08 eth_uip_feed( eth_packet * p, u08 isarp );
+void eth_uip_send( u08 isarp );
+void dump_packet( eth_packet * p );
 
 #endif

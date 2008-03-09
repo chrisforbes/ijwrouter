@@ -7,6 +7,6 @@ typedef struct user
 	u64 credit;
 } user;
 
-user * get_user( mac_address const * addr );
+user * get_user( uip_eth_addr const * addr );
 
 #endif

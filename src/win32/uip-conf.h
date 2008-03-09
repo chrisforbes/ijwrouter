@@ -151,6 +151,11 @@ typedef unsigned short uip_stats_t;
 /*#include "resolv.h"*/
 /*#include "webclient.h"*/
 
+#include <winsock2.h>
+
+#define htons htons
+#define ntohs ntohs
+
 #endif /* __UIP_CONF_H__ */
 
 /** @} */
