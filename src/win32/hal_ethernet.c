@@ -54,6 +54,12 @@ u08 eth_getpacket( eth_packet * p )
 	if (!data)
 		return 0;	// no packet
 
+	if (h.len != h.caplen)
+	{
+		logf( "incomplete packet (dropped)!!\n" );
+		return 0;
+	}
+
 	memcpy( buf, data, h.len );
 	p->packet = (mac_header *) buf;
 	p->src_iface = IFACE_WAN;	// we have only one
