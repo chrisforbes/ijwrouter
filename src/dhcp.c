@@ -1,4 +1,5 @@
 #include "common.h"
+#include "hal_debug.h"
 #include <uip/uip.h>
 
 #pragma warning( disable: 4127 )
@@ -6,7 +7,9 @@
 
 typedef enum dhcp_state_e
 {
-	
+	DHCP_STATE_INITIAL = 0,
+	DHCP_STATE_WAIT_FOR_OFFER = 1,
+	DHCP_STATE_WAIT_FOR_ACK = 2,
 } dhcp_state_e;
 
 typedef struct dhcp_state
@@ -15,9 +18,10 @@ typedef struct dhcp_state
 	struct uip_udp_conn * conn;
 	u32 serverid;
 	u32 lease_time;
+	u32 send_time;
 } dhcp_state;
 
-static dhcp_state s;
+static dhcp_state s = { 0, 0, 0, 0, 0 };
 
 typedef struct dhcp_packet
 {
@@ -96,42 +100,6 @@ static u08 * append_opt_void( u08 * p, u08 optname )
 DEF_APPEND_OPT_T( u08 )
 DEF_APPEND_OPT_T( u32 )
 
-static u32 __gethostaddr()
-{
-	u32 x;
-	uip_gethostaddr( &x );
-	return x;
-}
-
-static u32 __getnetmask()
-{
-	u32 x;
-	uip_getnetmask( &x );
-	return x;
-}
-
-static u32 __getrouter()
-{
-	u32 x;
-	uip_getdraddr( &x );
-	return x;
-}
-
-static void __sethostaddr( u32 x )
-{
-	uip_sethostaddr( x );
-}
-
-static void __setnetmask( u32 x )
-{
-	uip_setnetmask( x );
-}
-
-static void __setrouter( u32 x )
-{
-	uip_setdraddr( x );
-}
-
 extern uip_eth_addr my_address;
 
 static void create_msg( dhcp_packet * p )
@@ -154,7 +122,7 @@ static void create_msg( dhcp_packet * p )
 
 static void send_discover( void )
 {
-	dhcp_packet * p = (dhcp_packet *)uip_appdata;
+	dhcp_packet * p = (dhcp_packet *)(uip_appdata = uip_buf + UIP_IPUDPH_LEN);
 	u08 * end = p->options + 4;
 	u08 opts[] = { DHCP_OPTION_NETMASK, DHCP_OPTION_ROUTER, DHCP_OPTION_DNS_SERVER };
 
@@ -165,6 +133,8 @@ static void send_discover( void )
 	end = append_opt_void( end, DHCP_OPTION_END );
 
 	uip_send( uip_appdata, end - (u08 *)uip_appdata );
+
+	logf( "DHCPDISCOVER sent\n" );
 }
 
 static void send_request( void )
@@ -192,10 +162,6 @@ static u08 parse_options( u08 * opt, int len )
 		{
 		case DHCP_OPTION_NETMASK:
 			__setnetmask( *( u32 * ) (opt + 2) );
-			break;
-
-		case DHCP_OPTION_ROUTER:
-			__setrouter( *( u32 * ) (opt + 2) );
 			break;
 
 		case DHCP_OPTION_MSG_TYPE:
@@ -233,4 +199,26 @@ static u08 parse_msg( void )
 	return 0;
 }
 
-// todo: low-level hackery
+void dhcp_process( void )
+{
+}
+
+void dhcp_init( void )
+{
+	u32 broadcast = 0xfffffffful;
+	s.conn = uip_udp_new( (uip_ipaddr_t *) &broadcast, HTONS( DHCP_SERVER_PORT ) );
+	if (!s.conn)
+	{
+		logf( "dhcp client failed\n" );
+		return;
+	}
+
+	uip_udp_bind( s.conn, HTONS( DHCP_CLIENT_PORT ) );
+	bind_handler( s.conn, dhcp_process );
+
+	logf( "dhcp client started\n" );
+
+	send_discover();
+}
+
+

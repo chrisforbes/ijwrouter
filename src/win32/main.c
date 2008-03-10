@@ -2,26 +2,24 @@
 
 #pragma comment( lib, "ws2_32.lib" )
 #include "../common.h"
+#include "../ip/rfc.h"
+#include "../ip/conf.h"
 #include "../ethernet.h"
 #include "../hal_ethernet.h"
 #include "../hal_debug.h"
 #include "../user.h"
 #include "../hal_time.h"
+#include "../ip/rfc.h"
 
 #include <uip/uip.h>
 #include <uip/uip_arp.h>
 
-static uip_eth_addr router_address;
-uip_eth_addr my_address = { { 0x00, 0x19, 0xe0, 0xff, 0x09, 0x08 } };
-
-uip_ip4addr_t ipaddr;
-uip_ip4addr_t netmask;
-uip_ip4addr_t default_router;
+#include "../ip/stack.h"
 
 u08 charge_for_packet( eth_packet * p )
 {
-	uip_eth_addr * lanside = (p->dest_iface == IFACE_WAN) 
-		? &p->packet->dest : &p->packet->src;
+	mac_addr lanside = (p->dest_iface == IFACE_WAN) 
+		? p->packet->dest : p->packet->src;
 
 	user * u = get_user( lanside );
 
@@ -46,7 +44,7 @@ u08 handle_packet( eth_packet * p )
 {
 	u16 ethertype = ntohs(p->packet->ethertype);
 
-	if (mac_equal( &p->packet->src, &my_address ))
+	if (mac_equal( p->packet->src, get_macaddr()))
 		return eth_discard( p );
 
 	dump_packet( p );
@@ -126,21 +124,11 @@ void do_timeouts( void )
 
 int main( void )
 {
-	uip_eth_addr e;
 	u08 interfaces = eth_init();
 	uip_init();
 
-#pragma warning( disable: 4310 )
-	uip_ipaddr( ipaddr, 192, 168, 2, 253 );
-	uip_ipaddr( netmask, 255, 0, 0, 0 );
-	uip_ipaddr( default_router, 192, 168, 2, 10 );
-
-	uip_sethostaddr( ipaddr );
-	uip_setnetmask( netmask );
-	uip_setdraddr( default_router );
-
-	e = *( uip_eth_addr * ) &my_address;
-	uip_setethaddr( e );
+	set_hostaddr( make_ip( 192, 168, 2, 253 ) );
+	set_netmask( make_ip( 255, 255, 255, 0 ) );
 
 	if (!interfaces)
 		logf( "! no interfaces available\n" );

@@ -184,10 +184,6 @@
 				>
 			</File>
 			<File
-				RelativePath="..\src\dhcp.c"
-				>
-			</File>
-			<File
 				RelativePath="..\src\ethernet.c"
 				>
 			</File>
@@ -296,6 +292,54 @@
 					RelativePath="..\src\hal_time.h"
 					>
 				</File>
+			</Filter>
+			<Filter
+				Name="ip"
+				>
+				<Filter
+					Name="headers"
+					>
+					<File
+						RelativePath="..\src\ip\arp.h"
+						>
+					</File>
+					<File
+						RelativePath="..\src\ip\arptab.h"
+						>
+					</File>
+					<File
+						RelativePath="..\src\ip\conf.h"
+						>
+					</File>
+					<File
+						RelativePath="..\src\ip\rfc.h"
+						>
+					</File>
+					<File
+						RelativePath="..\src\ip\stack.h"
+						>
+					</File>
+				</Filter>
+				<Filter
+					Name="sources"
+					>
+					<File
+						RelativePath="..\src\ip\arp.c"
+						>
+					</File>
+					<File
+						RelativePath="..\src\ip\arptab.c"
+						>
+					</File>
+					<File
+						RelativePath="..\src\ip\conf.c"
+						>
+					</File>
+					<File
+						RelativePath="..\src\ip\stack.c"
+						>
+					</File>
+				</Filter>
 			</Filter>
 		</Filter>
 	</Files>

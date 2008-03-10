@@ -1,6 +1,7 @@
 // ethernet hal stub for win32
 
 #include "../common.h"
+#include "../ip/rfc.h"
 #include "../ethernet.h"
 #include "../hal_ethernet.h"
 #include "../hal_debug.h"
@@ -13,8 +14,6 @@
 
 static pcap_t * dev;
 u08 buf[2048];
-
-extern uip_eth_addr my_address;
 
 #define MAXBLOCKTIME	10
 
@@ -66,9 +65,9 @@ u08 eth_getpacket( eth_packet * p )
 	}
 
 	memcpy( buf, data, h.len );
-	p->packet = (mac_header *) buf;
+	p->packet = (eth_header *) buf;
 	p->src_iface = IFACE_WAN;	// we have only one
-	p->dest_iface = eth_find_interface( &p->packet->dest );
+	p->dest_iface = eth_find_interface( p->packet->dest );
 	p->len = (u16)h.len;
 
 	return 1;
@@ -94,15 +93,18 @@ u08 eth_inject( eth_packet * p )
 	return 1;
 }
 
-static const uip_eth_addr broadcast_mac = { { 0xff, 0xff, 0xff, 0xff, 0xff, 0xff } };
+static const mac_addr broadcast_mac = { { 0xff, 0xff, 0xff, 0xff, 0xff, 0xff } };
 
-u08 eth_find_interface( uip_eth_addr const * dest )
+u08 eth_find_interface( mac_addr dest )
 {
-	if (mac_equal( dest, &my_address ))
+	dest;
+	return IFACE_WAN;
+/*	if (mac_equal( dest, &my_address ))
 		return IFACE_INTERNAL;
 
 	if (mac_equal( dest, &broadcast_mac ))
 		return IFACE_BROADCAST;
 
 	return IFACE_WAN;	// hack hack hack
+	*/
 }

@@ -1,16 +1,17 @@
 #include "common.h"
-#include "ethernet.h"
+#include "ip/rfc.h"
 #include "hal_ethernet.h"
 #include "hal_debug.h"
 
 #include <uip/uip.h>
 #include <uip/uip_arp.h>
 
-char * mac_to_str( char * buf, uip_eth_addr const * a )
+char * mac_to_str( char * buf, void * _a )
 {
+	u08 const * a = _a;
 	sprintf( buf, "%02x-%02x-%02x-%02x-%02x-%02x", 
-		a->addr[0], a->addr[1], a->addr[2],
-		a->addr[3], a->addr[4], a->addr[5] );
+		a[0], a[1], a[2],
+		a[3], a[4], a[5] );
 	return buf;
 }
 
@@ -40,9 +41,9 @@ void eth_uip_send( u08 isarp )
 
 	memcpy( buf, uip_buf, uip_len );
 
-	p.packet = (mac_header *) buf;
+	p.packet = (eth_header *) buf;
 	p.src_iface = IFACE_INTERNAL;
-	p.dest_iface = eth_find_interface( &p.packet->dest );
+	p.dest_iface = eth_find_interface( p.packet->dest );
 	p.len = uip_len;
 	uip_len = 0;
 

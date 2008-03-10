@@ -23,9 +23,6 @@ void udp_appcall(void);
 #define UIP_APPCALL tcp_appcall
 #define UIP_UDP_APPCALL udp_appcall
 
-__inline void bind_handler(struct uip_udp_conn * conn, packet_handler_f * handler)
-{
-	conn->appstate.handler = handler;
-}
+void bind_handler( void * conn, packet_handler_f * handler );
 
 #endif
