@@ -57,10 +57,7 @@ u08 icmp_receive_packet( u08 iface, ip_header * p, u16 len )
 	logf( "icmp: got packet, type=%d code=%d\n", icmp->type, icmp->code );
 
 	if (icmp->type == 8 && icmp->code == 0)
-	{
-		logf( "icmp: got echorequest\n" );
 		icmp_send_reply( iface, p, icmp, len );
-	}
 	
 	return 1;
 }

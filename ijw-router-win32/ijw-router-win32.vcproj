@@ -269,6 +269,14 @@
 						RelativePath="..\src\ip\stack.h"
 						>
 					</File>
+					<File
+						RelativePath="..\src\ip\tcp.h"
+						>
+					</File>
+					<File
+						RelativePath="..\src\ip\udp.h"
+						>
+					</File>
 				</Filter>
 				<Filter
 					Name="sources"
@@ -291,6 +299,14 @@
 					</File>
 					<File
 						RelativePath="..\src\ip\stack.c"
+						>
+					</File>
+					<File
+						RelativePath="..\src\ip\tcp.c"
+						>
+					</File>
+					<File
+						RelativePath="..\src\ip\udp.c"
 						>
 					</File>
 				</Filter>

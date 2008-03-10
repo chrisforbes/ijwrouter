@@ -5,6 +5,8 @@
 #include "conf.h"
 #include "arp.h"
 #include "icmp.h"
+#include "udp.h"
+#include "tcp.h"
 #include "../hal_debug.h"
 #include "internal.h"
 
@@ -32,8 +34,6 @@ void ipstack_tick( void )
 static u08 ip_receive_packet( u08 iface, ip_header * p, u16 len )
 {
 	logf( "ip: got ip packet, proto=%d\n", p->proto );
-	if ( p->dest_addr != get_bcastaddr() && p->dest_addr != get_hostaddr() )
-		return 0;
 
 	if (!__ip_validate_header( p ))
 	{
@@ -44,15 +44,23 @@ static u08 ip_receive_packet( u08 iface, ip_header * p, u16 len )
 	switch( p->proto )
 	{
 	case IPPROTO_ICMP:
-		icmp_receive_packet( iface, p, len );
-		break;
+		return icmp_receive_packet( iface, p, len );
+
+	case IPPROTO_UDP:
+		return udp_receive_packet( iface, p, len );
+
+	case IPPROTO_TCP:
+		return tcp_receive_packet( iface, p, len );
 	}
 
-	return 1;
+	return 1;		// did we eat it? yes we did...
 }
 
 static u08 __ip_receive_packet( u08 iface, ip_header * p, u16 len )	// did we eat it?
 {
+	if (p->dest_addr != get_bcastaddr() && p->dest_addr != get_hostaddr())
+		return 0;
+
 	return ip_receive_packet( iface, p, len ) 
 		&& p->dest_addr != get_bcastaddr();
 }
