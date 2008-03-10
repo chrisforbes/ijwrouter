@@ -14,6 +14,7 @@ typedef struct dhcp_state
 	u08 state;
 	struct uip_udp_conn * conn;
 	u32 serverid;
+	u32 lease_time;
 } dhcp_state;
 
 static dhcp_state s;
@@ -102,6 +103,35 @@ static u32 __gethostaddr()
 	return x;
 }
 
+static u32 __getnetmask()
+{
+	u32 x;
+	uip_getnetmask( &x );
+	return x;
+}
+
+static u32 __getrouter()
+{
+	u32 x;
+	uip_getdraddr( &x );
+	return x;
+}
+
+static void __sethostaddr( u32 x )
+{
+	uip_sethostaddr( x );
+}
+
+static void __setnetmask( u32 x )
+{
+	uip_setnetmask( x );
+}
+
+static void __setrouter( u32 x )
+{
+	uip_setdraddr( x );
+}
+
 extern uip_eth_addr my_address;
 
 static void create_msg( dhcp_packet * p )
@@ -150,3 +180,57 @@ static void send_request( void )
 
 	uip_send( uip_appdata, end - (u08 *)uip_appdata );
 }
+
+static u08 parse_options( u08 * opt, int len )
+{
+	u08 * end = opt + len;
+	u08 type = 0;
+
+	while( opt < end )
+	{
+		switch( *opt )
+		{
+		case DHCP_OPTION_NETMASK:
+			__setnetmask( *( u32 * ) (opt + 2) );
+			break;
+
+		case DHCP_OPTION_ROUTER:
+			__setrouter( *( u32 * ) (opt + 2) );
+			break;
+
+		case DHCP_OPTION_MSG_TYPE:
+			type = *( u08 *) (opt + 2);
+			break;
+
+		case DHCP_OPTION_SERVER_ID:
+			s.serverid = *( u32 * ) (opt + 2);
+			break;
+
+		case DHCP_OPTION_LEASE_TIME:
+			s.lease_time = *( u32 * ) (opt + 2);
+			break;
+
+		case DHCP_OPTION_END:
+			return type;
+		}
+
+		opt += opt[1] + 2;
+		return type;
+	}
+}
+
+static u08 parse_msg( void )
+{
+	dhcp_packet * m = (dhcp_packet *) uip_appdata;
+	if (m->op == DHCP_OP_REPLY &&
+		m->xid == xid &&
+		memcmp( m->chaddr, &my_address, sizeof(my_address) ) == 0 )
+	{
+		__sethostaddr( m->yiaddr );
+		return parse_options( m->options + 4, uip_datalen() );
+	}
+
+	return 0;
+}
+
+// todo: low-level hackery
