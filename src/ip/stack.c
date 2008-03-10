@@ -6,6 +6,7 @@
 #include "arp.h"
 #include "icmp.h"
 #include "../hal_debug.h"
+#include "internal.h"
 
 static send_packet_f * on_send = 0;
 
@@ -31,10 +32,15 @@ void ipstack_tick( void )
 static u08 ip_receive_packet( u08 iface, ip_header * p, u16 len )
 {
 	logf( "ip: got ip packet, proto=%d\n", p->proto );
-	if ( p->dest_addr != 0xfffffffful && p->dest_addr != get_hostaddr() )
+	if ( p->dest_addr != get_bcastaddr() && p->dest_addr != get_hostaddr() )
 		return 0;
 
-	// todo: verify checksum
+	if (!__ip_validate_header( p ))
+	{
+		logf( "ip: bad ip checksum\n" );
+		return 1;
+	}
+
 	switch( p->proto )
 	{
 	case IPPROTO_ICMP:
@@ -42,7 +48,13 @@ static u08 ip_receive_packet( u08 iface, ip_header * p, u16 len )
 		break;
 	}
 
-	return (p->dest_addr == 0xfffffffful) ? 0 : 1;
+	return 1;
+}
+
+static u08 __ip_receive_packet( u08 iface, ip_header * p, u16 len )	// did we eat it?
+{
+	return ip_receive_packet( iface, p, len ) 
+		&& p->dest_addr != get_bcastaddr();
 }
 
 u08 ipstack_receive_packet( u08 iface, u08 const * buf, u16 len )
@@ -58,7 +70,7 @@ u08 ipstack_receive_packet( u08 iface, u08 const * buf, u16 len )
 		{
 			ip_header * ip = (ip_header *) (eth + 1);
 			arptab_insert( iface, ip->src_addr, eth->src );
-			return ip_receive_packet( iface, ip, len - sizeof( eth_header ) );
+			return __ip_receive_packet( iface, ip, len - sizeof( eth_header ) );
 		}
 
 	case ethertype_arp:

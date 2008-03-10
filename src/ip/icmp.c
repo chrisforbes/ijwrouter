@@ -37,7 +37,7 @@ static void icmp_send_reply( u08 iface, ip_header * reqip, icmp_header * reqping
 	out.ip.ident = reqip->ident;
 	out.ip.dest_addr = reqip->src_addr;
 	out.ip.src_addr = reqip->dest_addr;
-	out.ip.ttl = 64;	// todo?
+	out.ip.ttl = 128;
 	out.ip.proto = IPPROTO_ICMP;
 	out.ip.checksum = ~__htons(__checksum( (u16 const *)&out.ip, 10 ));
 
@@ -46,14 +46,14 @@ static void icmp_send_reply( u08 iface, ip_header * reqip, icmp_header * reqping
 	out.icmp.sequence = reqping->sequence;
 	out.icmp.id = reqping->id;
 	memcpy( &out.crap, reqping + 1, len - sizeof( ip_header ) - sizeof( icmp_header ) );
-	out.icmp.checksum = ~__htons(__checksum( (u16 const *)&out.icmp, (len - sizeof( ip_header ))/2 ));
+	out.icmp.checksum = ~__htons(__checksum( (u16 const *)&out.icmp, (len - sizeof( ip_header )) >> 1 ));
 
 	__send_packet( iface, (u08 const *) &out, len + sizeof( eth_header ) );
 }
 
 u08 icmp_receive_packet( u08 iface, ip_header * p, u16 len )
 {
-	icmp_header * icmp = ( icmp_header * )( p + 1 );
+	icmp_header * icmp = ( icmp_header * )__ip_payload( p );
 	logf( "icmp: got packet, type=%d code=%d\n", icmp->type, icmp->code );
 
 	if (icmp->type == 8 && icmp->code == 0)

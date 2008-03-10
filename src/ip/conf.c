@@ -24,3 +24,8 @@ void set_netmask( u32 x )
 }
 
 void set_macaddr( mac_addr x ) { __macaddr = x; }
+
+u32 get_bcastaddr( void )
+{
+	return (__hostaddr & __netmask) | ~__netmask;
+}
