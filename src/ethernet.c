@@ -1,4 +1,3 @@
-#include <winsock2.h>
 #include "common.h"
 #include "ethernet.h"
 #include "hal_ethernet.h"
@@ -22,7 +21,10 @@ void dump_packet( eth_packet * p )
 	mac_to_str( srcbuf, &p->packet->src );
 	mac_to_str( destbuf, &p->packet->dest );
 
-	logf( "src=%s@%02x dest=%s@%02x type=%04x len=%u\n", srcbuf, p->src_iface, destbuf, p->dest_iface, ntohs(p->packet->ethertype), p->len );
+	logf( "src=%s@%02x dest=%s@%02x type=%04x len=%u\n", 
+		srcbuf, p->src_iface, 
+		destbuf, p->dest_iface, 
+		ntohs(p->packet->ethertype), p->len );
 }
 
 void eth_uip_send( u08 isarp )

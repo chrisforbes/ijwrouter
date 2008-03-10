@@ -1,5 +1,4 @@
 // ethernet hal stub for win32
-// todo: make this work with pcap?
 
 #include "../common.h"
 #include "../ethernet.h"
@@ -7,7 +6,7 @@
 #include "../hal_debug.h"
 
 #include <stdio.h>
-#include <pcap.h>
+#include "minpcap.h"
 
 #pragma comment( lib, "packet.lib" )
 #pragma comment( lib, "wpcap.lib" )
@@ -31,7 +30,7 @@ u08 eth_init( void )
 		return 0;
 	}
 
-	d = alldevs->next;	// ethernet interface on odd-socks
+	d = alldevs->next;	// hack hack hack: interface 2 = ethernet interface on odd-socks/valkyrie
 
 	dev = pcap_open_live( d->name, 65536, 1, MAXBLOCKTIME, errbuf );
 
@@ -43,6 +42,7 @@ u08 eth_init( void )
 	else
 		logf( "opened interface %s\n", d->name );
 
+	// enter nonblocking mode
 	//if (-1 == pcap_setnonblock( dev, 1, errbuf ))
 	//	logf( "failed setting interface to nonblocking mode\n" );
 
@@ -77,7 +77,7 @@ u08 eth_getpacket( eth_packet * p )
 u08 eth_discard( eth_packet * p )
 {
 	p;
-	return 0;	// didnt work
+	return 1;
 }
 
 u08 eth_forward( eth_packet * p )

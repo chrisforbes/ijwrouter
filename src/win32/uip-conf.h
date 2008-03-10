@@ -125,7 +125,7 @@ typedef unsigned short uip_stats_t;
  *
  * \hideinitializer
  */
-#define UIP_CONF_UDP             0
+#define UIP_CONF_UDP             1
 
 /**
  * UDP checksums on or off
@@ -141,20 +141,7 @@ typedef unsigned short uip_stats_t;
  */
 #define UIP_CONF_STATISTICS      1
 
-/* Here we include the header file for the application(s) we use in
-   our project. */
-/*#include "smtp.h"*/
-/*#include "hello-world.h"*/
-/*#include "telnetd.h"*/
-/*#include "webserver.h"*/
-/*#include "dhcpc.h"*/
-/*#include "resolv.h"*/
-/*#include "webclient.h"*/
-
-#include <winsock2.h>
-
-#define htons htons
-#define ntohs ntohs
+#define htons __htons
 
 #endif /* __UIP_CONF_H__ */
 

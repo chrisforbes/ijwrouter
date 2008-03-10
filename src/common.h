@@ -28,4 +28,10 @@ typedef signed __int64 i64;
 #include <stdio.h>
 #include <memory.h>
 
+u16 __htons( u16 x );
+u32 __ntohs( u16 x );
+
+u32 __htonl( u32 x );
+u32 __ntohl( u32 x );
+
 #endif

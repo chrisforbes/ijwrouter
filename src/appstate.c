@@ -3,6 +3,6 @@
 
 #include <uip/uip.h>
 
-void ip_appcall(void)
-{
-}
+void tcp_appcall(void) {}
+
+void udp_appcall(void) {}

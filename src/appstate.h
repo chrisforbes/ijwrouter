@@ -1,15 +1,23 @@
 #ifndef APPSTATE_H
 #define APPSTATE_H
 
-typedef struct ip_state
+typedef struct tcp_state
 {
 	u08 foo;
-} ip_state;
+} tcp_state;
 
-typedef ip_state uip_tcp_appstate_t;
+typedef tcp_state uip_tcp_appstate_t;
 
-void ip_appcall(void);
+typedef struct udp_state
+{
+	u08 foo;
+} udp_state;
 
-#define UIP_APPCALL ip_appcall
+typedef udp_state uip_udp_appstate_t;
+
+void tcp_appcall(void);
+
+#define UIP_APPCALL tcp_appcall
+#define UIP_UDP_APPCALL udp_appcall
 
 #endif

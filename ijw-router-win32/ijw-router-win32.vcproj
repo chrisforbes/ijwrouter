@@ -218,6 +218,14 @@
 					RelativePath="..\src\win32\main.c"
 					>
 				</File>
+				<File
+					RelativePath="..\src\win32\minpcap.h"
+					>
+				</File>
+				<File
+					RelativePath="..\src\win32\platform.c"
+					>
+				</File>
 			</Filter>
 			<Filter
 				Name="uip"
@@ -234,6 +242,7 @@
 						>
 						<Tool
 							Name="VCCLCompilerTool"
+							WarningLevel="0"
 							WarnAsError="false"
 						/>
 					</FileConfiguration>
@@ -254,6 +263,7 @@
 						>
 						<Tool
 							Name="VCCLCompilerTool"
+							WarningLevel="0"
 							WarnAsError="false"
 						/>
 					</FileConfiguration>

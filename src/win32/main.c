@@ -1,10 +1,8 @@
 // ijw router win32 stub
 
-#include <winsock2.h>
 #pragma comment( lib, "ws2_32.lib" )
 #include "../common.h"
 #include "../ethernet.h"
-#include "../ip.h"
 #include "../hal_ethernet.h"
 #include "../hal_debug.h"
 #include "../user.h"
@@ -20,19 +18,12 @@ uip_ip4addr_t ipaddr;
 uip_ip4addr_t netmask;
 uip_ip4addr_t default_router;
 
-u16 packet_size( eth_packet * p )
-{
-	ip_header const * h = (ip_header const *)(p->packet + 1);
-	return h->totalLength;
-}
-
 u08 charge_for_packet( eth_packet * p )
 {
 	uip_eth_addr * lanside = (p->dest_iface == IFACE_WAN) 
 		? &p->packet->dest : &p->packet->src;
 
 	user * u = get_user( lanside );
-	u16 size = packet_size( p );
 
 	if (!u)
 	{
@@ -40,9 +31,9 @@ u08 charge_for_packet( eth_packet * p )
 		return eth_discard( p );
 	}
 
-	if (u->credit >= size)
+	if (u->credit >= p->len)
 	{
-		u->credit -= size;
+		u->credit -= p->len;
 		logf("+ (ok)\n");
 		return eth_forward( p );
 	}
@@ -117,7 +108,14 @@ void do_timeouts( void )
 			eth_uip_send( 0 );
 	}
 
-	// todo: udp
+#if UIP_UDP
+	for( i = 0; i < UIP_UDP_CONNS; i++ )
+	{
+		uip_udp_periodic(i);
+		if (uip_len > 0)
+			eth_uip_send( 0 );
+	}
+#endif
 
 	if (t - last_arp_refresh >= 10000)
 	{
