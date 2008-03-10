@@ -184,6 +184,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\src\dhcp.c"
+				>
+			</File>
+			<File
 				RelativePath="..\src\ethernet.c"
 				>
 			</File>
