@@ -254,6 +254,10 @@
 						>
 					</File>
 					<File
+						RelativePath="..\src\ip\icmp.h"
+						>
+					</File>
+					<File
 						RelativePath="..\src\ip\internal.h"
 						>
 					</File>
@@ -279,6 +283,10 @@
 					</File>
 					<File
 						RelativePath="..\src\ip\conf.c"
+						>
+					</File>
+					<File
+						RelativePath="..\src\ip\icmp.c"
 						>
 					</File>
 					<File

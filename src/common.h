@@ -30,6 +30,8 @@ typedef struct mac_addr
 	u08 addr[6];
 } mac_addr;
 
+
+
 u32 __gethostaddr( void );
 u32 __getnetmask( void );
 

@@ -4,6 +4,7 @@
 #include "rfc.h"
 #include "conf.h"
 #include "arp.h"
+#include "icmp.h"
 #include "../hal_debug.h"
 
 static send_packet_f * on_send = 0;
@@ -27,6 +28,23 @@ void ipstack_tick( void )
 	arptab_tick();
 }
 
+static u08 ip_receive_packet( u08 iface, ip_header * p, u16 len )
+{
+	logf( "ip: got ip packet, proto=%d\n", p->proto );
+	if ( p->dest_addr != 0xfffffffful && p->dest_addr != get_hostaddr() )
+		return 0;
+
+	// todo: verify checksum
+	switch( p->proto )
+	{
+	case IPPROTO_ICMP:
+		icmp_receive_packet( iface, p, len );
+		break;
+	}
+
+	return (p->dest_addr == 0xfffffffful) ? 0 : 1;
+}
+
 u08 ipstack_receive_packet( u08 iface, u08 const * buf, u16 len )
 {
 	eth_header * eth = (eth_header *) buf;
@@ -40,8 +58,7 @@ u08 ipstack_receive_packet( u08 iface, u08 const * buf, u16 len )
 		{
 			ip_header * ip = (ip_header *) (eth + 1);
 			arptab_insert( iface, ip->src_addr, eth->src );
-//			ip_receive_packet( ip, len - sizeof( eth_header ) );		// todo
-			return 0;	// todo
+			return ip_receive_packet( iface, ip, len - sizeof( eth_header ) );
 		}
 
 	case ethertype_arp:

@@ -16,7 +16,7 @@ char * mac_to_str( char * buf, void * _a )
 void dump_packet( eth_packet * p )
 {
 	static char srcbuf[64], destbuf[64];
-	int i = 0;
+//	int i = 0;
 
 	mac_to_str( srcbuf, &p->packet->src );
 	mac_to_str( destbuf, &p->packet->dest );
@@ -26,7 +26,7 @@ void dump_packet( eth_packet * p )
 		destbuf, p->dest_iface, 
 		__ntohs(p->packet->ethertype), p->len );
 
-	for( i = 0; i < p->len; i++ )
+/*	for( i = 0; i < p->len; i++ )
 		logf(" %02x", ((u08 const *)p->packet)[i]);
-	logf( "\n" );
+	logf( "\n" );	*/
 }

@@ -2,6 +2,7 @@
 
 #include "../common.h"
 #include "../ip/rfc.h"
+#include "../ip/conf.h"
 #include "../ethernet.h"
 #include "../hal_ethernet.h"
 #include "../hal_debug.h"
@@ -93,18 +94,15 @@ u08 eth_inject( eth_packet * p )
 	return 1;
 }
 
-static const mac_addr broadcast_mac = { { 0xff, 0xff, 0xff, 0xff, 0xff, 0xff } };
+const mac_addr broadcast_mac = { { 0xff, 0xff, 0xff, 0xff, 0xff, 0xff } };
 
 u08 eth_find_interface( mac_addr dest )
 {
-	dest;
-	return IFACE_WAN;
-/*	if (mac_equal( dest, &my_address ))
+	if (mac_equal( dest, get_macaddr() ))
 		return IFACE_INTERNAL;
 
-	if (mac_equal( dest, &broadcast_mac ))
+	if (mac_equal( dest, broadcast_mac ))
 		return IFACE_BROADCAST;
 
 	return IFACE_WAN;	// hack hack hack
-	*/
 }
