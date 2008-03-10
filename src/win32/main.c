@@ -11,9 +11,6 @@
 #include "../hal_time.h"
 #include "../ip/rfc.h"
 
-#include <uip/uip.h>
-#include <uip/uip_arp.h>
-
 #include "../ip/stack.h"
 
 u08 charge_for_packet( eth_packet * p )
@@ -40,10 +37,22 @@ u08 charge_for_packet( eth_packet * p )
 	return eth_discard( p );	// do not want
 }
 
+void eth_inject_packet( u08 iface, u08 const * data, u16 len )
+{
+	eth_packet p;
+	p.src_iface = IFACE_INTERNAL;
+	p.dest_iface = iface;
+	p.len = len;
+	p.packet = (eth_header *)data;
+
+	eth_inject( &p );
+}
+
 u08 handle_packet( eth_packet * p )
 {
-	u16 ethertype = ntohs(p->packet->ethertype);
+	u16 ethertype = __ntohs(p->packet->ethertype);
 
+	// throw away packets from us (yes, we see them with winpcap!)
 	if (mac_equal( p->packet->src, get_macaddr()))
 		return eth_discard( p );
 
@@ -51,14 +60,13 @@ u08 handle_packet( eth_packet * p )
 
 	if (p->dest_iface == IFACE_INTERNAL)
 	{
-		eth_uip_feed( p, (ethertype == ethertype_arp) ? 1 : 0 );
+		ipstack_receive_packet( p->src_iface, (u08 const *)p->packet, p->len );
 		return eth_discard( p );	// dont want to forward it
 	}
 
 	if (ethertype == ethertype_arp)
 	{
-		// ask uip whether it wants this packet
-		if (eth_uip_feed( p, 1 ))
+		if (ipstack_receive_packet( p->src_iface, (u08 const *)p->packet, p->len ))
 		{
 			logf( "+ arp (eaten by uip)\n" );
 			return eth_discard( p );
@@ -82,53 +90,18 @@ u08 handle_packet( eth_packet * p )
 		return eth_discard( p );
 	}
 
-	// todo: re-enable this when we have an actual WAN interface
-
-//	if ((p->src_iface == IFACE_WAN) || (p->dest_iface == IFACE_WAN))
-//		return charge_for_packet( p );
-
 	logf( "+ pure lan\n" );
 	return eth_forward( p );	// not crossing from lan <-> wan	*/
-}
-
-void do_timeouts( void )
-{
-	static u32 last_arp_refresh	= 0;
-	u32 t = ticks();
-	int i;
-
-	for( i = 0; i < UIP_CONNS; i++ )
-	{
-#pragma warning( disable: 4127 )
-		uip_periodic( i );
-
-		if (uip_len > 0)
-			eth_uip_send( 0 );
-	}
-
-#if UIP_UDP
-	for( i = 0; i < UIP_UDP_CONNS; i++ )
-	{
-		uip_udp_periodic(i);
-		if (uip_len > 0)
-			eth_uip_send( 0 );
-	}
-#endif
-
-	if (t - last_arp_refresh >= 10000)
-	{
-		uip_arp_timer();
-		last_arp_refresh = t;
-	}
 }
 
 int main( void )
 {
 	u08 interfaces = eth_init();
-	uip_init();
 
 	set_hostaddr( make_ip( 192, 168, 2, 253 ) );
 	set_netmask( make_ip( 255, 255, 255, 0 ) );
+
+	ipstack_init( eth_inject_packet );
 
 	if (!interfaces)
 		logf( "! no interfaces available\n" );
@@ -138,7 +111,5 @@ int main( void )
 		eth_packet p;
 		if (eth_getpacket( &p ))
 			handle_packet( &p );
-
-		do_timeouts();
 	}
 }

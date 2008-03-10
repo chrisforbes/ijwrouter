@@ -172,14 +172,6 @@
 			Name="src"
 			>
 			<File
-				RelativePath="..\src\appstate.c"
-				>
-			</File>
-			<File
-				RelativePath="..\src\appstate.h"
-				>
-			</File>
-			<File
 				RelativePath="..\src\common.h"
 				>
 			</File>
@@ -228,56 +220,6 @@
 				</File>
 			</Filter>
 			<Filter
-				Name="uip"
-				>
-				<File
-					RelativePath="..\src\win32\uip-conf.h"
-					>
-				</File>
-				<File
-					RelativePath="..\include\uip\uip.c"
-					>
-					<FileConfiguration
-						Name="Debug|Win32"
-						>
-						<Tool
-							Name="VCCLCompilerTool"
-							WarningLevel="0"
-							WarnAsError="false"
-						/>
-					</FileConfiguration>
-				</File>
-				<File
-					RelativePath="..\include\uip\uip.h"
-					>
-				</File>
-				<File
-					RelativePath="..\include\uip\uip_arch.h"
-					>
-				</File>
-				<File
-					RelativePath="..\include\uip\uip_arp.c"
-					>
-					<FileConfiguration
-						Name="Debug|Win32"
-						>
-						<Tool
-							Name="VCCLCompilerTool"
-							WarningLevel="0"
-							WarnAsError="false"
-						/>
-					</FileConfiguration>
-				</File>
-				<File
-					RelativePath="..\include\uip\uip_arp.h"
-					>
-				</File>
-				<File
-					RelativePath="..\include\uip\uipopt.h"
-					>
-				</File>
-			</Filter>
-			<Filter
 				Name="hals"
 				>
 				<File
@@ -309,6 +251,10 @@
 					</File>
 					<File
 						RelativePath="..\src\ip\conf.h"
+						>
+					</File>
+					<File
+						RelativePath="..\src\ip\internal.h"
 						>
 					</File>
 					<File

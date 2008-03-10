@@ -1,6 +1,8 @@
 #ifndef RFC_H
 #define RFC_H
 
+#pragma pack( push, 1 )
+
 typedef enum ethertype
 {
 	ethertype_ipv4	= 0x0800,
@@ -86,5 +88,7 @@ typedef struct icmp_header
 	u16 id;
 	u16 sequence;
 } icmp_header;
+
+#pragma pack( pop )
 
 #endif
