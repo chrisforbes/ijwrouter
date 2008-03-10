@@ -1,32 +1,3 @@
-<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML//EN">
-<HTML>
-<HEAD>
-<TITLE>RFC 2131 (rfc2131) - Dynamic Host Configuration Protocol</TITLE>
-<META  name="description" content="RFC 2131 - Dynamic Host Configuration Protocol">
-<META  name="obsoletes" content="RFC1541">
-<script language="JavaScript1.2">
-function erfc(s)
-{document.write("<A href=\"/rfccomment.php?rfcnum="+s+"\" target=\"_blank\" onclick=\"window.open('/rfccomment.php?rfcnum="+s+"','Popup','toolbar=no,location=no,status=no,menubar=no,scrollbars=yes,resizable=yes,width=680,height=530,left=30,top=43'); return false;\")>Comment on RFC "+s+"</A>\n");}
-//-->
-</script>
-</HEAD>
-<BODY BGCOLOR="#ffffff" TEXT="#000000">
-<P ALIGN=CENTER><IMG SRC="/images/library.jpg" HEIGHT=62 WIDTH=150 BORDER="0" ALIGN="MIDDLE" ALT=""></P>
-<H1 ALIGN=CENTER>RFC 2131 (RFC2131)</H1>
-<P ALIGN=CENTER>Internet RFC/STD/FYI/BCP Archives</P>
-
-<DIV ALIGN=CENTER>[ <a href="/rfcs/">RFC Index</a> | <A HREF="/rfcs/rfcsearch.html">RFC Search</A> | <a href="/faqs/">Usenet FAQs</a> | <a href="/contrib/">Web FAQs</a> | <a href="/docs/">Documents</a> | <a href="http://www.city-data.com/">Cities</a> ]
-<P>
-<STRONG>Alternate Formats:</STRONG>
- <A HREF="/ftp/rfc/rfc2131.txt">rfc2131.txt</A> |
- <A HREF="/ftp/rfc/pdf/rfc2131.txt.pdf">rfc2131.txt.pdf</A></DIV>
-<p align=center><script language="JavaScript"><!--
-erfc("2131");
-// --></script></p>
-<h3 align=center>RFC 2131 - Dynamic Host Configuration Protocol</h3>
-<HR SIZE=2 NOSHADE>
-<PRE>
-
 Network Working Group                                           R. Droms
 Request for Comments: 2131                           Bucknell University
 Obsoletes: 1541                                               March 1997
@@ -55,7 +26,7 @@ Abstract
 Table of Contents
 
    1.  Introduction. . . . . . . . . . . . . . . . . . . . . . . . .  2
-   1.1 Changes to <A HREF="/rfcs/rfc1541.html">RFC1541</A>. . . . . . . . . . . . . . . . . . . . . .  3
+   1.1 Changes to RFC1541. . . . . . . . . . . . . . . . . . . . . .  3
    1.2 Related Work. . . . . . . . . . . . . . . . . . . . . . . . .  4
    1.3 Problem definition and issues . . . . . . . . . . . . . . . .  4
    1.4 Requirements. . . . . . . . . . . . . . . . . . . . . . . . .  5
@@ -162,10 +133,10 @@ List of Tables
    the necessity of having a DHCP server on each physical network
    segment.
 
-1.1 Changes to <A HREF="/rfcs/rfc1541.html">RFC 1541</A>
+1.1 Changes to RFC 1541
 
    This document updates the DHCP protocol specification that appears in
-   <A HREF="/rfcs/rfc1541.html">RFC1541</A>.  A new DHCP message type, DHCPINFORM, has been added; see
+   RFC1541.  A new DHCP message type, DHCPINFORM, has been added; see
    section 3.4, 4.3 and 4.4 for details.  The classing mechanism for
    identifying DHCP clients to DHCP servers has been extended to include
    "vendor" classes as defined in sections 4.2 and 4.3.  The minimum
@@ -331,7 +302,7 @@ List of Tables
         hosts and with existing network protocol implementations.
 
       o DHCP must interoperate with the BOOTP relay agent behavior as
-        described by <A HREF="/rfcs/rfc951.html">RFC 951</A> and by <A HREF="/rfcs/rfc1542.html">RFC 1542</A> [21].
+        described by RFC 951 and by RFC 1542 [21].
 
       o DHCP must provide service to existing BOOTP clients.
 
@@ -361,7 +332,7 @@ List of Tables
    From the client's point of view, DHCP is an extension of the BOOTP
    mechanism.  This behavior allows existing BOOTP clients to
    interoperate with DHCP servers without requiring any change to the
-   clients' initialization software.  <A HREF="/rfcs/rfc1542.html">RFC 1542</A> [2] details the
+   clients' initialization software.  RFC 1542 [2] details the
    interactions between BOOTP and DHCP clients and servers [9].  There
    are some new, optional transactions that optimize the interaction
    between DHCP clients and servers that are described in sections 3 and
@@ -492,7 +463,7 @@ List of Tables
    In the case of a client using DHCP for initial configuration (before
    the client's TCP/IP software has been completely configured), DHCP
    requires creative use of the client's TCP/IP software and liberal
-   interpretation of <A HREF="/rfcs/rfc1122.html">RFC 1122</A>.  The TCP/IP software SHOULD accept and
+   interpretation of RFC 1122.  The TCP/IP software SHOULD accept and
    forward to the IP layer any IP packets delivered to the client's
    hardware address before the IP address is configured; DHCP servers
    and BOOTP relay agents may not be able to deliver DHCP messages to
@@ -582,17 +553,17 @@ List of Tables
 
 3. The Client-Server Protocol
 
-   DHCP uses the BOOTP message format defined in <A HREF="/rfcs/rfc951.html">RFC 951</A> and given in
+   DHCP uses the BOOTP message format defined in RFC 951 and given in
    table 1 and figure 1.  The 'op' field of each DHCP message sent from
    a client to a server contains BOOTREQUEST. BOOTREPLY is used in the
    'op' field of each DHCP message sent from a server to a client.
 
    The first four octets of the 'options' field of the DHCP message
    contain the (decimal) values 99, 130, 83 and 99, respectively (this
-   is the same magic cookie as is defined in <A HREF="/rfcs/rfc1497.html">RFC 1497</A> [17]).  The
+   is the same magic cookie as is defined in RFC 1497 [17]).  The
    remainder of the 'options' field consists of a list of tagged
    parameters that are called "options".  All of the "vendor extensions"
-   listed in <A HREF="/rfcs/rfc1497.html">RFC 1497</A> are also DHCP options.  <A HREF="/rfcs/rfc1533.html">RFC 1533</A> gives the
+   listed in RFC 1497 are also DHCP options.  RFC 1533 gives the
    complete set of options defined for use with DHCP.
 
    Several options have been defined so far.  One particular option -
@@ -1096,7 +1067,7 @@ List of Tables
 
    If the options in a DHCP message extend into the 'sname' and 'file'
    fields, the 'option overload' option MUST appear in the 'options'
-   field, with value 1, 2 or 3, as specified in <A HREF="/rfcs/rfc1533.html">RFC 1533</A>.  If the
+   field, with value 1, 2 or 3, as specified in RFC 1533.  If the
 
    'option overload' option is present in the 'options' field, the
    options in the 'options' field MUST be terminated by an 'end' option,
@@ -1597,9 +1568,9 @@ All others                MAY          MAY                MUST NOT
    described in section 3.2.
 
  --------                               -------
-|        | +--------------------------&gt;|       |&lt;-------------------+
-| INIT-  | |     +--------------------&gt;| INIT  |                    |
-| REBOOT |DHCPNAK/         +----------&gt;|       |&lt;---+               |
+|        | +-------------------------->|       |<-------------------+
+| INIT-  | |     +-------------------->| INIT  |                    |
+| REBOOT |DHCPNAK/         +---------->|       |<---+               |
 |        |Restart|         |            -------     |               |
  --------  |  DHCPNAK/     |               |                        |
     |      Discard offer   |      -/Send DHCPDISCOVER               |
@@ -1607,14 +1578,14 @@ All others                MAY          MAY                MUST NOT
     |      |     |      DHCPACK            v        |               |
  -----------     |   (not accept.)/   -----------   |               |
 |           |    |  Send DHCPDECLINE |           |                  |
-| REBOOTING |    |         |         | SELECTING |&lt;----+            |
+| REBOOTING |    |         |         | SELECTING |<----+            |
 |           |    |        /          |           |     |DHCPOFFER/  |
  -----------     |       /            -----------   |  |Collect     |
     |            |      /                  |   |       |  replies   |
 DHCPACK/         |     /  +----------------+   +-------+            |
 Record lease, set|    |   v   Select offer/                         |
 timers T1, T2   ------------  send DHCPREQUEST      |               |
-    |   +-----&gt;|            |             DHCPNAK, Lease expired/   |
+    |   +----->|            |             DHCPNAK, Lease expired/   |
     |   |      | REQUESTING |                  Halt network         |
     DHCPOFFER/ |            |                       |               |
     Discard     ------------                        |               |
@@ -1624,9 +1595,9 @@ timers T1, T2   ------------  send DHCPREQUEST      |               |
     |                timers T1, T2     /     |           |          |
     |                     |        DHCPACK/   -----------           |
     |                     v     Record lease, set   ^               |
-    +----------------&gt; -------      /timers T1,T2   |               |
-               +-----&gt;|       |&lt;---+                |               |
-               |      | BOUND |&lt;---+                |               |
+    +----------------> -------      /timers T1,T2   |               |
+               +----->|       |<---+                |               |
+               |      | BOUND |<---+                |               |
   DHCPOFFER, DHCPACK, |       |    |            T2 expires/   DHCPNAK/
    DHCPNAK/Discard     -------     |             Broadcast  Halt network
                |       | |         |            DHCPREQUEST         |
@@ -1636,7 +1607,7 @@ timers T1, T2   ------------  send DHCPREQUEST      |               |
                  to leasing server |                |               |
                          |   ----------             |               |
                          |  |          |------------+               |
-                         +-&gt;| RENEWING |                            |
+                         +->| RENEWING |                            |
                             |          |----------------------------+
                              ----------
           Figure 5:  State-transition diagram for DHCP clients
@@ -1916,19 +1887,19 @@ All others                 MAY           MAY              MUST NOT
 
 6. References
 
-   [1] Acetta, M., "Resource Location Protocol", <A HREF="/rfcs/rfc887.html">RFC 887</A>, CMU, December
+   [1] Acetta, M., "Resource Location Protocol", RFC 887, CMU, December
        1983.
 
    [2] Alexander, S., and R. Droms, "DHCP Options and BOOTP Vendor
-       Extensions", <A HREF="/rfcs/rfc1533.html">RFC 1533</A>, Lachman Technology, Inc., Bucknell
+       Extensions", RFC 1533, Lachman Technology, Inc., Bucknell
        University, October 1993.
 
    [3] Braden, R., Editor, "Requirements for Internet Hosts --
-       Communication Layers", STD 3, <A HREF="/rfcs/rfc1122.html">RFC 1122</A>, USC/Information Sciences
+       Communication Layers", STD 3, RFC 1122, USC/Information Sciences
        Institute, October 1989.
 
    [4] Braden, R., Editor, "Requirements for Internet Hosts --
-       Application and Support, STD 3, <A HREF="/rfcs/rfc1123.html">RFC 1123</A>, USC/Information
+       Application and Support, STD 3, RFC 1123, USC/Information
        Sciences Institute, October 1989.
 
    [5] Brownell, D, "Dynamic Reverse Address Resolution Protocol
@@ -1938,53 +1909,53 @@ All others                 MAY           MAY              MUST NOT
        Services", Proc. of ACM SIGCOMM '90 (Special issue of Computer
        Communications Review), 20(4):50--59, 1990.
 
-   [7] Croft, B., and J. Gilmore, "Bootstrap Protocol (BOOTP)", <A HREF="/rfcs/rfc951.html">RFC 951</A>,
+   [7] Croft, B., and J. Gilmore, "Bootstrap Protocol (BOOTP)", RFC 951,
        Stanford and SUN Microsystems, September 1985.
 
-   [8] Deering, S., "ICMP Router Discovery Messages", <A HREF="/rfcs/rfc1256.html">RFC 1256</A>, Xerox
+   [8] Deering, S., "ICMP Router Discovery Messages", RFC 1256, Xerox
        PARC, September 1991.
 
-   [9] Droms, D., "Interoperation between DHCP and BOOTP", <A HREF="/rfcs/rfc1534.html">RFC 1534</A>,
+   [9] Droms, D., "Interoperation between DHCP and BOOTP", RFC 1534,
        Bucknell University, October 1993.
 
    [10] Finlayson, R., Mann, T., Mogul, J., and M. Theimer, "A Reverse
-        Address Resolution Protocol", <A HREF="/rfcs/rfc903.html">RFC 903</A>, Stanford, June 1984.
+        Address Resolution Protocol", RFC 903, Stanford, June 1984.
 
    [11] Gray C., and D. Cheriton, "Leases: An Efficient Fault-Tolerant
         Mechanism for Distributed File Cache Consistency", In Proc. of
         the Twelfth ACM Symposium on Operating Systems Design, 1989.
 
    [12] Mockapetris, P., "Domain Names -- Concepts and Facilities", STD
-        13, <A HREF="/rfcs/rfc1034.html">RFC 1034</A>, USC/Information Sciences Institute, November 1987.
+        13, RFC 1034, USC/Information Sciences Institute, November 1987.
 
    [13] Mockapetris, P., "Domain Names -- Implementation and
-        Specification", STD 13, <A HREF="/rfcs/rfc1035.html">RFC 1035</A>, USC/Information Sciences
+        Specification", STD 13, RFC 1035, USC/Information Sciences
         Institute, November 1987.
 
-   [14] Mogul J., and S. Deering, "Path MTU Discovery", <A HREF="/rfcs/rfc1191.html">RFC 1191</A>,
+   [14] Mogul J., and S. Deering, "Path MTU Discovery", RFC 1191,
         November 1990.
 
    [15] Morgan, R., "Dynamic IP Address Assignment for Ethernet Attached
         Hosts", Work in Progress.
 
-   [16] Postel, J., "Internet Control Message Protocol", STD 5, <A HREF="/rfcs/rfc792.html">RFC 792</A>,
+   [16] Postel, J., "Internet Control Message Protocol", STD 5, RFC 792,
         USC/Information Sciences Institute, September 1981.
 
-   [17] Reynolds, J., "BOOTP Vendor Information Extensions", <A HREF="/rfcs/rfc1497.html">RFC 1497</A>,
+   [17] Reynolds, J., "BOOTP Vendor Information Extensions", RFC 1497,
         USC/Information Sciences Institute, August 1993.
 
-   [18] Reynolds, J., and J. Postel, "Assigned Numbers", STD 2, <A HREF="/rfcs/rfc1700.html">RFC 1700</A>,
+   [18] Reynolds, J., and J. Postel, "Assigned Numbers", STD 2, RFC 1700,
         USC/Information Sciences Institute, October 1994.
 
    [19] Jeffrey Schiller and Mark Rosenstein. A Protocol for the Dynamic
         Assignment of IP Addresses for use on an Ethernet. (Available
         from the Athena Project, MIT), 1989.
 
-   [20] Sollins, K., "The TFTP Protocol (Revision 2)",  <A HREF="/rfcs/rfc783.html">RFC 783</A>, NIC,
+   [20] Sollins, K., "The TFTP Protocol (Revision 2)",  RFC 783, NIC,
         June 1981.
 
    [21] Wimer, W., "Clarifications and Extensions for the Bootstrap
-        Protocol", <A HREF="/rfcs/rfc1542.html">RFC 1542</A>, Carnegie Mellon University, October 1993.
+        Protocol", RFC 1542, Carnegie Mellon University, October 1993.
 
 7. Security Considerations
 
@@ -2018,7 +1989,7 @@ All others                 MAY           MAY              MUST NOT
       Lewisburg, PA 17837
 
       Phone: (717) 524-1145
-      EMail: <A HREF="mailto:droms@bucknell.edu">droms@bucknell.edu</A>
+      EMail: droms@bucknell.edu
 
 A. Host Configuration Parameters
 
@@ -2057,7 +2028,7 @@ A. Host Configuration Parameters
    Link-layer_parameters,_per_interface:_
    Trailers                       on/off                 HRC 2.3.1
    ARP cache timeout              integer                HRC 2.3.2.1
-   Ethernet encapsulation         (<A HREF="/rfcs/rfc894.html">RFC 894</A>/RFC 1042)     HRC 2.3.3
+   Ethernet encapsulation         (RFC 894/RFC 1042)     HRC 2.3.3
 
    TCP_parameters,_per_host:_
    TTL                            integer                HRC 4.2.2.19
@@ -2066,41 +2037,5 @@ A. Host Configuration Parameters
 
 Key:
 
-   MTU = Path MTU Discovery (<A HREF="/rfcs/rfc1191.html">RFC 1191</A>, Proposed Standard)
-   RD = Router Discovery (<A HREF="/rfcs/rfc1256.html">RFC 1256</A>, Proposed Standard)
-
-</PRE>
-<p align=center><script language="JavaScript"><!--
-erfc("2131");
-// --></script></p>
-&nbsp;<br>
-<div align="center">
-<center>
-<table border="0" cellpadding="4" cellspacing="4" width="100%">
-<tr><td width="100%" bgcolor="#D6D6C0">
-<p><font face="Arial">Comments about this RFC:</font></p>
-<ul>
-<li><font face="Arial"><a href="/qa/rfcc-1612.html">RFC 2131: Section 4.1 of the DHCP RFC 2131 states:     DHCP uses UDP as its transport...</a> by torkar (1/19/2005)</font></li>
-</ul>
-</td></tr></table> <br></center></div>
-<div align="center">
-<table border="0" cellpadding="3" width="100%" cellspacing="3">
-<tr><td width="45%">
-<p align="left">Previous: <a href="/rfcs/rfc2130.html">RFC 2130 - The Report of the IAB Character Set Workshop held 29 February - 1 March, 1996</a>
-</p></td><td width="10%">&nbsp;</td><td width="45%">
-<p align="right">Next: <a href="/rfcs/rfc2132.html">RFC 2132 - DHCP Options and BOOTP Vendor Extensions</a>
-</p></td></tr></table></div><p align="right">&nbsp;</p>
-<HR SIZE=2 NOSHADE>
-<DIV ALIGN=CENTER>[ <a href="/rfcs/">RFC Index</a> | <A HREF="/rfcs/rfcsearch.html">RFC Search</A> | <a href="/faqs/">Usenet FAQs</a> | <a href="/contrib/">Web FAQs</a> | <a href="/docs/">Documents</a> | <a href="http://www.city-data.com/">Cities</a> ]
-<P>
-</DIV>
-<SMALL>
-<ADDRESS>
-<P ALIGN=CENTER>
- 
-</P>
-</ADDRESS>
-</SMALL>
-</BODY>
-</HTML>
-
+   MTU = Path MTU Discovery (RFC 1191, Proposed Standard)
+   RD = Router Discovery (RFC 1256, Proposed Standard)
