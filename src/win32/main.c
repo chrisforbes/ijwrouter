@@ -79,7 +79,8 @@ u08 handle_packet( eth_packet * p )
 	return eth_forward( p );	// not crossing from lan <-> wan	*/
 }
 
-extern void dhcp_init(void);
+extern void dhcp_init( void );
+extern void dhcp_process( void );
 
 int main( void )
 {
@@ -97,5 +98,6 @@ int main( void )
 		eth_packet p;
 		if (eth_getpacket( &p ))
 			handle_packet( &p );
+		dhcp_process();
 	}
 }

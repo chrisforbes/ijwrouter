@@ -1,5 +1,6 @@
 #include "common.h"
 #include "hal_debug.h"
+#include "hal_time.h"
 
 #include "ip/rfc.h"
 #include "ip/udp.h"
@@ -12,7 +13,7 @@
 
 typedef enum dhcp_state_e
 {
-	DHCP_STATE_INITIAL = 0,
+	DHCP_STATE_IDLE = 0,
 	DHCP_STATE_WAIT_FOR_OFFER = 1,
 	DHCP_STATE_WAIT_FOR_ACK = 2,
 } dhcp_state_e;
@@ -57,6 +58,8 @@ typedef struct dhcp_packet
 
 #define DHCP_SERVER_PORT	((u16)67)
 #define DHCP_CLIENT_PORT	((u16)68)
+
+#define DHCP_TIMEOUT	1000
 
 typedef enum dhcp_op
 {
@@ -129,6 +132,8 @@ static void create_msg( dhcp_packet * p )
 	memcpy( p->options, cookie, sizeof(cookie) );
 }
 
+static u32 tickCount = 0;
+
 static void send_discover( void )
 {
 	dhcp_packet p;
@@ -146,6 +151,8 @@ static void send_discover( void )
 	udp_send( s.socket, 0xfffffffful, DHCP_SERVER_PORT, start, (u16)(end - start) );
 
 	logf( "DHCPDISCOVER sent\n" );
+	tickCount = ticks();
+	s.state = DHCP_STATE_WAIT_FOR_OFFER;
 }
 
 static void send_request( void )
@@ -162,6 +169,8 @@ static void send_request( void )
 	end = append_opt_u32( end, DHCP_OPTION_REQ_IPADDR, get_hostaddr());
 
 	udp_send( s.socket, 0xfffffffful, DHCP_SERVER_PORT, start, (u16)(end-start));
+	tickCount = ticks();
+	s.state = DHCP_STATE_WAIT_FOR_ACK;
 }
 
 static u08 parse_options( u08 * opt, int len )
@@ -212,6 +221,18 @@ static u08 parse_msg( dhcp_packet * packet, u16 len )
 
 void dhcp_process( void )
 {
+	if ((ticks() - tickCount) >= DHCP_TIMEOUT)
+	{
+		switch(s.state)
+		{
+		case DHCP_STATE_WAIT_FOR_ACK:
+			send_request();
+			break;
+		case DHCP_STATE_WAIT_FOR_OFFER:
+			send_discover();
+			break;
+		}
+	}
 }
 
 static void dhcp_event( udp_sock sock, u08 evt, u32 from_ip, u16 from_port, u08 const * data, u16 len )
@@ -225,13 +246,16 @@ static void dhcp_event( udp_sock sock, u08 evt, u32 from_ip, u16 from_port, u08 
 	{
 	case DHCP_OFFER:
 		logf( "Got DHCP_OFFER\n" );
+		s.state = DHCP_STATE_IDLE;
 		send_request();
 		break;
 	case DHCP_ACK:
 		logf( "Got DHCP_ACK\n" );
+		s.state = DHCP_STATE_IDLE;
 		break;
 	case DHCP_NAK:
 		logf( "Got DHCP_NAK\n" );
+		s.state = DHCP_STATE_IDLE;
 		send_discover();
 		break;
 	}
