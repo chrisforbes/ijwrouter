@@ -30,9 +30,9 @@ typedef struct ip_header
 	u16 checksum;
 	u32 src_addr;
 	u32 dest_addr;
-
-	// todo: ip options
 } ip_header;
+
+// todo definitions for ip options
 
 typedef enum IPPROTO
 {

@@ -69,6 +69,9 @@ u08 handle_arp_packet( u08 iface, arp_header * arp )
 			send_arp_reply( iface, arp );
 			return 1;
 		}
+
+		logf( "arp: for someone else.\n" );
+		return 0;
 	}
 
 	if (op == ARP_REPLY)
