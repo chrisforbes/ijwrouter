@@ -36,12 +36,12 @@ static tcp_conn * tcp_find_conn( u16 port )
 {
 	tcp_conn * free = 0;
 	u08 i;
-	for( i = 0; i < UDP_MAX_CONNS; i++ )
+	for( i = 0; i < TCP_MAX_CONNS; i++ )
 	{
 		tcp_conn * p = &tcp_conns[ i ];
 		if (!p->state)
 			free = p;
-		else if (p->port == port)
+		else if (p->localport == port)
 			return p;
 	}
 
