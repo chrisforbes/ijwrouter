@@ -58,7 +58,7 @@ static u08 ip_receive_packet( u08 iface, ip_header * p, u16 len )
 
 static u08 __ip_receive_packet( u08 iface, ip_header * p, u16 len )	// did we eat it?
 {
-	if (p->dest_addr != get_bcastaddr() && p->dest_addr != get_hostaddr())
+	if (p->dest_addr != get_bcastaddr() && p->dest_addr != get_hostaddr() && p->dest_addr != 0xfffffffful)
 		return 0;
 
 	return ip_receive_packet( iface, p, len ) 

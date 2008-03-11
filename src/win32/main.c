@@ -56,24 +56,11 @@ u08 handle_packet( eth_packet * p )
 
 	dump_packet( p );
 
-	if (p->dest_iface == IFACE_INTERNAL)
+	if (p->dest_iface == IFACE_INTERNAL || p->dest_iface == IFACE_BROADCAST)
 	{
-		ipstack_receive_packet( p->src_iface, (u08 const *)p->packet, p->len );
-		return eth_discard( p );	// dont want to forward it
-	}
-
-	if (ethertype == ethertype_arp)
-	{
-		if (ipstack_receive_packet( p->src_iface, (u08 const *)p->packet, p->len ))
-		{
-			logf( "+ arp (eaten by uip)\n" );
-			return eth_discard( p );
-		}
-		else
-		{
-			logf( "+ arp (forwarded)\n" );
-			return eth_forward( p );
-		}
+		logf( "packet: internal or bcast\n" );
+		return ipstack_receive_packet( p->src_iface, (u08 const *)p->packet, p->len ) 
+			? eth_discard( p ) : eth_forward( p );
 	}
 
 	if (ethertype != ethertype_ipv4 )
@@ -97,9 +84,6 @@ extern void dhcp_init(void);
 int main( void )
 {
 	u08 interfaces = eth_init();
-
-//	set_hostaddr( make_ip( 192, 168, 2, 253 ) );
-//	set_netmask( make_ip( 255, 255, 255, 0 ) );
 
 	ipstack_init( eth_inject_packet );
 

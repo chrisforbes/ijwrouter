@@ -5,6 +5,8 @@
 #include "ip/udp.h"
 #include "ip/conf.h"
 
+#define HOSTNAME	"ijw-router"
+
 #pragma warning( disable: 4127 )
 #pragma warning( disable: 4310 )
 
@@ -72,6 +74,7 @@ typedef enum dhcp_option
 	DHCP_OPTION_NETMASK = 1,
 	DHCP_OPTION_ROUTER = 3,
 	DHCP_OPTION_DNS_SERVER = 6,
+	DHCP_OPTION_HOSTNAME = 12,
 	DHCP_OPTION_REQ_IPADDR = 50,
 	DHCP_OPTION_LEASE_TIME = 51,
 	DHCP_OPTION_MSG_TYPE = 53,
@@ -137,6 +140,7 @@ static void send_discover( void )
 
 	end = append_opt_u08( end, DHCP_OPTION_MSG_TYPE, DHCP_DISCOVER );
 	end = append_opt( end, DHCP_OPTION_REQ_LIST, sizeof(opts), opts );
+	end = append_opt( end, DHCP_OPTION_HOSTNAME, sizeof(HOSTNAME), (u08 *)HOSTNAME );
 	end = append_opt_void( end, DHCP_OPTION_END );
 
 	udp_send( s.socket, 0xfffffffful, DHCP_SERVER_PORT, start, (u16)(end - start) );
@@ -154,6 +158,7 @@ static void send_request( void )
 	
 	end = append_opt_u08( end, DHCP_OPTION_MSG_TYPE, DHCP_REQUEST );
 	end = append_opt_u32( end, DHCP_OPTION_SERVER_ID, s.serverid );
+	end = append_opt( end, DHCP_OPTION_HOSTNAME, sizeof(HOSTNAME), (u08 *)HOSTNAME );
 	end = append_opt_u32( end, DHCP_OPTION_REQ_IPADDR, get_hostaddr());
 
 	udp_send( s.socket, 0xfffffffful, DHCP_SERVER_PORT, start, (u16)(end-start));
