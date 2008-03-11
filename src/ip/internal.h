@@ -5,14 +5,8 @@
 
 void __send_packet( u08 iface, u08 const * buf, u16 len );
 
-__inline u16 __checksum( u16 const * base, u16 n )
-{
-	u32 x = 0;
-	while( n-- )
-		x += __ntohs(*base++);
-
-	return ((u16)x) + ((u16)(x >> 16));
-}
+u16 __checksum_ex( u16 seed, void const * data, u16 size );
+__inline u16 __checksum( void const * data, u16 size ) { return __checksum_ex( 0, data, size ); }
 
 __inline u16 __ip_header_length( ip_header * h )
 {
@@ -31,7 +25,7 @@ __inline u16 __ip_payload_length( ip_header * h )
 
 __inline u08 __ip_validate_header( ip_header * h )
 {
-	return 0xffff == __checksum( (u16 const *)h, __ip_header_length( h ) >> 1 );
+	return 0xffff == __checksum( h, __ip_header_length( h ) );
 }
 
 #endif

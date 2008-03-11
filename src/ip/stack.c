@@ -87,3 +87,30 @@ u08 ipstack_receive_packet( u08 iface, u08 const * buf, u16 len )
 
 	return 0;
 }
+
+u16 __checksum_ex( u16 sum, void const * _data, u16 len )
+{
+	u16 t;
+	const u08 * data = _data;
+	const u08 *dataptr;
+	const u08 *last_byte;
+
+	dataptr = data;
+	last_byte = data + len - 1;
+
+	while(dataptr < last_byte) {	/* At least two more bytes */
+		t = (dataptr[0] << 8) + dataptr[1];
+		sum += t;
+		if(sum < t) ++sum;	// carry
+		dataptr += 2;
+	}
+
+	if(dataptr == last_byte) {
+		t = (dataptr[0] << 8) + 0;
+		sum += t;
+		if(sum < t) ++sum;	// carry
+	}
+
+	/* Return sum in host byte order. */
+	return sum;
+}

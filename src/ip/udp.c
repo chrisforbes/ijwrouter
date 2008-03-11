@@ -119,10 +119,21 @@ udp_sock udp_new_sock( u16 port, void * ctx, udp_event_f * handler )
 	} out;
 #pragma pack( pop )
 
+#pragma pack( push, 1 )
+	static struct		// ip pseudo-header for udp checksum
+	{
+		u32 src;
+		u32 dest;
+		u08 sbz;
+		u08 proto;
+		u16 len;
+	} ipph;
+
 void udp_send( udp_sock sock, u32 to_ip, u16 to_port, u08 const * data, u16 len )
 {
 	udp_conn * conn = &udp_conns[sock];
 	u08 iface;
+
 	if (!conn->handler)
 	{
 		logf( "udp: not_sock in send\n" );
@@ -151,7 +162,7 @@ void udp_send( udp_sock sock, u32 to_ip, u16 to_port, u08 const * data, u16 len 
 	out.ip.ttl = 128;
 	out.ip.proto = IPPROTO_UDP;
 	out.ip.checksum = 0;
-	out.ip.checksum = ~__htons( __checksum( (u16 const *)&out.ip, 10 ) );
+	out.ip.checksum = ~__htons( __checksum( &out.ip, sizeof( ip_header ) ) );	
 
 	out.udp.src_port = __htons(conn->port);
 	out.udp.dest_port = __htons(to_port);
@@ -159,10 +170,15 @@ void udp_send( udp_sock sock, u32 to_ip, u16 to_port, u08 const * data, u16 len 
 
 	memcpy( out.crap, data, len );
 
-	// todo: fix the checksum
-//	out.udp.checksum = 0xdd99;
-	out.udp.checksum = 0;
-	//out.udp.checksum = ~__htons( __checksum( (u16 const *)&out.ip, ( len + sizeof( ip_header ) + sizeof( udp_header ) ) >> 1 ));
+	ipph.src = out.ip.src_addr;
+	ipph.dest = out.ip.dest_addr;
+	ipph.proto = out.ip.proto;
+	ipph.sbz = 0;
+	ipph.len = out.udp.length;
+
+	out.udp.checksum = ~__htons(__checksum_ex( 
+		__checksum( &ipph, sizeof(ipph) ), 
+		&out.udp, len + sizeof( udp_header ) ));
 
 	__send_packet( iface, (u08 const *) &out, sizeof( eth_header ) + sizeof( ip_header ) + sizeof( udp_header ) + len );
 }

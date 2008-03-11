@@ -39,14 +39,14 @@ static void icmp_send_reply( u08 iface, ip_header * reqip, icmp_header * reqping
 	out.ip.src_addr = reqip->dest_addr;
 	out.ip.ttl = 128;
 	out.ip.proto = IPPROTO_ICMP;
-	out.ip.checksum = ~__htons(__checksum( (u16 const *)&out.ip, 10 ));
+	out.ip.checksum = __htons(__checksum( &out.ip, sizeof(ip_header) ));
 
 	out.icmp.type = 0;
 	out.icmp.code = 0;
 	out.icmp.sequence = reqping->sequence;
 	out.icmp.id = reqping->id;
 	memcpy( &out.crap, reqping + 1, len - sizeof( ip_header ) - sizeof( icmp_header ) );
-	out.icmp.checksum = ~__htons(__checksum( (u16 const *)&out.icmp, (len - sizeof( ip_header )) >> 1 ));
+	out.icmp.checksum = __htons(__checksum( &out.icmp, len - sizeof( ip_header ) ));
 
 	__send_packet( iface, (u08 const *) &out, len + sizeof( eth_header ) );
 }
