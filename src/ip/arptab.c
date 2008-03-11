@@ -1,5 +1,6 @@
 #include "../common.h"
 #include "arptab.h"
+#include "conf.h"
 #include "../hal_debug.h"
 
 #define ARPTAB_SIZE		64
@@ -44,17 +45,27 @@ void arptab_insert( u08 iface, u32 net_addr, mac_addr phys_addr )
 
 u08 arptab_query( u08 * iface, u32 net_addr, mac_addr * phys_addr )
 {
-	arptab_entry * e = arptab_findslot( net_addr );
+	if (net_addr == get_bcastaddr() || net_addr == 0xfffffffful)
+	{
+		mac_addr bcast = {{ 0xff, 0xff, 0xff, 0xff, 0xff, 0xff }};
+		*phys_addr = bcast;
+		*iface = 0xff;
+		return 1;
+	}
+	else
+	{
+		arptab_entry * e = arptab_findslot( net_addr );
 
-	if (!e->ttl || e->net_addr != net_addr)
-		return 0;
+		if (!e->ttl || e->net_addr != net_addr)
+			return 0;
 
-	if (iface)	
-		*iface = e->iface;
-	if (phys_addr) 
-		*phys_addr = e->phys_addr;
+		if (iface)	
+			*iface = e->iface;
+		if (phys_addr) 
+			*phys_addr = e->phys_addr;
 
-	return 1;
+		return 1;
+	}
 }
 
 void arptab_tick( void )

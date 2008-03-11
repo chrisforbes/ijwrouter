@@ -98,8 +98,8 @@ int main( void )
 {
 	u08 interfaces = eth_init();
 
-	set_hostaddr( make_ip( 192, 168, 2, 253 ) );
-	set_netmask( make_ip( 255, 255, 255, 0 ) );
+//	set_hostaddr( make_ip( 192, 168, 2, 253 ) );
+//	set_netmask( make_ip( 255, 255, 255, 0 ) );
 
 	ipstack_init( eth_inject_packet );
 

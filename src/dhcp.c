@@ -38,6 +38,8 @@ typedef struct dhcp_packet
 	u32 giaddr;
 	mac_addr chaddr;
 	u08 crap[10];
+	u08 sname[64];
+	u08 file[128];
 
 	u08 options[312];
 } dhcp_packet;
@@ -79,7 +81,7 @@ typedef enum dhcp_option
 } dhcp_option;
 
 static const u32 xid = 0xadde1223;
-static const u08 cookie[] = { 99, 130, 83, 99 };
+static const u08 cookie[] = { 0x63, 0x82, 0x53, 0x63 };
 
 static u08 * append_opt( u08 * p, u08 optname, u08 len, u08 * option )
 {
@@ -106,11 +108,13 @@ DEF_APPEND_OPT_T( u32 )
 
 static void create_msg( dhcp_packet * p )
 {
+	memset( p, 0, sizeof( dhcp_packet ) );
 	p->op = DHCP_OP_REQUEST;
 	p->htype = DHCP_HTYPE_ETHERNET;
 	p->hlen = DHCP_HLEN_ETHERNET;
 	p->hops = 0;
 	p->xid = xid;
+	p->secs = 0;
 	p->flags = __htons( BOOTP_BROADCAST );
 
 	p->ciaddr = get_hostaddr();
@@ -135,7 +139,7 @@ static void send_discover( void )
 	end = append_opt( end, DHCP_OPTION_REQ_LIST, sizeof(opts), opts );
 	end = append_opt_void( end, DHCP_OPTION_END );
 
-	udp_send( s.socket, get_bcastaddr(), DHCP_SERVER_PORT, start, (u16)(end - start) );
+	udp_send( s.socket, 0xfffffffful, DHCP_SERVER_PORT, start, (u16)(end - start) );
 
 	logf( "DHCPDISCOVER sent\n" );
 }
@@ -152,7 +156,7 @@ static void send_request( void )
 	end = append_opt_u32( end, DHCP_OPTION_SERVER_ID, s.serverid );
 	end = append_opt_u32( end, DHCP_OPTION_REQ_IPADDR, get_hostaddr());
 
-	udp_send( s.socket, get_bcastaddr(), DHCP_SERVER_PORT, start, (u16)(end-start));
+	udp_send( s.socket, 0xfffffffful, DHCP_SERVER_PORT, start, (u16)(end-start));
 }
 
 static u08 parse_options( u08 * opt, int len )

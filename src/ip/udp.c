@@ -44,6 +44,8 @@ u08 udp_receive_packet( u08 iface, ip_header * p, u16 len )
 
 	iface; len;
 
+	logf( "udp: got packet\n" );
+
 	// todo: verify udp checksum
 
 	conn = udp_find_conn_by_port( port );
@@ -148,6 +150,7 @@ void udp_send( udp_sock sock, u32 to_ip, u16 to_port, u08 const * data, u16 len 
 	out.ip.src_addr = get_hostaddr();
 	out.ip.ttl = 128;
 	out.ip.proto = IPPROTO_UDP;
+	out.ip.checksum = 0;
 	out.ip.checksum = ~__htons( __checksum( (u16 const *)&out.ip, 10 ) );
 
 	out.udp.src_port = __htons(conn->port);
@@ -155,7 +158,11 @@ void udp_send( udp_sock sock, u32 to_ip, u16 to_port, u08 const * data, u16 len 
 	out.udp.length = __htons( len + sizeof( udp_header ) );
 
 	memcpy( out.crap, data, len );
-	out.udp.checksum = ~__htons( __checksum( (u16 const *)&out.udp, ( len + sizeof( udp_header ) ) >> 1 ));
+
+	// todo: fix the checksum
+//	out.udp.checksum = 0xdd99;
+	out.udp.checksum = 0;
+	//out.udp.checksum = ~__htons( __checksum( (u16 const *)&out.ip, ( len + sizeof( ip_header ) + sizeof( udp_header ) ) >> 1 ));
 
 	__send_packet( iface, (u08 const *) &out, sizeof( eth_header ) + sizeof( ip_header ) + sizeof( udp_header ) + len );
 }

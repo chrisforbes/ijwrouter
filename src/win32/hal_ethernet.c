@@ -3,7 +3,6 @@
 #include "../common.h"
 #include "../ip/rfc.h"
 #include "../ip/conf.h"
-#include "../ethernet.h"
 #include "../hal_ethernet.h"
 #include "../hal_debug.h"
 
@@ -62,6 +61,12 @@ u08 eth_getpacket( eth_packet * p )
 	if (h.len != h.caplen)
 	{
 		logf( "incomplete packet (dropped)!!\n" );
+		return 0;
+	}
+
+	if (h.len > sizeof(buf))
+	{
+		logf( "hal: ethernet frame too large (%u bytes)\n", h.len );
 		return 0;
 	}
 
