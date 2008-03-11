@@ -1,6 +1,9 @@
 #include "common.h"
 #include "hal_debug.h"
-#include <uip/uip.h>
+
+#include "ip/rfc.h"
+#include "ip/udp.h"
+#include "ip/conf.h"
 
 #pragma warning( disable: 4127 )
 #pragma warning( disable: 4310 )
@@ -15,7 +18,7 @@ typedef enum dhcp_state_e
 typedef struct dhcp_state
 {
 	u08 state;
-	struct uip_udp_conn * conn;
+	udp_sock socket;
 	u32 serverid;
 	u32 lease_time;
 	u32 send_time;
@@ -33,7 +36,8 @@ typedef struct dhcp_packet
 	u32 yiaddr;
 	u32 siaddr;
 	u32 giaddr;
-	u08 chaddr[16];
+	mac_addr chaddr;
+	u08 crap[10];
 
 	u08 options[312];
 } dhcp_packet;
@@ -47,8 +51,8 @@ typedef struct dhcp_packet
 #define DHCP_HLEN_ETHERNET	6
 #define DHCP_MSG_LEN	236
 
-#define DHCP_SERVER_PORT	67
-#define DHCP_CLIENT_PORT	68
+#define DHCP_SERVER_PORT	((u16)67)
+#define DHCP_CLIENT_PORT	((u16)68)
 
 typedef enum dhcp_op
 {
@@ -100,8 +104,6 @@ static u08 * append_opt_void( u08 * p, u08 optname )
 DEF_APPEND_OPT_T( u08 )
 DEF_APPEND_OPT_T( u32 )
 
-extern uip_eth_addr my_address;
-
 static void create_msg( dhcp_packet * p )
 {
 	p->op = DHCP_OP_REQUEST;
@@ -109,46 +111,48 @@ static void create_msg( dhcp_packet * p )
 	p->hlen = DHCP_HLEN_ETHERNET;
 	p->hops = 0;
 	p->xid = xid;
-	p->flags = HTONS( BOOTP_BROADCAST );
+	p->flags = __htons( BOOTP_BROADCAST );
 
-	p->ciaddr = __gethostaddr();
+	p->ciaddr = get_hostaddr();
 	p->yiaddr = 0;
 	p->siaddr = 0;
 	p->giaddr = 0;
-	memcpy( p->chaddr, &my_address, sizeof( uip_eth_addr ) );
-	memset( p->chaddr + sizeof( uip_eth_addr ), 0, 16 - sizeof( uip_eth_addr ) );
+	p->chaddr = get_macaddr();
+	memset(p->crap, 0, sizeof(p->crap));
 	memcpy( p->options, cookie, sizeof(cookie) );
 }
 
 static void send_discover( void )
 {
-	dhcp_packet * p = (dhcp_packet *)(uip_appdata = uip_buf + UIP_IPUDPH_LEN);
-	u08 * end = p->options + 4;
+	dhcp_packet p;
+	u08 * start = (u08 *)&p;
+	u08 * end = p.options + 4;
 	u08 opts[] = { DHCP_OPTION_NETMASK, DHCP_OPTION_ROUTER, DHCP_OPTION_DNS_SERVER };
 
-	create_msg( p );
+	create_msg( &p );
 
 	end = append_opt_u08( end, DHCP_OPTION_MSG_TYPE, DHCP_DISCOVER );
 	end = append_opt( end, DHCP_OPTION_REQ_LIST, sizeof(opts), opts );
 	end = append_opt_void( end, DHCP_OPTION_END );
 
-	uip_send( uip_appdata, end - (u08 *)uip_appdata );
+	udp_send( s.socket, get_bcastaddr(), DHCP_SERVER_PORT, start, (u16)(end - start) );
 
 	logf( "DHCPDISCOVER sent\n" );
 }
 
 static void send_request( void )
 {
-	dhcp_packet * p = (dhcp_packet *)uip_appdata;
-	u08 * end = p->options + 4;
+	dhcp_packet p;
+	u08 * start = (u08 *)&p;
+	u08 * end = p.options + 4;
 
-	create_msg( p );
+	create_msg( &p );
 	
 	end = append_opt_u08( end, DHCP_OPTION_MSG_TYPE, DHCP_REQUEST );
 	end = append_opt_u32( end, DHCP_OPTION_SERVER_ID, s.serverid );
-	end = append_opt_u32( end, DHCP_OPTION_REQ_IPADDR, __gethostaddr() );
+	end = append_opt_u32( end, DHCP_OPTION_REQ_IPADDR, get_hostaddr());
 
-	uip_send( uip_appdata, end - (u08 *)uip_appdata );
+	udp_send( s.socket, get_bcastaddr(), DHCP_SERVER_PORT, start, (u16)(end-start));
 }
 
 static u08 parse_options( u08 * opt, int len )
@@ -161,7 +165,7 @@ static u08 parse_options( u08 * opt, int len )
 		switch( *opt )
 		{
 		case DHCP_OPTION_NETMASK:
-			__setnetmask( *( u32 * ) (opt + 2) );
+			set_netmask( *( u32 * ) (opt + 2) );
 			break;
 
 		case DHCP_OPTION_MSG_TYPE:
@@ -181,19 +185,17 @@ static u08 parse_options( u08 * opt, int len )
 		}
 
 		opt += opt[1] + 2;
-		return type;
 	}
+	return type;
 }
 
-static u08 parse_msg( void )
+static u08 parse_msg( dhcp_packet * packet, u16 len )
 {
-	dhcp_packet * m = (dhcp_packet *) uip_appdata;
-	if (m->op == DHCP_OP_REPLY &&
-		m->xid == xid &&
-		memcmp( m->chaddr, &my_address, sizeof(my_address) ) == 0 )
+	if (packet->op == DHCP_OP_REPLY &&
+		packet->xid == xid)
 	{
-		__sethostaddr( m->yiaddr );
-		return parse_options( m->options + 4, uip_datalen() );
+		set_hostaddr( packet->yiaddr );
+		return parse_options( packet->options + 4, len );
 	}
 
 	return 0;
@@ -203,18 +205,37 @@ void dhcp_process( void )
 {
 }
 
+static void dhcp_event( udp_sock sock, u08 evt, u32 from_ip, u16 from_port, u08 const * data, u16 len )
+{
+	u08 type = parse_msg((dhcp_packet *)data, len);
+	from_ip;
+	from_port;
+	evt;
+	sock;
+	switch (type)
+	{
+	case DHCP_OFFER:
+		logf( "Got DHCP_OFFER\n" );
+		send_request();
+		break;
+	case DHCP_ACK:
+		logf( "Got DHCP_ACK\n" );
+		break;
+	case DHCP_NAK:
+		logf( "Got DHCP_NAK\n" );
+		send_discover();
+		break;
+	}
+}
+
 void dhcp_init( void )
 {
-	u32 broadcast = 0xfffffffful;
-	s.conn = uip_udp_new( (uip_ipaddr_t *) &broadcast, HTONS( DHCP_SERVER_PORT ) );
-	if (!s.conn)
+	s.socket = udp_new_sock(DHCP_CLIENT_PORT, 0, dhcp_event);
+	if (s.socket == INVALID_UDP_SOCK)
 	{
 		logf( "dhcp client failed\n" );
 		return;
 	}
-
-	uip_udp_bind( s.conn, HTONS( DHCP_CLIENT_PORT ) );
-	bind_handler( s.conn, dhcp_process );
 
 	logf( "dhcp client started\n" );
 
