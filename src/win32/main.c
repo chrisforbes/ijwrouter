@@ -4,12 +4,10 @@
 #include "../common.h"
 #include "../ip/rfc.h"
 #include "../ip/conf.h"
-#include "../ethernet.h"
 #include "../hal_ethernet.h"
 #include "../hal_debug.h"
 #include "../user.h"
 #include "../hal_time.h"
-#include "../ip/rfc.h"
 
 #include "../ip/stack.h"
 
@@ -94,6 +92,8 @@ u08 handle_packet( eth_packet * p )
 	return eth_forward( p );	// not crossing from lan <-> wan	*/
 }
 
+extern void dhcp_init(void);
+
 int main( void )
 {
 	u08 interfaces = eth_init();
@@ -105,6 +105,8 @@ int main( void )
 
 	if (!interfaces)
 		logf( "! no interfaces available\n" );
+
+	dhcp_init();
 
 	for(;;)
 	{
