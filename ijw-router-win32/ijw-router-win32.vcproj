@@ -180,10 +180,6 @@
 				>
 			</File>
 			<File
-				RelativePath="..\src\ethernet.h"
-				>
-			</File>
-			<File
 				RelativePath="..\src\user.c"
 				>
 			</File>

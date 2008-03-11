@@ -16,5 +16,6 @@ typedef void udp_event_f( udp_sock sock, u08 evt, u32 from_ip, u16 from_port, u0
 
 void * udp_get_ctx( udp_sock sock );
 udp_sock udp_new_sock( u16 port, void * ctx, udp_event_f * handler );
+void udp_send( udp_sock sock, u32 to_ip, u16 to_port, u08 const * data, u16 len );
 
 #endif

@@ -2,7 +2,9 @@
 #include "stack.h"
 #include "rfc.h"
 #include "arp.h"
+#include "arptab.h"
 #include "udp.h"
+#include "conf.h"
 #include "../hal_debug.h"
 #include "internal.h"
 
@@ -38,21 +40,22 @@ u08 udp_receive_packet( u08 iface, ip_header * p, u16 len )
 	udp_header * udp = ( udp_header * ) __ip_payload( p );
 	udp_conn * conn;
 	udp_sock sock;
+	u16 port = __ntohs( udp->dest_port );
 
 	iface; len;
 
 	// todo: verify udp checksum
 
-	conn = udp_find_conn_by_port( __ntohs( udp->dest_port ) );
+	conn = udp_find_conn_by_port( port );
 	if (!conn || !conn->handler)
 	{
-		logf( "udp: no conn for port=%u\n", __ntohs( udp->dest_port ) );
+		logf( "udp: no conn for port=%u\n", port );
 		return 0;
 	}
 
 	sock = (udp_sock)(conn - udp_conns);
 
-	logf( "udp: delivering datagram for port=%u\n to sock %u\n", __ntohs( udp->dest_port ), sock );
+	logf( "udp: delivering datagram for port=%u\n to sock %u\n", port, sock );
 
 	conn->handler( sock, 
 		UDP_EVENT_PACKET, 
@@ -102,4 +105,57 @@ udp_sock udp_new_sock( u16 port, void * ctx, udp_event_f * handler )
 	logf( "udp: bound port %u to socket %u\n", port, (conn - udp_conns) );
 
 	return (udp_sock)(conn - udp_conns);
+}
+
+#pragma pack( push, 1 )
+	static struct
+	{
+		eth_header eth;
+		ip_header ip;
+		udp_header udp;
+		u08 crap[2048];
+	} out;
+#pragma pack( pop )
+
+void udp_send( udp_sock sock, u32 to_ip, u16 to_port, u08 const * data, u16 len )
+{
+	udp_conn * conn = &udp_conns[sock];
+	u08 iface;
+	if (!conn->handler)
+	{
+		logf( "udp: not_sock in send\n" );
+		return;
+	}
+
+	memset( &out, 0, sizeof( out ) );
+
+	if (!arptab_query( &iface, to_ip, &out.eth.dest ))
+	{
+		logf( "udp: no arp cache for host, refreshing...\n" );
+		send_arp_request( 0xff, to_ip );	// 0xff = broadcast
+		return;
+	}
+
+	out.eth.src = get_macaddr();
+	out.eth.ethertype = __htons( ethertype_ipv4 );
+	
+	out.ip.version = 0x45;
+	out.ip.tos = 0;
+	out.ip.length = __htons( len + sizeof( ip_header ) + sizeof( udp_header ) );
+	out.ip.fraginfo = 0;
+	out.ip.ident = 0;
+	out.ip.dest_addr = to_ip;
+	out.ip.src_addr = get_hostaddr();
+	out.ip.ttl = 128;
+	out.ip.proto = IPPROTO_UDP;
+	out.ip.checksum = ~__htons( __checksum( (u16 const *)&out.ip, 10 ) );
+
+	out.udp.src_port = __htons(conn->port);
+	out.udp.dest_port = __htons(to_port);
+	out.udp.length = __htons( len + sizeof( udp_header ) );
+
+	memcpy( out.crap, data, len );
+	out.udp.checksum = ~__htons( __checksum( (u16 const *)&out.udp, ( len + sizeof( udp_header ) ) >> 1 ));
+
+	__send_packet( iface, (u08 const *) &out, sizeof( eth_header ) + sizeof( ip_header ) + sizeof( udp_header ) + len );
 }
