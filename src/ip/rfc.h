@@ -89,6 +89,15 @@ typedef struct icmp_header
 	u16 sequence;
 } icmp_header;
 
+typedef struct ip_pseudoheader		// for tcp and udp checksum
+{
+	u32 src;
+	u32 dest;
+	u08 sbz;
+	u08 proto;
+	u16 len;
+} ip_pseudoheader;
+
 #pragma pack( pop )
 
 #endif

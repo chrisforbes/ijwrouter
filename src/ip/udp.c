@@ -119,15 +119,7 @@ udp_sock udp_new_sock( u16 port, void * ctx, udp_event_f * handler )
 	} out;
 #pragma pack( pop )
 
-#pragma pack( push, 1 )
-	static struct		// ip pseudo-header for udp checksum
-	{
-		u32 src;
-		u32 dest;
-		u08 sbz;
-		u08 proto;
-		u16 len;
-	} ipph;
+static ip_pseudoheader ipph;
 
 void udp_send( udp_sock sock, u32 to_ip, u16 to_port, u08 const * data, u16 len )
 {
