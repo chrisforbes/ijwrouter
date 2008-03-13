@@ -14,21 +14,31 @@
 	} out;
 #pragma pack( pop )
 
+	static mac_addr all_zero_mac = {{0,0,0,0,0,0}};
+
+static void make_arp( arp_header * arp, u08 op, u32 tpa, mac_addr tha )
+{
+	arp->hlen = 6;
+	arp->plen = 4;
+	arp->htype = __htons(1);
+	arp->ptype = __htons(0x0800);
+	arp->oper = __htons( op );
+	arp->sha = get_macaddr();
+	arp->spa = get_hostaddr();
+	arp->tha = tha;
+	arp->tpa = tpa;
+}
+
 static void send_arp_reply( u08 iface, arp_header * req )
 {
 	memset( &out, 0, sizeof( out ) );
 	out.eth.dest = out.arp.tha = req->sha;
 	out.eth.src = out.arp.sha = get_macaddr();
 	out.eth.ethertype = __htons( ethertype_arp );
-	out.arp.hlen = 6;
-	out.arp.htype = __htons(1);
-	out.arp.oper = __htons(ARP_REPLY);
-	out.arp.plen = 4;
-	out.arp.ptype = __htons( 0x0800 );
-	out.arp.tpa = req->spa;
-	out.arp.spa = req->tpa;
 
-	__send_packet( iface, (u08 const *) &out, sizeof( out ) );
+	make_arp( &out.arp, ARP_REPLY, req->spa, req->sha );
+
+	__send_packet( iface, &out, sizeof( out ) );
 }
 
 extern const mac_addr broadcast_mac;
@@ -39,15 +49,10 @@ void send_arp_request( u08 iface, u32 ip )
 	out.eth.dest = broadcast_mac;
 	out.eth.src = out.arp.sha = get_macaddr();
 	out.eth.ethertype = __htons( ethertype_arp );
-	out.arp.hlen = 6;
-	out.arp.htype = __htons(1);
-	out.arp.oper = __htons(ARP_REPLY);
-	out.arp.plen = 4;
-	out.arp.ptype = __htons( 0x0800 );
-	out.arp.tpa = ip;
-	out.arp.spa = get_hostaddr();
 
-	__send_packet( iface, (u08 const *) &out, sizeof( out ) );
+	make_arp( &out.arp, ARP_REQUEST, ip, all_zero_mac );
+
+	__send_packet( iface, &out, sizeof( out ) );
 }
 
 u08 handle_arp_packet( u08 iface, arp_header * arp )

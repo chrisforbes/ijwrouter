@@ -12,10 +12,10 @@
 
 static send_packet_f * on_send = 0;
 
-void __send_packet( u08 iface, u08 const * buf, u16 len )
+void __send_packet( u08 iface, void const * buf, u16 len )
 {
 	if (on_send)
-		on_send( iface, buf, len );
+		on_send( iface, (u08 const *)buf, len );
 	else
 		logf( "ip: trying to send packet but no driver bound.\n" );
 }
@@ -113,4 +113,16 @@ u16 __checksum_ex( u16 sum, void const * _data, u16 len )
 
 	/* Return sum in host byte order. */
 	return sum;
+}
+
+u16 __pseudoheader_checksum( ip_header const * ip )
+{
+	ip_pseudoheader ipph;
+	ipph.src = ip->src_addr;
+	ipph.dest = ip->dest_addr;
+	ipph.proto = ip->proto;
+	ipph.len = __htons(__ip_payload_length( ip ));
+	ipph.sbz = 0;
+
+	return __checksum_ex( 0, &ipph, sizeof(ipph) );
 }

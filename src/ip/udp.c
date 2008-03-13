@@ -119,8 +119,6 @@ udp_sock udp_new_sock( u16 port, void * ctx, udp_event_f * handler )
 	} out;
 #pragma pack( pop )
 
-static ip_pseudoheader ipph;
-
 void udp_send( udp_sock sock, u32 to_ip, u16 to_port, u08 const * data, u16 len )
 {
 	udp_conn * conn = &udp_conns[sock];
@@ -162,14 +160,8 @@ void udp_send( udp_sock sock, u32 to_ip, u16 to_port, u08 const * data, u16 len 
 
 	memcpy( out.crap, data, len );
 
-	ipph.src = out.ip.src_addr;
-	ipph.dest = out.ip.dest_addr;
-	ipph.proto = out.ip.proto;
-	ipph.sbz = 0;
-	ipph.len = out.udp.length;
-
 	out.udp.checksum = ~__htons(__checksum_ex( 
-		__checksum( &ipph, sizeof(ipph) ), 
+		__pseudoheader_checksum( &out.ip ),
 		&out.udp, len + sizeof( udp_header ) ));
 
 	__send_packet( iface, (u08 const *) &out, sizeof( eth_header ) + sizeof( ip_header ) + sizeof( udp_header ) + len );

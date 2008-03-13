@@ -30,6 +30,6 @@ int	pcap_findalldevs(pcap_if_t **, char *);
 void	pcap_freealldevs(pcap_if_t *);
 pcap_t	*pcap_open_live(const char *, int, int, int, char *);
 u08 const * pcap_next(pcap_t *, pcap_pkthdr *);
-int	pcap_sendpacket(pcap_t *, const u08 *, int);
+int	pcap_sendpacket(pcap_t *, const void *, int);
 
 #endif

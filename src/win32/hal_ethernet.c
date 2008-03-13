@@ -41,10 +41,6 @@ u08 eth_init( void )
 	else
 		logf( "opened interface %s\n", d->name );
 
-	// enter nonblocking mode
-	//if (-1 == pcap_setnonblock( dev, 1, errbuf ))
-	//	logf( "failed setting interface to nonblocking mode\n" );
-
 	pcap_freealldevs( alldevs );
 
 	return 1;
@@ -93,7 +89,7 @@ u08 eth_forward( eth_packet * p )
 
 u08 eth_inject( eth_packet * p )
 {
-	if (-1 == pcap_sendpacket( dev, (u08 const *)p->packet, p->len ))
+	if (-1 == pcap_sendpacket( dev, p->packet, p->len ))
 		return 0;
 
 	return 1;

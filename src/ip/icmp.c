@@ -32,7 +32,7 @@ static void icmp_send_reply( u08 iface, ip_header * reqip, icmp_header * reqping
 
 	out.ip.version = 0x45;
 	out.ip.tos = 0;
-	out.ip.length = __htons(len);
+	out.ip.length = __htons(len);	// this is bugged!
 	out.ip.fraginfo = 0;
 	out.ip.ident = reqip->ident;
 	out.ip.dest_addr = reqip->src_addr;
@@ -48,7 +48,7 @@ static void icmp_send_reply( u08 iface, ip_header * reqip, icmp_header * reqping
 	memcpy( &out.crap, reqping + 1, len - sizeof( ip_header ) - sizeof( icmp_header ) );
 	out.icmp.checksum = ~__htons(__checksum( &out.icmp, len - sizeof( ip_header ) ));
 
-	__send_packet( iface, (u08 const *) &out, len + sizeof( eth_header ) );
+	__send_packet( iface, &out, len + sizeof( eth_header ) );
 }
 
 u08 icmp_receive_packet( u08 iface, ip_header * p, u16 len )
