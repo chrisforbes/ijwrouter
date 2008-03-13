@@ -182,3 +182,18 @@ void udp_send( udp_sock sock, u32 to_ip, u16 to_port, u08 const * data, u16 len 
 
 	__send_packet( iface, (u08 const *) &out, sizeof( eth_header ) + sizeof( ip_header ) + sizeof( udp_header ) + len );
 }
+
+void udp_close( udp_sock sock )
+{
+	udp_conn * conn = &udp_conns[sock];
+
+	if (!conn)
+	{
+		logf( "udp: not_sock in close\n" );
+		return;
+	}
+
+	conn->handler = 0;
+	conn->ctx = 0;
+	conn->port = 0;
+}
