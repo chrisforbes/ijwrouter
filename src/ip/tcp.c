@@ -5,6 +5,7 @@
 #include "arp.h"
 #include "../hal_debug.h"
 #include "internal.h"
+#include "tcp.h"
 
 #define TCP_MAX_CONNS	40
 
@@ -50,7 +51,11 @@ static tcp_conn * tcp_find_conn( u16 port )
 
 u08 tcp_receive_packet( u08 iface, ip_header * p, u16 len )
 {
+	tcp_header* tcph;
+
 	iface; p; len;
+
+	tcph = (tcp_header*)(p+1);
 	logf( "tcp: got packet\n" );
 
 	if( p->dest_addr != get_hostaddr() )
