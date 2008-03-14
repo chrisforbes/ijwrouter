@@ -65,6 +65,16 @@ typedef struct udp_header
 	u16 checksum;
 } udp_header;
 
+enum tcp_flags
+{
+	TCP_FIN = 1,
+	TCP_SYN = 2,
+	TCP_RST = 4,
+	TCP_PSH = 8,
+	TCP_ACK = 16,
+	TCP_URG = 32,
+};
+
 typedef struct tcp_header
 {
 	u16 src_port;

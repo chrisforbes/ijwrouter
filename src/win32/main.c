@@ -10,6 +10,7 @@
 #include "../hal_time.h"
 
 #include "../ip/stack.h"
+#include "../ip/tcp.h"
 
 u08 charge_for_packet( eth_packet * p )
 {
@@ -92,6 +93,8 @@ int main( void )
 		logf( "! no interfaces available\n" );
 
 	dhcp_init();
+
+	tcp_new_listen_sock( 80, NULL, NULL );
 
 	for(;;)
 	{

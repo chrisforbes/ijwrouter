@@ -29,4 +29,9 @@ __inline u08 __ip_validate_header( ip_header const * h )
 	return 0xffff == __checksum( h, __ip_header_length( h ) );
 }
 
+__inline void * __tcp_payload( tcp_header* h )
+{
+	return 4 * h->data_offset + (u08*)h;
+}
+
 #endif
