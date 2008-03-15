@@ -89,3 +89,18 @@ u08 handle_arp_packet( u08 iface, arp_header * arp )
 	logf( "arp: bogus oper=%d\n", op );
 	return 0;
 }
+
+u08 arp_make_eth_header( eth_header * h, u32 destip, u08 * iface )
+{	// returns 1 if successful; 0 if we needed to send some ARP instead.
+	if (!arptab_query( iface, destip, &h->dest ))
+	{
+		logf( "arp: no arp cache for host, refreshing...\n" );
+		send_arp_request( 0xff, destip );
+		return 0;
+	}
+
+	h->src = get_macaddr();
+	h->ethertype = __htons( ethertype_ipv4 );
+
+	return 1;
+}

@@ -79,31 +79,14 @@ static tcp_conn * tcp_find_connection( u32 remote_host, u16 remote_port, u16 por
 void tcp_sendpacket( u32 dest, void* data, u16 datalen, tcp_header* inc_packet )
 {
 	u08 iface;
-
 	memset( &out, 0, sizeof( out ) );
 
-	if (!arptab_query( &iface, dest, &out.eth.dest ))
-	{
-		logf( "tcp: no arp cache for host, refreshing...\n" );
-		send_arp_request( 0xff, dest );	// 0xff = broadcast
+	if (!arp_make_eth_header( &out.eth, dest, &iface ))
 		return;
-	}
 
-	out.eth.src = get_macaddr();
-	out.eth.ethertype = __htons( ethertype_ipv4 );
-	
-	out.ip.version = 0x45;
-	out.ip.tos = 0;
-	out.ip.length = __htons( datalen + sizeof( ip_header ) + sizeof( tcp_header ) );
-	out.ip.fraginfo = 0;
-	out.ip.ident = 0;
-	out.ip.dest_addr = dest;
-	out.ip.src_addr = get_hostaddr();
-	out.ip.ttl = 128;
-	out.ip.proto = IPPROTO_TCP;
-	out.ip.checksum = 0;
-	out.ip.checksum = ~__htons( __checksum( &out.ip, sizeof( ip_header ) ) );	
-	
+	__ip_make_header( &out.ip, IPPROTO_TCP, 0, 
+		datalen + sizeof( ip_header ) + sizeof( tcp_header ), dest );
+
 	out.tcp.ack_no = inc_packet->seq_no + 1;
 	out.tcp.seq_no = 400;
 	out.tcp.dest_port = inc_packet->src_port;

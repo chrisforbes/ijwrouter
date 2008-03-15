@@ -132,33 +132,22 @@ void udp_send( udp_sock sock, u32 to_ip, u16 to_port, u08 const * data, u16 len 
 
 	memset( &out, 0, sizeof( out ) );
 
-	if (!arptab_query( &iface, to_ip, &out.eth.dest ))
-	{
-		logf( "udp: no arp cache for host, refreshing...\n" );
-		send_arp_request( 0xff, to_ip );	// 0xff = broadcast
+	if ( !arp_make_eth_header( &out.eth, to_ip, &iface ) )
 		return;
-	}
 
 	out.eth.src = get_macaddr();
 	out.eth.ethertype = __htons( ethertype_ipv4 );
 	
-	out.ip.version = 0x45;
-	out.ip.tos = 0;
-	out.ip.length = __htons( len + sizeof( ip_header ) + sizeof( udp_header ) );
-	out.ip.fraginfo = 0;
-	out.ip.ident = 0;
-	out.ip.dest_addr = to_ip;
-	out.ip.src_addr = get_hostaddr();
-	out.ip.ttl = 128;
-	out.ip.proto = IPPROTO_UDP;
-	out.ip.checksum = 0;
-	out.ip.checksum = ~__htons( __checksum( &out.ip, sizeof( ip_header ) ) );	
+	__ip_make_header( &out.ip, IPPROTO_UDP, 0,
+		len + sizeof( ip_header ) + sizeof( udp_header ),
+		to_ip );
 
 	out.udp.src_port = __htons(conn->port);
 	out.udp.dest_port = __htons(to_port);
 	out.udp.length = __htons( len + sizeof( udp_header ) );
 
-	memcpy( out.crap, data, len );
+	if ( len )
+		memcpy( out.crap, data, len );
 
 	out.udp.checksum = ~__htons(__checksum_ex( 
 		__pseudoheader_checksum( &out.ip ),
@@ -171,7 +160,7 @@ void udp_close( udp_sock sock )
 {
 	udp_conn * conn = &udp_conns[sock];
 
-	if (!conn)
+	if ( !conn )
 	{
 		logf( "udp: not_sock in close\n" );
 		return;

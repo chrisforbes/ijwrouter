@@ -8,38 +8,23 @@
 #include "arp.h"
 
 #pragma pack( push, 1 )
-	static struct
-	{
-		eth_header eth;
-		ip_header ip;
-		icmp_header icmp;
-		u08 crap[ 1536 - sizeof(eth_header) - sizeof(ip_header) - sizeof(icmp_header) ];
-	} out;
+static struct
+{
+	eth_header eth;
+	ip_header ip;
+	icmp_header icmp;
+	u08 crap[ 1536 - sizeof(eth_header) - sizeof(ip_header) - sizeof(icmp_header) ];
+} out;
 #pragma pack( pop )
 
 static void icmp_send_reply( u08 iface, ip_header * reqip, icmp_header * reqping, u16 len )
 {
 	memset( &out, 0, sizeof(out) );
-	if (!arptab_query( 0, reqip->src_addr, &out.eth.dest ))
-	{
-		logf( "icmp: no arp cache for host, refreshing...\n" );
-		send_arp_request( iface, reqip->src_addr );
+
+	if (!arp_make_eth_header( &out.eth, reqip->src_addr, 0 ))
 		return;
-	}
 
-	out.eth.src = get_macaddr();
-	out.eth.ethertype = __htons( ethertype_ipv4 );
-
-	out.ip.version = 0x45;
-	out.ip.tos = 0;
-	out.ip.length = __htons(len);	// this is bugged!
-	out.ip.fraginfo = 0;
-	out.ip.ident = reqip->ident;
-	out.ip.dest_addr = reqip->src_addr;
-	out.ip.src_addr = reqip->dest_addr;
-	out.ip.ttl = 128;
-	out.ip.proto = IPPROTO_ICMP;
-	out.ip.checksum = ~__htons(__checksum( &out.ip, sizeof(ip_header) ));
+	__ip_make_response( &out.ip, reqip, len );
 
 	out.icmp.type = 0;
 	out.icmp.code = 0;

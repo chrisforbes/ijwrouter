@@ -126,3 +126,22 @@ u16 __pseudoheader_checksum( ip_header const * ip )
 
 	return __checksum_ex( 0, &ipph, sizeof(ipph) );
 }
+
+void __ip_make_header( ip_header * ip, u08 proto, u16 ident, u16 len, u32 dest )
+{
+	ip->version = 0x45;
+	ip->tos = 0;
+	ip->length = __htons( len );
+	ip->fraginfo = 0;
+	ip->ident = ident;
+	ip->dest_addr = dest;
+	ip->src_addr = get_hostaddr();
+	ip->ttl = 128;
+	ip->proto = proto;
+	ip->checksum = ~__htons( __checksum( ip, sizeof(ip_header) ) );
+}
+
+void __ip_make_response( ip_header * ip, ip_header const * req, u16 len )
+{
+	__ip_make_header( ip, req->proto, req->ident, len, req->dest_addr );
+}
