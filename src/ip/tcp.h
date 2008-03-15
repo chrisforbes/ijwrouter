@@ -3,6 +3,8 @@
 
 typedef u16 tcp_sock;
 
+#define INVALID_TCP_SOCK	0xffff
+
 u08 tcp_receive_packet( u08 iface, ip_header * p, u16 len );
 
 typedef void tcp_listen_f( tcp_sock sock );

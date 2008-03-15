@@ -25,7 +25,13 @@ u08 eth_init( void )
 
 	if (pcap_findalldevs( &alldevs, errbuf ) == -1)
 	{
-		logf( "error in pcap_findalldevs: %s\n", errbuf );
+		logf( "hal: error in pcap_findalldevs: %s\n", errbuf );
+		return 0;
+	}
+
+	if (!alldevs)
+	{
+		logf( "hal: looks like there's no network cards, or pcap isnt running.\n" );
 		return 0;
 	}
 
@@ -35,11 +41,12 @@ u08 eth_init( void )
 
 	if (!dev)
 	{
-		logf( "failed opening interface %s\n", d->name );
+		logf( "hal: failed opening interface %s\n", d->name );
 		return 0;
 	}
 	else
-		logf( "opened interface %s\n", d->name );
+		logf( "hal: opened interface %s\n (%s)\n", 
+			d->name, d->description );
 
 	pcap_freealldevs( alldevs );
 
@@ -49,14 +56,20 @@ u08 eth_init( void )
 u08 eth_getpacket( eth_packet * p )
 {
 	struct pcap_pkthdr h;
-	u08 const * data = pcap_next( dev, &h );
+	u08 const * data;
+	
+	if ( !dev )
+		return 0;
 
-	if (!data)
+	data = pcap_next( dev, &h );
+
+	if ( !data )
 		return 0;	// no packet
 
 	if (h.len != h.caplen)
 	{
-		logf( "incomplete packet (dropped)!!\n" );
+		logf( "hal: incomplete ethernet frame (%u from %u)\n", 
+			h.caplen, h.len );
 		return 0;
 	}
 
@@ -89,6 +102,12 @@ u08 eth_forward( eth_packet * p )
 
 u08 eth_inject( eth_packet * p )
 {
+	if ( !dev )
+	{
+		logf( "hal: tried to inject packet without interface\n" );
+		return 0;
+	}
+
 	if (-1 == pcap_sendpacket( dev, p->packet, p->len ))
 		return 0;
 

@@ -150,7 +150,7 @@ static void send_discover( void )
 
 	udp_send( s.socket, 0xfffffffful, DHCP_SERVER_PORT, start, (u16)(end - start) );
 
-	logf( "DHCPDISCOVER sent\n" );
+	logf( "dhcp: discover sent\n" );
 	tickCount = ticks();
 	s.state = DHCP_STATE_WAIT_FOR_OFFER;
 }
@@ -238,23 +238,20 @@ void dhcp_process( void )
 static void dhcp_event( udp_sock sock, u08 evt, u32 from_ip, u16 from_port, u08 const * data, u16 len )
 {
 	u08 type = parse_msg((dhcp_packet *)data, len);
-	from_ip;
-	from_port;
-	evt;
-	sock;
+	from_ip; from_port;	evt; sock;
 	switch (type)
 	{
 	case DHCP_OFFER:
-		logf( "Got DHCP_OFFER\n" );
+		logf( "dhcp: got offer\n" );
 		s.state = DHCP_STATE_IDLE;
 		send_request();
 		break;
 	case DHCP_ACK:
-		logf( "Got DHCP_ACK\n" );
+		logf( "dhcp: got ack\n" );
 		s.state = DHCP_STATE_IDLE;
 		break;
 	case DHCP_NAK:
-		logf( "Got DHCP_NAK\n" );
+		logf( "dhcp: got nak\n" );
 		s.state = DHCP_STATE_IDLE;
 		send_discover();
 		break;
@@ -266,11 +263,11 @@ void dhcp_init( void )
 	s.socket = udp_new_sock(DHCP_CLIENT_PORT, 0, dhcp_event);
 	if (s.socket == INVALID_UDP_SOCK)
 	{
-		logf( "dhcp client failed\n" );
+		logf( "dhcp: unable to bind socket\n" );
 		return;
 	}
 
-	logf( "dhcp client started\n" );
+	logf( "dhcp: started successfully\n" );
 
 	send_discover();
 }

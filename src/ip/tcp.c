@@ -74,21 +74,11 @@ static tcp_conn * tcp_find_connection( u32 remote_host, u16 remote_port, u16 por
 		tcp_header tcp;
 		u08 crap[2048];
 	} out;
-
-	typedef struct tcp_pseudo_header_s
-	{
-		u32 src;
-		u32 dest;
-		u08 zero;
-		u08 ptcl;
-		u16 length;
-	} tcp_pseudo_header;
 #pragma pack( pop )
 
 void tcp_sendpacket( u32 dest, void* data, u16 datalen, tcp_header* inc_packet )
 {
 	u08 iface;
-	tcp_pseudo_header ph;
 
 	memset( &out, 0, sizeof( out ) );
 
@@ -122,16 +112,11 @@ void tcp_sendpacket( u32 dest, void* data, u16 datalen, tcp_header* inc_packet )
 	out.tcp.flags = TCP_SYN | TCP_ACK;
 	out.tcp.urgent_pointer = 0;
 
-	ph.src = get_hostaddr();
-	ph.dest = dest;
-	ph.zero = 0;
-	ph.ptcl = IPPROTO_TCP;
-	ph.length = sizeof( tcp_header ) + datalen;
-
 	if( datalen )
-		memcpy( &out.crap, data, datalen );
+		memcpy( out.crap, data, datalen );
 
-	out.tcp.checksum = __checksum_ex( __checksum( &ph, sizeof ( ph ) ), &out.tcp, datalen + sizeof( tcp_header ) );
+	out.tcp.checksum = __checksum_ex( __pseudoheader_checksum( &out.ip ), 
+		&out.tcp, datalen + sizeof( tcp_header ) );
 
 	__send_packet( iface, (u08*)&out, sizeof( eth_header ) + sizeof( ip_header ) + sizeof( tcp_header ) + datalen );
 }
@@ -156,7 +141,7 @@ u08 tcp_receive_packet( u08 iface, ip_header * p, u16 len )
 	tcp_header* tcph;
 	tcp_conn* conn;
 
-	iface; p; len;
+	iface;
 	tcph = (tcp_header*)__ip_payload( p );
 
 	//logf( "tcp: packet from %u.%u.%u.%u:%u  for  %u.%u.%u.%u:%u\n",
@@ -205,8 +190,8 @@ tcp_sock tcp_new_listen_sock( u16 port, tcp_listen_f* new_connection_callback, t
 
 	if( conn->state != TCP_STATE_CLOSED )
 	{
-		logf( "Listening on already-open port (%n)", __ntohs( port ) );
-		for(;;);
+		logf( "tcp: already listening on port %u", __ntohs( port ) );
+		return INVALID_TCP_SOCK;
 	}
 
 	memset( conn, 0, sizeof( tcp_conn ) );
