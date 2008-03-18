@@ -169,7 +169,7 @@ u08 handle_connection( tcp_conn* conn, ip_header* p, tcp_header* t, u16 len )
 	if( datalen && __ntohl( t->seq_no ) == conn->incoming_seq_no )
 	{
 		conn->incoming_seq_no = __ntohl(t->seq_no) + datalen;
-		// TODO: forward data to app
+		conn->recv_handler( (tcp_sock)(tcp_conns - conn), __tcp_payload( t ), datalen );
 		tcp_send_ack( conn );
 	}
 

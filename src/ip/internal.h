@@ -31,7 +31,7 @@ __inline u08 __ip_validate_header( ip_header const * h )
 
 __inline void * __tcp_payload( tcp_header* h )
 {
-	return 4 * h->data_offset + (u08*)h;
+	return (h->data_offset >> 2) + (u08*)h;
 }
 
 void __ip_make_header( ip_header * ip, u08 proto, u16 ident, u16 len, u32 dest );

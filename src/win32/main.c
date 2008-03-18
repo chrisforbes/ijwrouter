@@ -83,6 +83,15 @@ u08 handle_packet( eth_packet * p )
 extern void dhcp_init( void );
 extern void dhcp_process( void );
 
+void http_receive_data( tcp_sock sock, void* buf, u32 buflen )
+{
+	char* b = buf;
+	sock;
+
+	b[ buflen ] = 0;
+	logf( "%s", b );
+}
+
 int main( void )
 {
 	u08 interfaces = eth_init();
@@ -94,7 +103,7 @@ int main( void )
 
 	dhcp_init();
 
-	tcp_new_listen_sock( 80, NULL, NULL );
+	tcp_new_listen_sock( 80, NULL, http_receive_data );
 
 	for(;;)
 	{
