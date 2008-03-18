@@ -143,5 +143,5 @@ void __ip_make_header( ip_header * ip, u08 proto, u16 ident, u16 len, u32 dest )
 
 void __ip_make_response( ip_header * ip, ip_header const * req, u16 len )
 {
-	__ip_make_header( ip, req->proto, req->ident, len, req->dest_addr );
+	__ip_make_header( ip, req->proto, req->ident, len, req->src_addr );
 }
