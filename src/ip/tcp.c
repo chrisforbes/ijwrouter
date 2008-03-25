@@ -24,6 +24,14 @@ enum tcp_state_e
 	TCP_STATE_LAST_ACK,
 };
 
+typedef struct tcp_buf
+{
+	u08 const * data;
+	u32 len;
+	u32 ofs;
+	struct tcp_buf * next;
+} tcp_buf;
+
 typedef struct tcp_conn_s
 {
 	enum tcp_state_e state;
@@ -34,6 +42,7 @@ typedef struct tcp_conn_s
 	u32 outgoing_seq_no;
 	tcp_listen_f * listen_handler;
 	tcp_recv_f * recv_handler;
+	tcp_buf * sendbuf;
 } tcp_conn;
 
 static tcp_conn tcp_conns[ TCP_MAX_CONNS ];
@@ -92,6 +101,30 @@ static tcp_conn * tcp_find_connection( u32 remote_host, u16 remote_port, u16 por
 	} out;
 #pragma pack( pop )
 
+static void tcp_unbuffer( tcp_conn * conn, u32 bytes )
+{
+	while( bytes && conn->sendbuf )
+	{
+		u32 n = __min( bytes, conn->sendbuf->len - conn->sendbuf->ofs );
+		
+		if (n < conn->sendbuf->len - conn->sendbuf->ofs)
+		{
+			conn->sendbuf->ofs += n;
+			bytes -= n;
+		}
+		else
+		{
+			// free this buffer chunk
+			tcp_buf * b = conn->sendbuf;
+			bytes -= n;
+			conn->sendbuf = conn->sendbuf->next;
+
+			free( (void *) b->data );
+			free( b );
+		}
+	}
+}
+
 void tcp_sendpacket( tcp_conn * conn, void* data, u16 datalen, u08 flags )
 {
 	u08 iface;
@@ -143,6 +176,7 @@ u08 handle_listen_port( tcp_conn* conn, ip_header* p, tcp_header* t )
 	newconn->incoming_seq_no = __ntohl( t->seq_no );
 	newconn->outgoing_seq_no = 0x400;
 	newconn->recv_handler = conn->recv_handler;
+	newconn->sendbuf = 0;
 
 	logf( "flags: %x\n", t->flags );
 
@@ -163,7 +197,9 @@ u08 handle_connection( tcp_conn* conn, ip_header* p, tcp_header* t, u16 len )
 
 	if( t->flags == TCP_ACK )
 	{
-		// TODO: drop buffered output, send what they want.
+		u32 drop = __ntohl(t->ack_no) - conn->outgoing_seq_no;	// todo: bob, check this
+		if (drop)
+			tcp_unbuffer( conn, drop );	// drop the stuff they acked from our buffer
 	}
 
 	if( datalen && __ntohl( t->seq_no ) == conn->incoming_seq_no )
@@ -171,6 +207,8 @@ u08 handle_connection( tcp_conn* conn, ip_header* p, tcp_header* t, u16 len )
 		conn->incoming_seq_no = __ntohl(t->seq_no) + datalen;
 		conn->recv_handler( (tcp_sock)(tcp_conns - conn), __tcp_payload( t ), datalen );
 		tcp_send_ack( conn );
+
+		// todo: send outstanding data?
 	}
 
 	len;
@@ -222,12 +260,10 @@ u08 tcp_receive_packet( u08 iface, ip_header * p, u16 len )
 
 tcp_sock tcp_new_listen_sock( u16 port, tcp_listen_f* new_connection_callback, tcp_recv_f* recv_callback )
 {
-	tcp_conn* conn;
+	tcp_conn * conn;
 
 	port = __htons( port );
 	conn = tcp_find_listener( port );
-
-	new_connection_callback; recv_callback;
 
 	if( conn->state != TCP_STATE_CLOSED )
 	{
@@ -240,6 +276,35 @@ tcp_sock tcp_new_listen_sock( u16 port, tcp_listen_f* new_connection_callback, t
 	conn->localport = port;
 	conn->listen_handler = new_connection_callback;
 	conn->recv_handler = recv_callback;
+	conn->sendbuf = 0;
 
 	return (tcp_sock)(conn - tcp_conns);
+}
+
+void tcp_send( tcp_sock sock, void* buf, u32 buf_len )
+{
+	tcp_conn * conn = &tcp_conns[ sock ];	// todo: handle invalid socket
+	tcp_buf * p = conn->sendbuf;
+	tcp_buf * b; 
+
+	if ( conn->state != TCP_STATE_ESTABLISHED )
+		return;	// todo: are we allowed to do this at any other time?
+	
+	b = malloc( sizeof( tcp_buf ) );
+	b->next = 0;
+	b->ofs = 0;
+	b->len = buf_len;
+	b->data = buf;
+
+	if (!conn->sendbuf)
+		conn->sendbuf = b;
+	else
+	{
+		while( p->next ) 
+			p = p->next;
+
+		p->next = b;
+	}
+
+	// todo: actually send data
 }
