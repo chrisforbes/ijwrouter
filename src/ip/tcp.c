@@ -11,6 +11,7 @@
 #include <assert.h>
 
 #define TCP_MAX_CONNS	40
+#define MAXSEGSIZE		400		// todo: tune this to not suck
 
 enum tcp_state_e
 {
@@ -138,7 +139,7 @@ static void tcp_unbuffer( tcp_conn * conn, u32 bytes )
 	}
 }
 
-void tcp_sendpacket( tcp_conn * conn, void* data, u16 datalen, u08 flags )
+void tcp_sendpacket_ex( tcp_conn * conn, void const * data, u16 datalen, u08 flags, u32 seq )
 {
 	u08 iface;
 	memset( &out, 0, sizeof( out ) );
@@ -150,7 +151,7 @@ void tcp_sendpacket( tcp_conn * conn, void* data, u16 datalen, u08 flags )
 		datalen + sizeof( ip_header ) + sizeof( tcp_header ), conn->remotehost );
 
 	out.tcp.ack_no = __htonl(conn->incoming_seq_no);
-	out.tcp.seq_no = __htonl(conn->outgoing_seq_no);
+	out.tcp.seq_no = __htonl(seq);
 	out.tcp.dest_port = conn->remoteport;
 	out.tcp.src_port = conn->localport;
 	out.tcp.data_offset = 5 << 4;
@@ -168,6 +169,11 @@ void tcp_sendpacket( tcp_conn * conn, void* data, u16 datalen, u08 flags )
 		sizeof( eth_header ) + sizeof( ip_header ) + sizeof( tcp_header ) + datalen );
 }
 
+void tcp_sendpacket( tcp_conn * conn, void const * data, u16 datalen, u08 flags )
+{
+	tcp_sendpacket_ex( conn, data, datalen, flags, conn->outgoing_seq_no );
+}
+
 void tcp_send_synack( tcp_conn * conn, tcp_header * inc_packet )
 {
 	conn->incoming_seq_no = __ntohl( inc_packet->seq_no ) + 1;
@@ -177,6 +183,32 @@ void tcp_send_synack( tcp_conn * conn, tcp_header * inc_packet )
 void tcp_send_ack( tcp_conn * conn )
 {
 	tcp_sendpacket( conn, 0, 0, TCP_ACK );
+}
+
+void tcp_send_outstanding( tcp_conn * conn )
+{
+	tcp_buf * b = conn->sendbuf;
+	u32 ofs = 0;
+	u32 seq = conn->outgoing_seq_no;
+
+	if ( !b )
+		return;	// nothing to send
+
+	while( b )
+	{
+		u32 chunklen = __min( b->len - b->ofs - ofs, MAXSEGSIZE );
+		if ( chunklen )
+		{
+			tcp_sendpacket( conn, (void const*)(b->data + b->ofs + ofs), (u16) chunklen, TCP_ACK );	// maybe
+			seq += chunklen;
+			ofs += chunklen;
+		}
+		else
+		{
+			b = b->next;
+			ofs = 0;
+		}
+	}
 }
 
 void handle_listen_port( tcp_conn * conn, ip_header * p, tcp_header * t )
@@ -204,10 +236,18 @@ u08 handle_connection( tcp_conn * conn, ip_header * p, tcp_header * t, u16 len )
 	// todo: RST should be made to work :)
 	u32 datalen = __ip_payload_length( p ) - (t->data_offset >> 2);
 
+	len;	// unused
+
 	if (conn->state == TCP_STATE_SYN)
 	{
 		conn->state = TCP_STATE_ESTABLISHED;
 		return 1;
+	}
+
+	if (t->flags & TCP_RST)
+	{
+		logf( "tcp: got RST: should do something!\n" );
+		return 1;	// 
 	}
 
 	if( t->flags == TCP_ACK )
@@ -222,11 +262,9 @@ u08 handle_connection( tcp_conn * conn, ip_header * p, tcp_header * t, u16 len )
 		conn->incoming_seq_no = __ntohl(t->seq_no) + datalen;
 		conn->handler( tcp_sock_from_conn(conn), ev_data, __tcp_payload( t ), datalen );
 		tcp_send_ack( conn );
-
-		// todo: send outstanding data?
 	}
 
-	len;
+	tcp_send_outstanding( conn );
 	return 1;
 }
 
@@ -310,5 +348,5 @@ void tcp_send( tcp_sock sock, void* buf, u32 buf_len )
 		p->next = b;
 	}
 
-	// todo: actually send data
+	tcp_send_outstanding( conn );
 }
