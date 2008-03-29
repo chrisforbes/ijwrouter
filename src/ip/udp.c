@@ -35,14 +35,14 @@ static udp_conn * udp_find_conn_by_port( u16 port )
 	return free;
 }
 
-u08 udp_receive_packet( u08 iface, ip_header * p, u16 len )
+u08 udp_receive_packet( ip_header * p, u16 len )
 {
 	udp_header * udp = ( udp_header * ) __ip_payload( p );
 	udp_conn * conn;
 	udp_sock sock;
 	u16 port = __ntohs( udp->dest_port );
 
-	iface; len;
+	len;
 
 	logf( "udp: got packet\n" );
 

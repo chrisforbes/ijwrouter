@@ -8,6 +8,8 @@
 #include "internal.h"
 #include "tcp.h"
 
+#include <assert.h>
+
 #define TCP_MAX_CONNS	40
 
 enum tcp_state_e
@@ -40,12 +42,21 @@ typedef struct tcp_conn_s
 	u16 localport;
 	u32 incoming_seq_no;
 	u32 outgoing_seq_no;
-	tcp_listen_f * listen_handler;
-	tcp_recv_f * recv_handler;
+	tcp_event_f * handler;
 	tcp_buf * sendbuf;
 } tcp_conn;
 
 static tcp_conn tcp_conns[ TCP_MAX_CONNS ];
+
+__inline tcp_sock tcp_sock_from_conn( tcp_conn * conn )
+{
+	return conn ? ((tcp_sock) (conn - tcp_conns)) : INVALID_TCP_SOCK;
+}
+
+__inline tcp_conn * tcp_conn_from_sock( tcp_sock sock )
+{
+	return (sock == INVALID_TCP_SOCK) ? 0 : &tcp_conns[ sock ];
+}
 
 static tcp_conn * tcp_find_unused()
 {
@@ -119,8 +130,10 @@ static void tcp_unbuffer( tcp_conn * conn, u32 bytes )
 			bytes -= n;
 			conn->sendbuf = conn->sendbuf->next;
 
-			free( (void *) b->data );
-			free( b );
+			conn->handler( tcp_sock_from_conn( conn ), ev_releasebuf, 
+				(void *)b->data, b->len );
+
+			free( b );	// would be really nice to make this non-heap-alloc'd too.
 		}
 	}
 }
@@ -166,25 +179,27 @@ void tcp_send_ack( tcp_conn * conn )
 	tcp_sendpacket( conn, 0, 0, TCP_ACK );
 }
 
-u08 handle_listen_port( tcp_conn* conn, ip_header* p, tcp_header* t )
+void handle_listen_port( tcp_conn * conn, ip_header * p, tcp_header * t )
 {
 	tcp_conn * newconn = tcp_find_unused();
+	assert( newconn );	// please!
+
 	newconn->state = TCP_STATE_SYN;
 	newconn->localport = conn->localport;
 	newconn->remotehost = p->src_addr;
 	newconn->remoteport = t->src_port;
 	newconn->incoming_seq_no = __ntohl( t->seq_no );
 	newconn->outgoing_seq_no = 0x400;
-	newconn->recv_handler = conn->recv_handler;
+	newconn->handler = conn->handler;
 	newconn->sendbuf = 0;
 
 	logf( "flags: %x\n", t->flags );
 
 	tcp_send_synack( newconn, t );
-	return 1;
+	newconn->handler( tcp_sock_from_conn( newconn ), ev_opened, 0, 0 );
 }
 
-u08 handle_connection( tcp_conn* conn, ip_header* p, tcp_header* t, u16 len )
+u08 handle_connection( tcp_conn * conn, ip_header * p, tcp_header * t, u16 len )
 {
 	// todo: RST should be made to work :)
 	u32 datalen = __ip_payload_length( p ) - (t->data_offset >> 2);
@@ -205,7 +220,7 @@ u08 handle_connection( tcp_conn* conn, ip_header* p, tcp_header* t, u16 len )
 	if( datalen && __ntohl( t->seq_no ) == conn->incoming_seq_no )
 	{
 		conn->incoming_seq_no = __ntohl(t->seq_no) + datalen;
-		conn->recv_handler( (tcp_sock)(tcp_conns - conn), __tcp_payload( t ), datalen );
+		conn->handler( tcp_sock_from_conn(conn), ev_data, __tcp_payload( t ), datalen );
 		tcp_send_ack( conn );
 
 		// todo: send outstanding data?
@@ -215,25 +230,12 @@ u08 handle_connection( tcp_conn* conn, ip_header* p, tcp_header* t, u16 len )
 	return 1;
 }
 
-u08 tcp_receive_packet( u08 iface, ip_header * p, u16 len )
+u08 tcp_receive_packet( ip_header * p, u16 len )
 {
-	tcp_header* tcph;
-	tcp_conn* conn;
+	tcp_header * tcph;
+	tcp_conn * conn;
 
-	iface;
-	tcph = (tcp_header*)__ip_payload( p );
-
-	//logf( "tcp: packet from %u.%u.%u.%u:%u  for  %u.%u.%u.%u:%u\n",
-	//	p->src_addr & 0xff,
-	//	p->src_addr >> 8 & 0xff,
-	//	p->src_addr >> 16 & 0xff,
-	//	p->src_addr >> 24 & 0xff,
-	//	__ntohs( tcph->src_port ),
-	//	p->dest_addr & 0xff,
-	//	p->dest_addr >> 8 & 0xff,
-	//	p->dest_addr >> 16 & 0xff,
-	//	p->dest_addr >> 24 & 0xff,
-	//	__ntohs( tcph->dest_port ) );
+	tcph = ( tcp_header * )__ip_payload( p );
 
 	if( p->dest_addr != get_hostaddr() )
 		return 0;
@@ -253,12 +255,13 @@ u08 tcp_receive_packet( u08 iface, ip_header * p, u16 len )
 			p->src_addr >> 24 & 0xff,
 			__ntohs( tcph->src_port ) );
 
-		return handle_listen_port( conn, p, tcph );
+		handle_listen_port( conn, p, tcph );
+		return 1;
 	}
 	return 0;
 }
 
-tcp_sock tcp_new_listen_sock( u16 port, tcp_listen_f* new_connection_callback, tcp_recv_f* recv_callback )
+tcp_sock tcp_new_listen_sock( u16 port, tcp_event_f * handler )
 {
 	tcp_conn * conn;
 
@@ -274,18 +277,19 @@ tcp_sock tcp_new_listen_sock( u16 port, tcp_listen_f* new_connection_callback, t
 	memset( conn, 0, sizeof( tcp_conn ) );
 	conn->state = TCP_STATE_LISTENING;
 	conn->localport = port;
-	conn->listen_handler = new_connection_callback;
-	conn->recv_handler = recv_callback;
+	conn->handler = handler;
 	conn->sendbuf = 0;
 
-	return (tcp_sock)(conn - tcp_conns);
+	return tcp_sock_from_conn( conn );
 }
 
 void tcp_send( tcp_sock sock, void* buf, u32 buf_len )
 {
-	tcp_conn * conn = &tcp_conns[ sock ];	// todo: handle invalid socket
-	tcp_buf * p = conn->sendbuf;
-	tcp_buf * b; 
+	tcp_conn * conn = tcp_conn_from_sock( sock );
+	tcp_buf * p, * b;
+
+	assert( conn );
+	p = conn->sendbuf;
 
 	if ( conn->state != TCP_STATE_ESTABLISHED )
 		return;	// todo: are we allowed to do this at any other time?

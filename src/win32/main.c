@@ -12,6 +12,8 @@
 #include "../ip/stack.h"
 #include "../ip/tcp.h"
 
+#include <assert.h>
+
 u08 charge_for_packet( eth_packet * p )
 {
 	mac_addr lanside = (p->dest_iface == IFACE_WAN) 
@@ -83,13 +85,33 @@ u08 handle_packet( eth_packet * p )
 extern void dhcp_init( void );
 extern void dhcp_process( void );
 
-void http_receive_data( tcp_sock sock, void* buf, u32 buflen )
+void http_receive_data( tcp_sock sock, tcp_event_e ev, void* buf, u32 buflen )
 {
-	char* b = buf;
 	sock;
 
-	b[ buflen ] = 0;
-	logf( "%s", b );
+	switch( ev )
+	{
+	case ev_opened:
+		logf( "http: ev_opened\n" );
+		break;
+
+	case ev_closed:
+		logf( "http: ev_closed\n" );
+		break;
+
+	case ev_releasebuf:
+		logf( "http: ev_releasebuf\n" );
+		assert( buf );
+		free( buf );
+		break;
+
+	case ev_data:
+		{
+			char * b = buf;
+			b[buflen] = 0;
+			logf( "http: ev_data %s\n", b );
+		}
+	}
 }
 
 int main( void )
@@ -103,7 +125,7 @@ int main( void )
 
 	dhcp_init();
 
-	tcp_new_listen_sock( 80, NULL, http_receive_data );
+	tcp_new_listen_sock( 80, http_receive_data );
 
 	for(;;)
 	{

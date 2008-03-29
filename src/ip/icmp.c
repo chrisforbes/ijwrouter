@@ -17,11 +17,12 @@ static struct
 } out;
 #pragma pack( pop )
 
-static void icmp_send_reply( u08 iface, ip_header * reqip, icmp_header * reqping, u16 len )
+static void icmp_send_reply( ip_header * reqip, icmp_header * reqping, u16 len )
 {
+	u08 iface;
 	memset( &out, 0, sizeof(out) );
 
-	if (!arp_make_eth_header( &out.eth, reqip->src_addr, 0 ))
+	if (!arp_make_eth_header( &out.eth, reqip->src_addr, &iface ))
 		return;
 
 	__ip_make_response( &out.ip, reqip, len );
@@ -36,13 +37,13 @@ static void icmp_send_reply( u08 iface, ip_header * reqip, icmp_header * reqping
 	__send_packet( iface, &out, len + sizeof( eth_header ) );
 }
 
-u08 icmp_receive_packet( u08 iface, ip_header * p, u16 len )
+u08 icmp_receive_packet( ip_header * p, u16 len )
 {
 	icmp_header * icmp = ( icmp_header * )__ip_payload( p );
 	logf( "icmp: got packet, type=%d code=%d\n", icmp->type, icmp->code );
 
 	if (icmp->type == 8 && icmp->code == 0)
-		icmp_send_reply( iface, p, icmp, len );
+		icmp_send_reply( p, icmp, len );
 	
 	return 1;
 }

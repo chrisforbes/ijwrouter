@@ -235,7 +235,8 @@ void dhcp_process( void )
 	}
 }
 
-static void dhcp_event( udp_sock sock, u08 evt, u32 from_ip, u16 from_port, u08 const * data, u16 len )
+static void dhcp_event( udp_sock sock, udp_event_e evt, 
+					   u32 from_ip, u16 from_port, u08 const * data, u16 len )
 {
 	u08 type = parse_msg((dhcp_packet *)data, len);
 	from_ip; from_port;	evt; sock;

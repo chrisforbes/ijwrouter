@@ -31,7 +31,7 @@ void ipstack_tick( void )
 	arptab_tick();
 }
 
-static u08 ip_receive_packet( u08 iface, ip_header * p, u16 len )
+static u08 ip_receive_packet( ip_header * p, u16 len )
 {
 	logf( "ip: got ip packet, proto=%d\n", p->proto );
 
@@ -43,25 +43,22 @@ static u08 ip_receive_packet( u08 iface, ip_header * p, u16 len )
 
 	switch( p->proto )
 	{
-	case IPPROTO_ICMP:
-		return icmp_receive_packet( iface, p, len );
-
-	case IPPROTO_UDP:
-		return udp_receive_packet( iface, p, len );
-
-	case IPPROTO_TCP:
-		return tcp_receive_packet( iface, p, len );
+	case IPPROTO_ICMP: return icmp_receive_packet( p, len );
+	case IPPROTO_UDP: return udp_receive_packet( p, len );
+	case IPPROTO_TCP: return tcp_receive_packet( p, len );
 	}
 
 	return 1;		// did we eat it? yes we did...
 }
 
-static u08 __ip_receive_packet( u08 iface, ip_header * p, u16 len )	// did we eat it?
+static u08 __ip_receive_packet( ip_header * p, u16 len )	// did we eat it?
 {
-	if (p->dest_addr != get_bcastaddr() && p->dest_addr != get_hostaddr() && p->dest_addr != 0xfffffffful)
+	// check if it's actually for us!
+	if (p->dest_addr != get_bcastaddr() && 
+		p->dest_addr != get_hostaddr() && p->dest_addr != 0xfffffffful)
 		return 0;
 
-	return ip_receive_packet( iface, p, len ) 
+	return ip_receive_packet( p, len ) 
 		&& p->dest_addr != get_bcastaddr();
 }
 
@@ -78,7 +75,7 @@ u08 ipstack_receive_packet( u08 iface, u08 const * buf, u16 len )
 		{
 			ip_header * ip = (ip_header *) (eth + 1);
 			arptab_insert( iface, ip->src_addr, eth->src );
-			return __ip_receive_packet( iface, ip, len - sizeof( eth_header ) );
+			return __ip_receive_packet( ip, len - sizeof( eth_header ) );
 		}
 
 	case ethertype_arp:

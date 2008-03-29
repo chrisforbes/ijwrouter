@@ -5,14 +5,21 @@ typedef u16 tcp_sock;
 
 #define INVALID_TCP_SOCK	0xffff
 
-u08 tcp_receive_packet( u08 iface, ip_header * p, u16 len );
+u08 tcp_receive_packet( ip_header * p, u16 len );
 
-typedef void tcp_listen_f( tcp_sock sock );
-typedef void tcp_recv_f( tcp_sock sock, void* buf, u32 buf_len );
+typedef enum tcp_event_e
+{
+	ev_opened,
+	ev_closed,
+	ev_data,
+	ev_releasebuf,
+} tcp_event_e;
 
-tcp_sock tcp_new_listen_sock( u16 port, tcp_listen_f* new_connection_callback, tcp_recv_f* recv_callback );
+typedef void tcp_event_f( tcp_sock sock, tcp_event_e ev, void * data, u32 len );
 
-// buf should be malloc'd, and the tcp impl is responsible for free'ing it.
+tcp_sock tcp_new_listen_sock( u16 port, tcp_event_f * handler );
+
+// buffer will be passed back in an ev_releasebuf event when we're done.
 void tcp_send( tcp_sock sock, void* buf, u32 buf_len );
 
 #endif
