@@ -35,7 +35,7 @@ typedef struct tcp_buf
 	struct tcp_buf * next;
 } tcp_buf;
 
-typedef struct tcp_conn_s
+typedef struct tcp_conn
 {
 	enum tcp_state_e state;
 	u32 remotehost;
@@ -231,6 +231,13 @@ void handle_listen_port( tcp_conn * conn, ip_header * p, tcp_header * t )
 	newconn->handler( tcp_sock_from_conn( newconn ), ev_opened, 0, 0 );
 }
 
+void kill_connection( tcp_conn * conn )
+{
+	tcp_unbuffer( conn, 0xfffffffful );	// free all the buffers
+	conn->handler( tcp_sock_from_conn( conn ), ev_closed, 0, 0 );
+	memset( conn, 0, sizeof( tcp_conn ) );
+}
+
 u08 handle_connection( tcp_conn * conn, ip_header * p, tcp_header * t, u16 len )
 {
 	// todo: RST should be made to work :)
@@ -246,8 +253,19 @@ u08 handle_connection( tcp_conn * conn, ip_header * p, tcp_header * t, u16 len )
 
 	if (t->flags & TCP_RST)
 	{
-		logf( "tcp: got RST: should do something!\n" );
-		return 1;	// 
+		logf( "tcp: connection reset\n" );
+		kill_connection( conn );
+		return 1;
+	}
+
+	if (t->flags & TCP_FIN)
+	{
+		logf( "tcp: connection closed\n" );
+		// this is utter bullshit: dont try this at home, kids!
+		// will windows put up with it?
+		tcp_sendpacket( conn, 0, 0, TCP_RST );	// brute force reset
+		kill_connection( conn );
+		return 1;
 	}
 
 	if( t->flags == TCP_ACK )
