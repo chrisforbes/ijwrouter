@@ -85,10 +85,10 @@ u08 handle_packet( eth_packet * p )
 extern void dhcp_init( void );
 extern void dhcp_process( void );
 
+char const monkeys[] = "HTTP/1.0 404 Not found\r\nContent-Length: 0\r\n\r\n";
+
 void http_receive_data( tcp_sock sock, tcp_event_e ev, void* buf, u32 buflen )
 {
-	sock;
-
 	switch( ev )
 	{
 	case ev_opened:
@@ -101,8 +101,6 @@ void http_receive_data( tcp_sock sock, tcp_event_e ev, void* buf, u32 buflen )
 
 	case ev_releasebuf:
 		logf( "http: ev_releasebuf\n" );
-		assert( buf );
-		free( buf );
 		break;
 
 	case ev_data:
@@ -110,6 +108,8 @@ void http_receive_data( tcp_sock sock, tcp_event_e ev, void* buf, u32 buflen )
 			char * b = buf;
 			b[buflen] = 0;
 			logf( "http: ev_data %s\n", b );
+
+			tcp_send( sock, monkeys, sizeof(monkeys) - 1 );
 		}
 	}
 }

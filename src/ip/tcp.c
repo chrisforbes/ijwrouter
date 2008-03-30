@@ -178,6 +178,7 @@ void tcp_send_synack( tcp_conn * conn, tcp_header * inc_packet )
 {
 	conn->incoming_seq_no = __ntohl( inc_packet->seq_no ) + 1;
 	tcp_sendpacket( conn, 0, 0, TCP_SYN | TCP_ACK );
+	conn->outgoing_seq_no++;
 }
 
 void tcp_send_ack( tcp_conn * conn )
@@ -199,7 +200,8 @@ void tcp_send_outstanding( tcp_conn * conn )
 		u32 chunklen = __min( b->len - b->ofs - ofs, MAXSEGSIZE );
 		if ( chunklen )
 		{
-			tcp_sendpacket( conn, (void const*)(b->data + b->ofs + ofs), (u16) chunklen, TCP_ACK );	// maybe
+			tcp_sendpacket_ex( conn, (void const*)(b->data + b->ofs + ofs), 
+				(u16) chunklen, TCP_ACK, seq );	// maybe
 			seq += chunklen;
 			ofs += chunklen;
 		}
@@ -240,7 +242,6 @@ void kill_connection( tcp_conn * conn )
 
 u08 handle_connection( tcp_conn * conn, ip_header * p, tcp_header * t, u16 len )
 {
-	// todo: RST should be made to work :)
 	u32 datalen = __ip_payload_length( p ) - (t->data_offset >> 2);
 
 	len;	// unused
@@ -263,7 +264,7 @@ u08 handle_connection( tcp_conn * conn, ip_header * p, tcp_header * t, u16 len )
 		logf( "tcp: connection closed\n" );
 		// this is utter bullshit: dont try this at home, kids!
 		// will windows put up with it?
-		tcp_sendpacket( conn, 0, 0, TCP_RST );	// brute force reset
+		tcp_sendpacket( conn, 0, 0, TCP_FIN | TCP_ACK );	// brute force reset
 		kill_connection( conn );
 		return 1;
 	}
@@ -339,7 +340,7 @@ tcp_sock tcp_new_listen_sock( u16 port, tcp_event_f * handler )
 	return tcp_sock_from_conn( conn );
 }
 
-void tcp_send( tcp_sock sock, void* buf, u32 buf_len )
+void tcp_send( tcp_sock sock, void const * buf, u32 buf_len )
 {
 	tcp_conn * conn = tcp_conn_from_sock( sock );
 	tcp_buf * p, * b;
@@ -350,7 +351,7 @@ void tcp_send( tcp_sock sock, void* buf, u32 buf_len )
 	if ( conn->state != TCP_STATE_ESTABLISHED )
 		return;	// todo: are we allowed to do this at any other time?
 	
-	b = malloc( sizeof( tcp_buf ) );
+	b = malloc( sizeof( tcp_buf ) );	// todo: dont use heap here
 	b->next = 0;
 	b->ofs = 0;
 	b->len = buf_len;

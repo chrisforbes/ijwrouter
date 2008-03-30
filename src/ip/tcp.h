@@ -20,6 +20,6 @@ typedef void tcp_event_f( tcp_sock sock, tcp_event_e ev, void * data, u32 len );
 tcp_sock tcp_new_listen_sock( u16 port, tcp_event_f * handler );
 
 // buffer will be passed back in an ev_releasebuf event when we're done.
-void tcp_send( tcp_sock sock, void* buf, u32 buf_len );
+void tcp_send( tcp_sock sock, void const * buf, u32 buf_len );
 
 #endif
