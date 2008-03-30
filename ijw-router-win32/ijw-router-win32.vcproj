@@ -203,6 +203,10 @@
 					>
 				</File>
 				<File
+					RelativePath="..\src\win32\hal_file_system.c"
+					>
+				</File>
+				<File
 					RelativePath="..\src\win32\hal_time.c"
 					>
 				</File>
@@ -228,6 +232,10 @@
 				</File>
 				<File
 					RelativePath="..\src\hal_ethernet.h"
+					>
+				</File>
+				<File
+					RelativePath="..\src\hal_file_system.h"
 					>
 				</File>
 				<File
@@ -307,6 +315,30 @@
 					</File>
 					<File
 						RelativePath="..\src\ip\udp.c"
+						>
+					</File>
+				</Filter>
+			</Filter>
+			<Filter
+				Name="httpserv"
+				>
+				<Filter
+					Name="headers"
+					>
+					<File
+						RelativePath="..\src\httpserv\httpcommon.h"
+						>
+					</File>
+					<File
+						RelativePath="..\src\httpserv\httpserv.h"
+						>
+					</File>
+				</Filter>
+				<Filter
+					Name="sources"
+					>
+					<File
+						RelativePath="..\src\httpserv\httpserv.c"
 						>
 					</File>
 				</Filter>

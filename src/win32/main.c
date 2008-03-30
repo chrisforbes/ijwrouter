@@ -8,9 +8,12 @@
 #include "../hal_debug.h"
 #include "../user.h"
 #include "../hal_time.h"
+#include "../hal_file_system.h"
 
 #include "../ip/stack.h"
 #include "../ip/tcp.h"
+
+#include "../httpserv/httpserv.h"
 
 #include <assert.h>
 
@@ -85,35 +88,6 @@ u08 handle_packet( eth_packet * p )
 extern void dhcp_init( void );
 extern void dhcp_process( void );
 
-char const monkeys[] = "HTTP/1.0 404 Not found\r\nContent-Length: 0\r\n\r\n";
-
-void http_receive_data( tcp_sock sock, tcp_event_e ev, void* buf, u32 buflen )
-{
-	switch( ev )
-	{
-	case ev_opened:
-		logf( "http: ev_opened\n" );
-		break;
-
-	case ev_closed:
-		logf( "http: ev_closed\n" );
-		break;
-
-	case ev_releasebuf:
-		logf( "http: ev_releasebuf\n" );
-		break;
-
-	case ev_data:
-		{
-			char * b = buf;
-			b[buflen] = 0;
-			logf( "http: ev_data %s\n", b );
-
-			tcp_send( sock, monkeys, sizeof(monkeys) - 1 );
-		}
-	}
-}
-
 int main( void )
 {
 	u08 interfaces = eth_init();
@@ -125,7 +99,9 @@ int main( void )
 
 	dhcp_init();
 
-	tcp_new_listen_sock( 80, http_receive_data );
+	load_content();
+
+	httpserv_init();
 
 	for(;;)
 	{
