@@ -123,12 +123,14 @@ static void tcp_unbuffer( tcp_conn * conn, u32 bytes )
 		{
 			conn->sendbuf->ofs += n;
 			bytes -= n;
+			conn->outgoing_seq_no += n;
 		}
 		else
 		{
 			// free this buffer chunk
 			tcp_buf * b = conn->sendbuf;
 			bytes -= n;
+			conn->outgoing_seq_no += n;
 			conn->sendbuf = conn->sendbuf->next;
 
 			conn->handler( tcp_sock_from_conn( conn ), ev_releasebuf, 
@@ -150,7 +152,7 @@ void tcp_sendpacket_ex( tcp_conn * conn, void const * data, u16 datalen, u08 fla
 	__ip_make_header( &out.ip, IPPROTO_TCP, 0, 
 		datalen + sizeof( ip_header ) + sizeof( tcp_header ), conn->remotehost );
 
-	out.tcp.ack_no = __htonl(conn->incoming_seq_no);
+	out.tcp.ack_no = (flags & TCP_ACK) ? __htonl(conn->incoming_seq_no) : 0;
 	out.tcp.seq_no = __htonl(seq);
 	out.tcp.dest_port = conn->remoteport;
 	out.tcp.src_port = conn->localport;
@@ -215,7 +217,17 @@ void tcp_send_outstanding( tcp_conn * conn )
 
 void handle_listen_port( tcp_conn * conn, ip_header * p, tcp_header * t )
 {
-	tcp_conn * newconn = tcp_find_unused();
+	tcp_conn * newconn;
+
+	if (t->flags != TCP_SYN)
+	{
+		logf( "tcp: bad packet for listen socket!\n" );
+		tcp_sendpacket( conn, 0, 0, TCP_RST );
+		return;
+	}
+
+	newconn = tcp_find_unused();
+
 	assert( newconn );	// please!
 
 	newconn->state = TCP_STATE_SYN;
@@ -259,21 +271,30 @@ u08 handle_connection( tcp_conn * conn, ip_header * p, tcp_header * t, u16 len )
 		return 1;
 	}
 
+	if( t->flags & TCP_ACK )
+	{
+		u32 drop = __ntohl(t->ack_no) - conn->outgoing_seq_no;
+
+		if (conn->state == TCP_STATE_LAST_ACK)
+		{
+			kill_connection( conn );
+			return 1;
+		}
+
+		if (drop)
+			tcp_unbuffer( conn, drop );	// drop the stuff they acked from our buffer
+		
+		tcp_send_outstanding( conn );
+	}
+
 	if (t->flags & TCP_FIN)
 	{
 		logf( "tcp: connection closed\n" );
-		// this is utter bullshit: dont try this at home, kids!
-		// will windows put up with it?
-		tcp_sendpacket( conn, 0, 0, TCP_FIN | TCP_ACK );	// brute force reset
-		kill_connection( conn );
+		conn->incoming_seq_no++;	// this is wanky, but it works
+		tcp_sendpacket( conn, 0, 0, TCP_ACK );
+		tcp_sendpacket( conn, 0, 0, TCP_FIN | TCP_ACK );
+		conn->state = TCP_STATE_LAST_ACK;	// todo: check this
 		return 1;
-	}
-
-	if( t->flags == TCP_ACK )
-	{
-		u32 drop = __ntohl(t->ack_no) - conn->outgoing_seq_no;	// todo: bob, check this
-		if (drop)
-			tcp_unbuffer( conn, drop );	// drop the stuff they acked from our buffer
 	}
 
 	if( datalen && __ntohl( t->seq_no ) == conn->incoming_seq_no )
@@ -282,8 +303,7 @@ u08 handle_connection( tcp_conn * conn, ip_header * p, tcp_header * t, u16 len )
 		conn->handler( tcp_sock_from_conn(conn), ev_data, __tcp_payload( t ), datalen );
 		tcp_send_ack( conn );
 	}
-
-	tcp_send_outstanding( conn );
+	
 	return 1;
 }
 
