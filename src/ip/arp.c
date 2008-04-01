@@ -94,7 +94,11 @@ u08 arp_make_eth_header( eth_header * h, u32 destip, u08 * iface )
 {	// returns 1 if successful; 0 if we needed to send some ARP instead.
 	if (!arptab_query( iface, destip, &h->dest ))
 	{
-		logf( "arp: no arp cache for host, refreshing...\n" );
+		logf( "arp: no arp cache for host %u.%u.%u.%u, refreshing...\n",
+			destip & 0xff,
+			destip >> 8 & 0xff,
+			destip >> 16 & 0xff,
+			destip >> 24 & 0xff);
 		send_arp_request( 0xff, destip );
 		return 0;
 	}

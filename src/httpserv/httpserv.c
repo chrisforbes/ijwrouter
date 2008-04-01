@@ -180,10 +180,10 @@ void httpserv_handler( tcp_sock sock, tcp_event_e ev, void * data, u32 len )
 	switch(ev)
 	{
 	case ev_opened:
-		logf("Got HTTP connection\n");
+		//logf("http:Got HTTP connection\n");
 		break;
 	case ev_closed:
-		logf("HTTP Connection closed\n");
+		//logf("HTTP Connection closed\n");
 		break;
 	case ev_data:
 		httpserv_parse( sock, (u08 const *)data, len, httpserv_header_handler);

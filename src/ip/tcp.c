@@ -11,7 +11,7 @@
 #include <assert.h>
 
 #define TCP_MAX_CONNS	40
-#define MAXSEGSIZE		400		// todo: tune this to not suck
+#define MAXSEGSIZE		1024		// todo: tune this to not suck
 
 enum tcp_state_e
 {
@@ -141,7 +141,8 @@ static void tcp_unbuffer( tcp_conn * conn, u32 bytes )
 	}
 }
 
-void tcp_sendpacket_ex( tcp_conn * conn, void const * data, u16 datalen, u08 flags, u32 seq )
+void tcp_sendpacket_ex( tcp_conn * conn, void const * data, u16 datalen, 
+					   u08 flags, u32 seq, u32 destip, u16 destport )
 {
 	u08 iface;
 	memset( &out, 0, sizeof( out ) );
@@ -150,11 +151,11 @@ void tcp_sendpacket_ex( tcp_conn * conn, void const * data, u16 datalen, u08 fla
 		return;
 
 	__ip_make_header( &out.ip, IPPROTO_TCP, 0, 
-		datalen + sizeof( ip_header ) + sizeof( tcp_header ), conn->remotehost );
+		datalen + sizeof( ip_header ) + sizeof( tcp_header ), destip );
 
 	out.tcp.ack_no = (flags & TCP_ACK) ? __htonl(conn->incoming_seq_no) : 0;
 	out.tcp.seq_no = __htonl(seq);
-	out.tcp.dest_port = conn->remoteport;
+	out.tcp.dest_port = destport;
 	out.tcp.src_port = conn->localport;
 	out.tcp.data_offset = 5 << 4;
 	out.tcp.flags = flags;
@@ -173,7 +174,8 @@ void tcp_sendpacket_ex( tcp_conn * conn, void const * data, u16 datalen, u08 fla
 
 void tcp_sendpacket( tcp_conn * conn, void const * data, u16 datalen, u08 flags )
 {
-	tcp_sendpacket_ex( conn, data, datalen, flags, conn->outgoing_seq_no );
+	tcp_sendpacket_ex( conn, data, datalen, flags, 
+		conn->outgoing_seq_no, conn->remotehost, conn->remoteport );
 }
 
 void tcp_send_synack( tcp_conn * conn, tcp_header * inc_packet )
@@ -188,7 +190,7 @@ void tcp_send_ack( tcp_conn * conn )
 	tcp_sendpacket( conn, 0, 0, TCP_ACK );
 }
 
-void tcp_send_outstanding( tcp_conn * conn )
+void tcp_send_outstanding( tcp_conn * conn, u32 skip )
 {
 	tcp_buf * b = conn->sendbuf;
 	u32 ofs = 0;
@@ -200,10 +202,16 @@ void tcp_send_outstanding( tcp_conn * conn )
 	while( b )
 	{
 		u32 chunklen = __min( b->len - b->ofs - ofs, MAXSEGSIZE );
+		if (skip)
+			chunklen = __min( chunklen, skip );
+
 		if ( chunklen )
 		{
-			tcp_sendpacket_ex( conn, (void const*)(b->data + b->ofs + ofs), 
-				(u16) chunklen, TCP_ACK, seq );	// maybe
+			if (skip)
+				skip -= chunklen;
+			else
+				tcp_sendpacket_ex( conn, (void const*)(b->data + b->ofs + ofs), 
+					(u16) chunklen, TCP_ACK, seq, conn->remotehost, conn->remoteport );
 			seq += chunklen;
 			ofs += chunklen;
 		}
@@ -222,7 +230,7 @@ void handle_listen_port( tcp_conn * conn, ip_header * p, tcp_header * t )
 	if (t->flags != TCP_SYN)
 	{
 		logf( "tcp: bad packet for listen socket!\n" );
-		tcp_sendpacket( conn, 0, 0, TCP_RST );
+		tcp_sendpacket_ex( conn, 0, 0, TCP_RST, 0, p->src_addr, t->src_port );
 		return;
 	}
 
@@ -282,7 +290,7 @@ u08 handle_connection( tcp_conn * conn, ip_header * p, tcp_header * t, u16 len )
 		if (drop)
 			tcp_unbuffer( conn, drop );	// drop the stuff they acked from our buffer
 		
-		tcp_send_outstanding( conn );
+		tcp_send_outstanding( conn, 0 );
 	}
 
 	if (t->flags & TCP_FIN)
@@ -358,10 +366,24 @@ tcp_sock tcp_new_listen_sock( u16 port, tcp_event_f * handler )
 	return tcp_sock_from_conn( conn );
 }
 
+u32 get_outstanding_size( tcp_conn * sock )
+{
+	tcp_buf * p = sock->sendbuf;
+	u32 size = 0;
+	while( p )
+	{
+		size += p->len - p->ofs;
+		p = p->next;
+	}
+
+	return size;
+}
+
 void tcp_send( tcp_sock sock, void const * buf, u32 buf_len )
 {
 	tcp_conn * conn = tcp_conn_from_sock( sock );
 	tcp_buf * p, * b;
+	u32 skip = get_outstanding_size( conn );
 
 	assert( conn );
 	p = conn->sendbuf;
@@ -385,5 +407,5 @@ void tcp_send( tcp_sock sock, void const * buf, u32 buf_len )
 		p->next = b;
 	}
 
-	tcp_send_outstanding( conn );
+	tcp_send_outstanding( conn, skip );
 }
