@@ -239,8 +239,6 @@ void handle_listen_port( tcp_conn * conn, ip_header * p, tcp_header * t )
 	newconn->handler = conn->handler;
 	newconn->sendbuf = 0;
 
-	logf( "flags: %x\n", t->flags );
-
 	tcp_send_synack( newconn, t );
 	newconn->handler( tcp_sock_from_conn( newconn ), ev_opened, 0, 0 );
 }

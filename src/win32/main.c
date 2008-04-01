@@ -8,12 +8,12 @@
 #include "../hal_debug.h"
 #include "../user.h"
 #include "../hal_time.h"
-#include "../hal_file_system.h"
 
 #include "../ip/stack.h"
 #include "../ip/tcp.h"
 
 #include "../httpserv/httpserv.h"
+#include "../fs.h"
 
 #include <assert.h>
 
@@ -60,28 +60,28 @@ u08 handle_packet( eth_packet * p )
 	if (mac_equal( p->packet->src, get_macaddr()))
 		return eth_discard( p );
 
-	dump_packet( p );
+//	dump_packet( p );
 
 	if (p->dest_iface == IFACE_INTERNAL || p->dest_iface == IFACE_BROADCAST)
 	{
-		logf( "packet: internal or bcast\n" );
+	//	logf( "packet: internal or bcast\n" );
 		return ipstack_receive_packet( p->src_iface, (u08 const *)p->packet, p->len ) 
 			? eth_discard( p ) : eth_forward( p );
 	}
 
 	if (ethertype != ethertype_ipv4 )
 	{
-		logf( "- non-ip (ethertype=%x)\n", ethertype );
+	//	logf( "- non-ip (ethertype=%x)\n", ethertype );
 		return eth_discard( p );
 	}
 
 	if (p->src_iface == p->dest_iface)
 	{
-		logf( "- self-route\n" );
+	//	logf( "- self-route\n" );
 		return eth_discard( p );
 	}
 
-	logf( "+ pure lan\n" );
+	//logf( "+ pure lan\n" );
 	return eth_forward( p );	// not crossing from lan <-> wan	*/
 }
 
@@ -99,7 +99,7 @@ int main( void )
 
 	dhcp_init();
 
-	load_content();
+	fs_init();
 
 	httpserv_init();
 

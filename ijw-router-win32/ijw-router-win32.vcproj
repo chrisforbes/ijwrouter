@@ -203,7 +203,7 @@
 					>
 				</File>
 				<File
-					RelativePath="..\src\win32\hal_file_system.c"
+					RelativePath="..\src\win32\hal_fs.c"
 					>
 				</File>
 				<File
@@ -235,7 +235,7 @@
 					>
 				</File>
 				<File
-					RelativePath="..\src\hal_file_system.h"
+					RelativePath="..\src\hal_fs.h"
 					>
 				</File>
 				<File
@@ -322,26 +322,26 @@
 			<Filter
 				Name="httpserv"
 				>
-				<Filter
-					Name="headers"
+				<File
+					RelativePath="..\src\fs.c"
 					>
-					<File
-						RelativePath="..\src\httpserv\httpcommon.h"
-						>
-					</File>
-					<File
-						RelativePath="..\src\httpserv\httpserv.h"
-						>
-					</File>
-				</Filter>
-				<Filter
-					Name="sources"
+				</File>
+				<File
+					RelativePath="..\src\fs.h"
 					>
-					<File
-						RelativePath="..\src\httpserv\httpserv.c"
-						>
-					</File>
-				</Filter>
+				</File>
+				<File
+					RelativePath="..\src\httpserv\httpcommon.h"
+					>
+				</File>
+				<File
+					RelativePath="..\src\httpserv\httpserv.c"
+					>
+				</File>
+				<File
+					RelativePath="..\src\httpserv\httpserv.h"
+					>
+				</File>
 			</Filter>
 		</Filter>
 	</Files>

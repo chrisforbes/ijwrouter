@@ -33,7 +33,7 @@ void ipstack_tick( void )
 
 static u08 ip_receive_packet( ip_header * p, u16 len )
 {
-	logf( "ip: got ip packet, proto=%d\n", p->proto );
+//	logf( "ip: got ip packet, proto=%d\n", p->proto );
 
 	if (!__ip_validate_header( p ))
 	{

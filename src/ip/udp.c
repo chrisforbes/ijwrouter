@@ -44,8 +44,6 @@ u08 udp_receive_packet( ip_header * p, u16 len )
 
 	len;
 
-	logf( "udp: got packet\n" );
-
 	// todo: verify udp checksum
 
 	conn = udp_find_conn_by_port( port );
@@ -57,7 +55,7 @@ u08 udp_receive_packet( ip_header * p, u16 len )
 
 	sock = (udp_sock)(conn - udp_conns);
 
-	logf( "udp: delivering datagram for port=%u\n to sock %u\n", port, sock );
+	logf( "udp: delivering datagram for port=%u to sock %u\n", port, sock );
 
 	conn->handler( sock, 
 		UDP_EVENT_PACKET, 

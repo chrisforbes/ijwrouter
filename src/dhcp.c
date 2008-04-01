@@ -249,6 +249,7 @@ static void dhcp_event( udp_sock sock, udp_event_e evt,
 		break;
 	case DHCP_ACK:
 		logf( "dhcp: got ack\n" );
+		logf( "dhcp: host configuration complete\n" );
 		s.state = DHCP_STATE_IDLE;
 		break;
 	case DHCP_NAK:

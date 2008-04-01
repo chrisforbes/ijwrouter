@@ -4,7 +4,7 @@
 #include "../common.h"
 #include "../ip/rfc.h"
 #include "../ip/tcp.h"
-#include "../hal_file_system.h"
+#include "../fs.h"
 #include "httpserv.h"
 #include "httpcommon.h"
 
@@ -110,18 +110,18 @@ void httpserv_send_error_status( tcp_sock sock, u32 status, char const * error_m
 
 void httpserv_get_request( tcp_sock sock, char const * uri, u32 uri_length )
 {
-	file_entry const * entry;
+	struct file_entry const * entry;
 	char const * content;
 	char const * content_type;
 
 	if (*uri == '/' && uri_length == 1)
 	{
-		entry = find_file("index.htm");
+		entry = fs_find_file("index.htm");
 	}
 	else
 	{
 		uri++;
-		entry = find_file(uri);
+		entry = fs_find_file(uri);
 	}
 	
 	if (!entry)
@@ -130,8 +130,8 @@ void httpserv_get_request( tcp_sock sock, char const * uri, u32 uri_length )
 		return;
 	}
 
-	content_type = get_mime_type(entry);
-	content = get_content(entry);
+	content_type = fs_get_mimetype(entry);
+	content = fs_get_content(entry);
 
 	httpserv_send_content(sock, content_type, entry->mime_pair.length, content, entry->content_pair.length);
 }
@@ -192,7 +192,6 @@ void httpserv_handler( tcp_sock sock, tcp_event_e ev, void * data, u32 len )
 
 void httpserv_init( void )
 {
-	logf("Initializing httpserv\n");
 	tcp_new_listen_sock(HTTP_PORT, httpserv_handler);
-	logf("Now listening for connections on port %d\n", HTTP_PORT);
+	logf("http: listening on port %d\n", HTTP_PORT);
 }
