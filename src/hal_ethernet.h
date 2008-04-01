@@ -23,8 +23,6 @@ u08 eth_find_interface( mac_addr dest );
 #define IFACE_BROADCAST	0xff
 #define IFACE_INTERNAL	0xfe
 
-u08 eth_uip_feed( eth_packet * p, u08 isarp );
-void eth_uip_send( u08 isarp );
 void dump_packet( eth_packet * p );
 
 #endif

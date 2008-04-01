@@ -8,6 +8,11 @@
 #include "httpserv.h"
 #include "httpcommon.h"
 
+// http pseudoheaders from request line
+#define ph_method	((char const *)1)
+#define ph_uri		((char const *)2)
+#define ph_version	((char const *)3)
+
 typedef void http_header_f( tcp_sock sock, char const * name, char const * value );
 
 #define MAXNAMESIZE		128
@@ -36,15 +41,15 @@ void httpserv_parse( tcp_sock sock, u08 const * data, u32 len, http_header_f * f
 		{
 			memcpy( value, p, isp - p );
 			value[ isp - p ] = 0;
-			f( sock, "Method", value );
+			f( sock, ph_method, value );
 
 			memcpy( value, isp + 1, isp2 - isp - 1 );
 			value[ isp2 - isp - 1 ] = 0;
-			f( sock, "Uri", value );
+			f( sock, ph_uri, value );
 
 			memcpy( value, isp2 + 1, irr - isp2 - 1 );
 			value[ irr - isp2 - 1 ] = 0;
-			f( sock, "Version", value );
+			f( sock, ph_version, value );
 
 			p = irr + 2;
 		}
@@ -140,7 +145,7 @@ static u08 current_method;
 
 void httpserv_header_handler( tcp_sock sock, char const * name, char const * value )
 {
-	if (strcmp(name, "Method") == 0)
+	if (name == ph_method)
 	{
 		if (strcmp(value, "GET") == 0)
 		{
@@ -162,13 +167,9 @@ void httpserv_header_handler( tcp_sock sock, char const * name, char const * val
 	switch (current_method)
 	{
 	case http_method_get:
-		if (strcmp(name, "Uri") == 0)
-			httpserv_get_request(sock, value, strlen(value));
-		break;
 	case http_method_head:
-		if (strcmp(name, "Uri") == 0)
+		if (name == ph_uri)
 			httpserv_get_request(sock, value, strlen(value));
-		break;
 	}
 }
 

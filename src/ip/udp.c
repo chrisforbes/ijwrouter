@@ -49,7 +49,7 @@ u08 udp_receive_packet( ip_header * p, u16 len )
 	conn = udp_find_conn_by_port( port );
 	if (!conn || !conn->handler)
 	{
-		logf( "udp: no conn for port=%u\n", port );
+//		logf( "udp: no conn for port=%u\n", port );
 		return 0;
 	}
 
