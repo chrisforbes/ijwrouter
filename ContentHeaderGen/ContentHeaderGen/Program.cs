@@ -5,6 +5,8 @@ using System.Text;
 using System.Text.RegularExpressions;
 using IjwFramework.Collections;
 using System.Runtime.InteropServices;
+using System.Linq;
+using IjwFramework.Types;
 
 namespace ContentHeaderGen
 {
@@ -13,24 +15,20 @@ namespace ContentHeaderGen
 		static void Main(string[] args)
 		{
 			var ms = new MemoryStream();
-			var blob = new Cache<byte[], OffsetLengthPair>(
+			var blob = new Cache<byte[], Pair<int,int>>(
 				x =>
 				{
 					ms.Write(x, 0, x.Length);
-					return new OffsetLengthPair() { offset = (int)ms.Length - x.Length, length = x.Length };
+					return new Pair<int, int>( (int)ms.Length - x.Length, x.Length );
 				});
 
 			var enc = Encoding.ASCII;
 			var namecache = new Cache<string, byte[]>(x => enc.GetBytes(x));
 
-			string dir;
-			if (args.Length == 0)
-				dir = Environment.CurrentDirectory;
-			else
-				dir = args[0];
+			string dir = args.DefaultIfEmpty(Environment.CurrentDirectory).First();
 
 			var files = new List<string>();
-			files.AddRange(Directory.GetFiles(dir));
+			files.AddRange(Directory.GetFiles(dir)); 
 
 			var writer = new BinaryWriter(File.OpenWrite("content.blob"));
 
@@ -44,25 +42,19 @@ namespace ContentHeaderGen
 				mime = mime ?? "application/octet-stream";
 				Console.WriteLine(result + " " + mime);
 
-				var fPair = blob[namecache[Path.GetFileName(file)]];
-				var mPair = blob[namecache[mime]];
-				var cPair = blob[content];
-
-				writer.Write(fPair.offset);
-				writer.Write(fPair.length);
-				writer.Write(mPair.offset);
-				writer.Write(mPair.length);
-				writer.Write(cPair.offset);
-				writer.Write(cPair.length);
+				foreach (var x in new Pair<int, int>[] {  
+					blob[namecache[Path.GetFileName(file)]],
+					blob[namecache[mime]],
+					blob[content] } )
+				{
+					writer.Write( x.First );
+					writer.Write( x.Second ); 
+				}
 			}
+
 			writer.Write((int)0);
 			writer.Write(ms.ToArray());
 			writer.Close();
-		}
-
-		struct OffsetLengthPair
-		{
-			public int offset, length;
 		}
 
 		[DllImport("urlmon.dll", CharSet=CharSet.Unicode)]
