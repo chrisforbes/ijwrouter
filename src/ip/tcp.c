@@ -230,7 +230,7 @@ void handle_listen_port( tcp_conn * conn, ip_header * p, tcp_header * t )
 	if (t->flags != TCP_SYN)
 	{
 		logf( "tcp: bad packet for listen socket!\n" );
-		tcp_sendpacket_ex( conn, 0, 0, TCP_RST, 0, p->src_addr, t->src_port );
+	//	tcp_sendpacket_ex( conn, 0, 0, TCP_RST, 0, p->src_addr, t->src_port );
 		return;
 	}
 
