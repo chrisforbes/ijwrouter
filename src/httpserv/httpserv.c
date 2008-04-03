@@ -105,7 +105,7 @@ static void httpserv_send_content( tcp_sock sock, char const * content_type, u32
 	__memcpyz( mime, content_type, content_type_len );
 
 	sprintf(msg, 
-		"HTTP/1.0 200 OK\r\nContent-Length: %d\r\nContent-Type: %s\r\nCache-Control: no-cache\r\nExpires: -1\r\n", 
+		"HTTP/1.0 200 OK\r\nContent-Length: %d\r\nContent-Type: %s\r\nCache-Control: no-cache\r\nExpires: -1\r\n\r\n", 
 		content_len, mime);
 	tcp_send( sock, msg, strlen(msg), 1 );
 	tcp_send( sock, content, content_len, flags );

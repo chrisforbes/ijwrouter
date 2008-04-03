@@ -40,7 +40,7 @@
 			function do_ajax()
 			{
 				var req = window.XMLHttpRequest ?
-					new XMLHttpRequest() : new ActiveXObject( "MSXML2.XMLHTTP.3.0" );
+					new XMLHttpRequest() : new ActiveXObject( "Microsoft.XMLHTTP" );
 				req.open( "GET", "/usage", true );
 				req.onreadystatechange = function()
 				{
