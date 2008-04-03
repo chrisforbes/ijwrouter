@@ -117,11 +117,11 @@ static char const * httpserv_generate_usage_info( tcp_sock sock )
 	arptab_query(0, host, &host_mac);
 	host_user = get_user(host_mac);
 
-	sprintf(msg, "{uname:%s,start:%s,current:%s,new:%s,days:%d,fill:%d}", 
+	sprintf(msg, "{uname:\"%s\",start:\"%s\",current:\"%s\",new:\"%s\",days:%d,fill:%d}", 
 		/*host_user->name*/"John Smith", 
 		"1 January", 
-		/*format_amount(host_user->credit)*/"0.00GB", 
-		/*format_amount(host_user->quota)*/"1.00GB", 
+		/*format_amount(host_user->credit)*/"0.00 GB", 
+		/*format_amount(host_user->quota)*/"1.00 GB", 
 		20, 
 		80);
 	return msg;
