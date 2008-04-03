@@ -113,7 +113,7 @@ static int hax = 0;
 
 static char const * httpserv_generate_usage_info( tcp_sock sock )
 {
-	char * msg = malloc( 128 );
+	char * msg = malloc( 256 );
 	u32 host = tcp_gethost( sock );
 	mac_addr host_mac;
 	user * host_user;
