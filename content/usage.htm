@@ -20,11 +20,17 @@
 			{
 				if (!size_installed)
 					window.onresize = do_size;
-					
+		
 				var e = document.getElementById( "foo" );
 				var w = window.innerWidth;
 				var h = window.innerHeight;
 				
+				if (w == null)
+					w = document.body.clientWidth;
+				if (h == null)
+					h = document.body.clientHeight;
+					
+				e.style.position = "absolute";				
 				e.style.left = (w - dsx) / 2;
 				e.style.width = dsx;
 				e.style.top = (h - dsy) / 2;
@@ -59,6 +65,7 @@
 				document.getElementById( "barfill" )
 					.style.width = d.fill + "%";
 			}
+			
 		//-->
 		</script>
 	</head>
@@ -73,9 +80,10 @@
 				<div id="barfill"></div>
 			</div>
 		</div>
-		<script> 
-			do_size(); 
-			do_ajax();
+		<script>
+		<!--
+			do_size(); do_ajax();
+		//-->
 		</script>
 	</body>
 </html>
