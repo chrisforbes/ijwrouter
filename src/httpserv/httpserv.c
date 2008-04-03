@@ -108,6 +108,8 @@ static void httpserv_send_content( tcp_sock sock, char const * content_type, u32
 	tcp_send( sock, content, content_len );
 }
 
+static int hax = 0;
+
 static char const * httpserv_generate_usage_info( tcp_sock sock )
 {
 	char * msg = malloc( 128 );
@@ -117,13 +119,13 @@ static char const * httpserv_generate_usage_info( tcp_sock sock )
 	arptab_query(0, host, &host_mac);
 	host_user = get_user(host_mac);
 
-	sprintf(msg, "{uname:\"%s\",start:\"%s\",current:\"%s\",new:\"%s\",days:%d,fill:%d}", 
+	sprintf(msg, "{uname:\"%s\",start:\"%s\",current:\"%s\",quota:\"%s\",days:%d,fill:%d}", 
 		/*host_user->name*/"John Smith", 
 		"1 January", 
 		/*format_amount(host_user->credit)*/"0.00 GB", 
 		/*format_amount(host_user->quota)*/"1.00 GB", 
 		20, 
-		80);
+		(++hax % 100));
 	return msg;
 }
 
@@ -216,8 +218,11 @@ static void httpserv_handler( tcp_sock sock, tcp_event_e ev, void * data, u32 le
 		httpserv_parse( sock, (u08 const *)data, len, httpserv_header_handler);
 		break;
 	case ev_releasebuf:
-		if (!fs_is_static_buf(data))
-			free( data );
+
+		// FIXME: stop leaking memory here! but be careful, must ONLY free() things we 
+		// malloc'd here - dont try to free the flash, or the data segment, etc
+	//	if (!fs_is_static_buf(data))
+	//		free( data );
 		break;
 	}
 }

@@ -4,8 +4,8 @@
 		<style>
 			body { background-color: #888888 }
 			#foo { background-color: #eeeeee; border: 2px solid black; padding: 1em; position: absolute }
-			#bar { background-color: #eeeeee; border: 2px solid black; margin: 1em; margin-top: 0; height: 28px }
-			#barfill { background-color: #004488; border: 0px; margin: 0px; height: 28px; width: 200px }
+			#bar { border: 2px solid black; margin: 1em; margin-top: 0; height: 28px }
+			#barfill { background-color: #004488; border: 0px; margin: 0px; height: 28px; width: 0% }
 			
 			.field { color: #004488 }
 			
@@ -31,10 +31,33 @@
 				e.style.height = dsy;
 			}
 			
+			function do_ajax()
+			{
+				var req = window.XMLHttpRequest ?
+					new XMLHttpRequest() : new ActiveXObject( "MSXML2.XMLHTTP.3.0" );
+				req.open( "GET", "/usage", true );
+				req.onreadystatechange = function()
+				{
+					if (req.readyState == 4)
+					{
+						merge_data( eval( "(" + req.responseText + ")" ) );
+						setTimeout( "do_ajax()", 2000 );
+					}
+				}
+				req.send(null);
+			}
+			
 			function merge_data( d )
 			{
 				for( var k in d )
-					document.getElementById( k ).innerHTML = d[k];
+				{
+					var e = document.getElementById( k );
+					if (e)
+						e.innerHTML = d[k];
+				}
+				
+				document.getElementById( "barfill" )
+					.style.width = d.fill + "%";
 			}
 		//-->
 		</script>
@@ -42,7 +65,7 @@
 	<body>
 		<div id="foo">
 		<h1>Welcome, <span id="uname" class="field">---</span>!</h1>
-<h2> Since <span id="start" class="field">---</span>, you've used<br/>
+				<h2> Since <span id="start" class="field">---</span>, you've used<br/>
 				<span id="current" class="field">---</span> 
 					of your <span id="quota" class="field">---</span> quota.
 				<br/>(<span id="days" class="field">---</span> days remaining)</h2>
@@ -52,12 +75,7 @@
 		</div>
 		<script> 
 			do_size(); 
-			var data = 
-			{
-				uname: "Matthew",
-				current: "1.36 GB"
-			};
-			merge_data( data );
+			do_ajax();
 		</script>
 	</body>
 </html>
