@@ -5,6 +5,7 @@
 #include "../ip/rfc.h"
 #include "../ip/tcp.h"
 #include "../fs.h"
+#include "../hal_debug.h"
 #include "httpserv.h"
 #include "httpcommon.h"
 
@@ -21,7 +22,7 @@ typedef void http_header_f( tcp_sock sock, char const * name, char const * value
 #define __COPYINTO( ptr, base, value, max )\
 	{ *ptr++ = value; if (ptr - base >= max) ptr = base; }
 
-void httpserv_parse( tcp_sock sock, u08 const * data, u32 len, http_header_f * f )
+static void httpserv_parse( tcp_sock sock, u08 const * data, u32 len, http_header_f * f )
 {
 	char name[ MAXNAMESIZE + 1 ], * pname = name;
 	char value[ MAXVALUESIZE + 1 ], * pvalue = value;
@@ -89,13 +90,13 @@ void httpserv_parse( tcp_sock sock, u08 const * data, u32 len, http_header_f * f
 	}
 }
 	// zero-terminating memcpy
-void __inline __memcpyz( char * dest, char const * src, u32 len )
+static void __inline __memcpyz( char * dest, char const * src, u32 len )
 {
 	memcpy( dest, src, len );
 	dest[len] = 0;
 }
 
-void httpserv_send_content( tcp_sock sock, char const * content_type, u32 content_type_len, char const * content, u32 content_len )
+static void httpserv_send_content( tcp_sock sock, char const * content_type, u32 content_type_len, char const * content, u32 content_len )
 {
 	char msg[128], mime[64];
 	__memcpyz( mime, content_type, content_type_len );
@@ -105,7 +106,7 @@ void httpserv_send_content( tcp_sock sock, char const * content_type, u32 conten
 	tcp_send( sock, content, content_len );
 }
 
-void httpserv_send_error_status( tcp_sock sock, u32 status, char const * error_msg )
+static void httpserv_send_error_status( tcp_sock sock, u32 status, char const * error_msg )
 {
 	char msg[128];
 	u32 errorlen = strlen( error_msg );
@@ -115,7 +116,7 @@ void httpserv_send_error_status( tcp_sock sock, u32 status, char const * error_m
 	tcp_send( sock, error_msg, errorlen );
 }
 
-void httpserv_get_request( tcp_sock sock, char const * uri )
+static void httpserv_get_request( tcp_sock sock, char const * uri )
 {
 	struct file_entry const * entry;
 	char const * content;
@@ -144,7 +145,7 @@ void httpserv_get_request( tcp_sock sock, char const * uri )
 
 static u08 current_method;
 
-void httpserv_header_handler( tcp_sock sock, char const * name, char const * value )
+static void httpserv_header_handler( tcp_sock sock, char const * name, char const * value )
 {
 	if (name == ph_method)
 	{
@@ -174,9 +175,7 @@ void httpserv_header_handler( tcp_sock sock, char const * name, char const * val
 	}
 }
 
-extern void logf( char const * str, ... );
-
-void httpserv_handler( tcp_sock sock, tcp_event_e ev, void * data, u32 len )
+static void httpserv_handler( tcp_sock sock, tcp_event_e ev, void * data, u32 len )
 {
 	switch(ev)
 	{

@@ -409,3 +409,10 @@ void tcp_send( tcp_sock sock, void const * buf, u32 buf_len )
 
 	tcp_send_outstanding( conn, skip );
 }
+
+u32 tcp_gethost( tcp_sock sock )
+{
+	tcp_conn * conn = tcp_conn_from_sock( sock );
+	assert( conn ); // someone fails at passing us a valid socket
+	return conn->remotehost;
+}

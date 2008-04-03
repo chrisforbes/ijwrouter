@@ -21,5 +21,6 @@ tcp_sock tcp_new_listen_sock( u16 port, tcp_event_f * handler );
 
 // buffer will be passed back in an ev_releasebuf event when we're done.
 void tcp_send( tcp_sock sock, void const * buf, u32 buf_len );
+u32 tcp_gethost( tcp_sock sock );
 
 #endif
