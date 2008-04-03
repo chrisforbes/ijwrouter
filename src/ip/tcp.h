@@ -15,12 +15,12 @@ typedef enum tcp_event_e
 	ev_releasebuf,
 } tcp_event_e;
 
-typedef void tcp_event_f( tcp_sock sock, tcp_event_e ev, void * data, u32 len );
+typedef void tcp_event_f( tcp_sock sock, tcp_event_e ev, void * data, u32 len, u32 flags );
 
 tcp_sock tcp_new_listen_sock( u16 port, tcp_event_f * handler );
 
 // buffer will be passed back in an ev_releasebuf event when we're done.
-void tcp_send( tcp_sock sock, void const * buf, u32 buf_len );
+void tcp_send( tcp_sock sock, void const * buf, u32 buf_len, u32 flags );
 u32 tcp_gethost( tcp_sock sock );
 
 #endif

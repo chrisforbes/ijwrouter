@@ -33,6 +33,7 @@ typedef struct tcp_buf
 	u32 len;
 	u32 ofs;
 	struct tcp_buf * next;
+	u32 flags;
 } tcp_buf;
 
 typedef struct tcp_conn
@@ -134,7 +135,7 @@ static void tcp_unbuffer( tcp_conn * conn, u32 bytes )
 			conn->sendbuf = conn->sendbuf->next;
 
 			conn->handler( tcp_sock_from_conn( conn ), ev_releasebuf, 
-				(void *)b->data, b->len );
+				(void *)b->data, b->len, b->flags );
 
 			free( b );	// would be really nice to make this non-heap-alloc'd too.
 		}
@@ -248,13 +249,13 @@ void handle_listen_port( tcp_conn * conn, ip_header * p, tcp_header * t )
 	newconn->sendbuf = 0;
 
 	tcp_send_synack( newconn, t );
-	newconn->handler( tcp_sock_from_conn( newconn ), ev_opened, 0, 0 );
+	newconn->handler( tcp_sock_from_conn( newconn ), ev_opened, 0, 0, 0 );
 }
 
 void kill_connection( tcp_conn * conn )
 {
 	tcp_unbuffer( conn, 0xfffffffful );	// free all the buffers
-	conn->handler( tcp_sock_from_conn( conn ), ev_closed, 0, 0 );
+	conn->handler( tcp_sock_from_conn( conn ), ev_closed, 0, 0, 0 );
 	memset( conn, 0, sizeof( tcp_conn ) );
 }
 
@@ -306,7 +307,7 @@ u08 handle_connection( tcp_conn * conn, ip_header * p, tcp_header * t, u16 len )
 	if( datalen && __ntohl( t->seq_no ) == conn->incoming_seq_no )
 	{
 		conn->incoming_seq_no = __ntohl(t->seq_no) + datalen;
-		conn->handler( tcp_sock_from_conn(conn), ev_data, __tcp_payload( t ), datalen );
+		conn->handler( tcp_sock_from_conn(conn), ev_data, __tcp_payload( t ), datalen, 0 );
 		tcp_send_ack( conn );
 	}
 	
@@ -379,7 +380,7 @@ u32 get_outstanding_size( tcp_conn * sock )
 	return size;
 }
 
-void tcp_send( tcp_sock sock, void const * buf, u32 buf_len )
+void tcp_send( tcp_sock sock, void const * buf, u32 buf_len, u32 flags )
 {
 	tcp_conn * conn = tcp_conn_from_sock( sock );
 	tcp_buf * p, * b;
@@ -396,6 +397,7 @@ void tcp_send( tcp_sock sock, void const * buf, u32 buf_len )
 	b->ofs = 0;
 	b->len = buf_len;
 	b->data = buf;
+	b->flags = flags;
 
 	if (!conn->sendbuf)
 		conn->sendbuf = b;

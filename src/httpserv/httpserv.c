@@ -98,14 +98,15 @@ static void __inline __memcpyz( char * dest, char const * src, u32 len )
 	dest[len] = 0;
 }
 
-static void httpserv_send_content( tcp_sock sock, char const * content_type, u32 content_type_len, char const * content, u32 content_len )
+static void httpserv_send_content( tcp_sock sock, char const * content_type, u32 content_type_len, char const * content, u32 content_len, u32 flags )
 {
-	char msg[128], mime[64];
+	char * msg = malloc( 128 );
+	char mime[64];
 	__memcpyz( mime, content_type, content_type_len );
 
 	sprintf(msg, "HTTP/1.0 200 OK\r\nContent-Length: %d\r\nContent-Type: %s\r\n\r\n", content_len, mime);
-	tcp_send( sock, msg, strlen(msg) );
-	tcp_send( sock, content, content_len );
+	tcp_send( sock, msg, strlen(msg), 1 );
+	tcp_send( sock, content, content_len, flags );
 }
 
 static int hax = 0;
@@ -135,8 +136,8 @@ static void httpserv_send_error_status( tcp_sock sock, u32 status, char const * 
 	u32 errorlen = strlen( error_msg );
 	sprintf(msg, "HTTP/1.0 %d %s\r\nContent-Length: %d\r\nContent-Type: text/html; charset=UTF-8\r\n\r\n", 
 		status, http_get_status_message(status), errorlen);
-	tcp_send(sock, msg, strlen(msg));
-	tcp_send( sock, error_msg, errorlen );
+	tcp_send(sock, msg, strlen(msg), 0);
+	tcp_send( sock, error_msg, errorlen, 0 );
 }
 
 static void httpserv_get_request( tcp_sock sock, char const * uri )
@@ -159,7 +160,7 @@ static void httpserv_get_request( tcp_sock sock, char const * uri )
 		if (strcmp(uri, "usage") == 0)
 		{
 			content = httpserv_generate_usage_info(sock);
-			httpserv_send_content(sock, "application/x-json", 18, content, strlen(content));
+			httpserv_send_content(sock, "application/x-json", 18, content, strlen(content), 1);
 		}
 		else
 			httpserv_send_error_status(sock, HTTP_STATUS_NOT_FOUND, "Webpage could not be found.");
@@ -169,7 +170,7 @@ static void httpserv_get_request( tcp_sock sock, char const * uri )
 	content_type = fs_get_mimetype(entry);
 	content = fs_get_content(entry);
 
-	httpserv_send_content(sock, content_type, entry->mime_pair.length, content, entry->content_pair.length);
+	httpserv_send_content(sock, content_type, entry->mime_pair.length, content, entry->content_pair.length, 0);
 }
 
 static u08 current_method;
@@ -204,7 +205,7 @@ static void httpserv_header_handler( tcp_sock sock, char const * name, char cons
 	}
 }
 
-static void httpserv_handler( tcp_sock sock, tcp_event_e ev, void * data, u32 len )
+static void httpserv_handler( tcp_sock sock, tcp_event_e ev, void * data, u32 len, u32 flags )
 {
 	switch(ev)
 	{
@@ -221,8 +222,8 @@ static void httpserv_handler( tcp_sock sock, tcp_event_e ev, void * data, u32 le
 
 		// FIXME: stop leaking memory here! but be careful, must ONLY free() things we 
 		// malloc'd here - dont try to free the flash, or the data segment, etc
-	//	if (!fs_is_static_buf(data))
-	//		free( data );
+		if (flags)
+			free(data);
 		break;
 	}
 }
