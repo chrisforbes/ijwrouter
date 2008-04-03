@@ -19,5 +19,6 @@ typedef struct file_entry
 file_entry const * fs_find_file ( char const * filename );
 char const * fs_get_mimetype ( struct file_entry const * entry );
 char const * fs_get_content ( struct file_entry const * entry );
+u08 fs_is_static_buf( void * p );
 
 #endif

@@ -157,7 +157,7 @@ static void httpserv_get_request( tcp_sock sock, char const * uri )
 		if (strcmp(uri, "usage") == 0)
 		{
 			content = httpserv_generate_usage_info(sock);
-			httpserv_send_content(sock, "text/plain", 10, content, strlen(content));
+			httpserv_send_content(sock, "application/x-json", 18, content, strlen(content));
 		}
 		else
 			httpserv_send_error_status(sock, HTTP_STATUS_NOT_FOUND, "Webpage could not be found.");
@@ -214,6 +214,10 @@ static void httpserv_handler( tcp_sock sock, tcp_event_e ev, void * data, u32 le
 		break;
 	case ev_data:
 		httpserv_parse( sock, (u08 const *)data, len, httpserv_header_handler);
+		break;
+	case ev_releasebuf:
+		if (!fs_is_static_buf(data))
+			free( data );
 		break;
 	}
 }
