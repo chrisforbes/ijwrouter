@@ -1,0 +1,63 @@
+<html>
+	<head>
+		<title>Your Internet Usage</title>
+		<style>
+			body { background-color: #888888 }
+			#foo { background-color: #eeeeee; border: 2px solid black; padding: 1em; position: absolute }
+			#bar { background-color: #eeeeee; border: 2px solid black; margin: 1em; margin-top: 0; height: 28px }
+			#barfill { background-color: #004488; border: 0px; margin: 0px; height: 28px; width: 200px }
+			
+			.field { color: #004488 }
+			
+			h1,h2 { font-family: Segoe UI, Trebuchet MS; text-align: center }
+		</style>
+		<script>
+		<!--
+			var size_installed = false;
+			var dsx = 600; var dsy = 250;
+			
+			function do_size()
+			{
+				if (!size_installed)
+					window.onresize = do_size;
+					
+				var e = document.getElementById( "foo" );
+				var w = window.innerWidth;
+				var h = window.innerHeight;
+				
+				e.style.left = (w - dsx) / 2;
+				e.style.width = dsx;
+				e.style.top = (h - dsy) / 2;
+				e.style.height = dsy;
+			}
+			
+			function merge_data( d )
+			{
+				for( var k in d )
+					document.getElementById( k ).innerHTML = d[k];
+			}
+		//-->
+		</script>
+	</head>
+	<body>
+		<div id="foo">
+		<h1>Welcome, <span id="uname" class="field">---</span>!</h1>
+<h2> Since <span id="start" class="field">---</span>, you've used<br/>
+				<span id="current" class="field">---</span> 
+					of your <span id="quota" class="field">---</span> quota.
+				<br/>(<span id="days" class="field">---</span> days remaining)</h2>
+			<div id="bar">
+				<div id="barfill"></div>
+			</div>
+		</div>
+		<script> 
+			do_size(); 
+			var data = 
+			{
+				uname: "Matthew",
+				current: "1.36 GB"
+			};
+			merge_data( data );
+		</script>
+	</body>
+</html>
