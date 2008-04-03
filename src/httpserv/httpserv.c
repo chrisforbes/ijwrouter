@@ -4,8 +4,10 @@
 #include "../common.h"
 #include "../ip/rfc.h"
 #include "../ip/tcp.h"
+#include "../ip/arptab.h"
 #include "../fs.h"
 #include "../hal_debug.h"
+#include "../user.h"
 #include "httpserv.h"
 #include "httpcommon.h"
 
@@ -106,6 +108,25 @@ static void httpserv_send_content( tcp_sock sock, char const * content_type, u32
 	tcp_send( sock, content, content_len );
 }
 
+static char const * httpserv_generate_usage_info( tcp_sock sock )
+{
+	char * msg = malloc( 128 );
+	u32 host = tcp_gethost( sock );
+	mac_addr host_mac;
+	user * host_user;
+	arptab_query(0, host, &host_mac);
+	host_user = get_user(host_mac);
+
+	sprintf(msg, "{uname:%s,start:%s,current:%s,new:%s,days:%d,fill:%d}", 
+		/*host_user->name*/"John Smith", 
+		"1 January", 
+		/*format_amount(host_user->credit)*/"0.00GB", 
+		/*format_amount(host_user->quota)*/"1.00GB", 
+		20, 
+		80);
+	return msg;
+}
+
 static void httpserv_send_error_status( tcp_sock sock, u32 status, char const * error_msg )
 {
 	char msg[128];
@@ -133,7 +154,13 @@ static void httpserv_get_request( tcp_sock sock, char const * uri )
 	
 	if (!entry)
 	{
-		httpserv_send_error_status(sock, HTTP_STATUS_NOT_FOUND, "Webpage could not be found.");
+		if (strcmp(uri, "usage") == 0)
+		{
+			content = httpserv_generate_usage_info(sock);
+			httpserv_send_content(sock, "text/plain", 10, content, strlen(content));
+		}
+		else
+			httpserv_send_error_status(sock, HTTP_STATUS_NOT_FOUND, "Webpage could not be found.");
 		return;
 	}
 
