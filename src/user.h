@@ -9,5 +9,6 @@ typedef struct user
 } user;
 
 user * get_user( mac_addr addr );
+user * get_user_by_ip( u32 addr );
 
 #endif

@@ -25,10 +25,8 @@
 				var w = window.innerWidth;
 				var h = window.innerHeight;
 				
-				if (w == null)
-					w = document.body.clientWidth;
-				if (h == null)
-					h = document.body.clientHeight;
+				if (w == null) w = document.body.clientWidth;
+				if (h == null) h = document.body.clientHeight;
 					
 				e.style.position = "absolute";				
 				e.style.left = (w - dsx) / 2;
@@ -41,15 +39,16 @@
 			{
 				var req = window.XMLHttpRequest ?
 					new XMLHttpRequest() : new ActiveXObject( "Microsoft.XMLHTTP" );
-				req.open( "GET", "/usage", true );
 				req.onreadystatechange = function()
 				{
 					if (req.readyState == 4)
 					{
+					//	alert( req.status + ":" + req.responseText );
 						merge_data( eval( "(" + req.responseText + ")" ) );
 						setTimeout( "do_ajax()", 2000 );
 					}
 				}
+				req.open( "GET", "/usage", true );
 				req.send(null);
 			}
 			

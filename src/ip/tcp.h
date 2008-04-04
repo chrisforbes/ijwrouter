@@ -23,4 +23,8 @@ tcp_sock tcp_new_listen_sock( u16 port, tcp_event_f * handler );
 void tcp_send( tcp_sock sock, void const * buf, u32 buf_len, u32 flags );
 u32 tcp_gethost( tcp_sock sock );
 
+void * tcp_get_user_data( tcp_sock sock );
+void tcp_set_user_data( tcp_sock sock, void * ctx );
+void tcp_close( tcp_sock sock );
+
 #endif

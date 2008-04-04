@@ -63,30 +63,31 @@ u08 handle_arp_packet( u08 iface, arp_header * arp )
 	{
 		if (arp->tpa == arp->spa)	// gratuitous arp
 		{
-			logf( "arp: got gratuitous arp\n" );
+//			logf( "arp: got gratuitous arp\n" );
 			arptab_insert( iface, arp->spa, arp->sha );
 			return 0;
 		}
 
 		if (arp->tpa == get_hostaddr())
 		{
-			logf( "arp: got request, replying.\n" );
+//			logf( "arp: got request, replying.\n" );
 			send_arp_reply( iface, arp );
 			return 1;
 		}
 
-		logf( "arp: for someone else.\n" );
+//		logf( "arp: for someone else.\n" );
+		arptab_insert( iface, arp->spa, arp->sha );
 		return 0;
 	}
 
 	if (op == ARP_REPLY)
 	{
-		logf( "arp: got reply\n" );
+//		logf( "arp: got reply\n" );
 		arptab_insert( iface, arp->spa, arp->sha );
 		return 1;
 	}
 
-	logf( "arp: bogus oper=%d\n", op );
+//	logf( "arp: bogus oper=%d\n", op );
 	return 0;
 }
 

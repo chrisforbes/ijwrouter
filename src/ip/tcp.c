@@ -46,6 +46,7 @@ typedef struct tcp_conn
 	u32 outgoing_seq_no;
 	tcp_event_f * handler;
 	tcp_buf * sendbuf;
+	void * user;
 } tcp_conn;
 
 static tcp_conn tcp_conns[ TCP_MAX_CONNS ];
@@ -58,6 +59,19 @@ __inline tcp_sock tcp_sock_from_conn( tcp_conn * conn )
 __inline tcp_conn * tcp_conn_from_sock( tcp_sock sock )
 {
 	return (sock == INVALID_TCP_SOCK) ? 0 : &tcp_conns[ sock ];
+}
+
+void * tcp_get_user_data( tcp_sock sock )
+{
+	tcp_conn * conn = tcp_conn_from_sock( sock );
+	return conn ? conn->user : 0;
+}
+
+void tcp_set_user_data( tcp_sock sock, void * ctx )
+{
+	tcp_conn * conn = tcp_conn_from_sock( sock );
+	if( conn )
+		conn->user = ctx;
 }
 
 static tcp_conn * tcp_find_unused()
@@ -143,7 +157,7 @@ static void tcp_unbuffer( tcp_conn * conn, u32 bytes )
 }
 
 void tcp_sendpacket_ex( tcp_conn * conn, void const * data, u16 datalen, 
-					   u08 flags, u32 seq, u32 destip, u16 destport )
+					   u08 flags, u32 seq )
 {
 	u08 iface;
 	memset( &out, 0, sizeof( out ) );
@@ -152,11 +166,11 @@ void tcp_sendpacket_ex( tcp_conn * conn, void const * data, u16 datalen,
 		return;
 
 	__ip_make_header( &out.ip, IPPROTO_TCP, 0, 
-		datalen + sizeof( ip_header ) + sizeof( tcp_header ), destip );
+		datalen + sizeof( ip_header ) + sizeof( tcp_header ), conn->remotehost );
 
 	out.tcp.ack_no = (flags & TCP_ACK) ? __htonl(conn->incoming_seq_no) : 0;
 	out.tcp.seq_no = __htonl(seq);
-	out.tcp.dest_port = destport;
+	out.tcp.dest_port = conn->remoteport;
 	out.tcp.src_port = conn->localport;
 	out.tcp.data_offset = 5 << 4;
 	out.tcp.flags = flags;
@@ -176,7 +190,7 @@ void tcp_sendpacket_ex( tcp_conn * conn, void const * data, u16 datalen,
 void tcp_sendpacket( tcp_conn * conn, void const * data, u16 datalen, u08 flags )
 {
 	tcp_sendpacket_ex( conn, data, datalen, flags, 
-		conn->outgoing_seq_no, conn->remotehost, conn->remoteport );
+		conn->outgoing_seq_no );
 }
 
 void tcp_send_synack( tcp_conn * conn, tcp_header * inc_packet )
@@ -212,7 +226,7 @@ void tcp_send_outstanding( tcp_conn * conn, u32 skip )
 				skip -= chunklen;
 			else
 				tcp_sendpacket_ex( conn, (void const*)(b->data + b->ofs + ofs), 
-					(u16) chunklen, TCP_ACK, seq, conn->remotehost, conn->remoteport );
+					(u16) chunklen, TCP_ACK, seq );
 			seq += chunklen;
 			ofs += chunklen;
 		}
@@ -230,7 +244,7 @@ void handle_listen_port( tcp_conn * conn, ip_header * p, tcp_header * t )
 
 	if (t->flags != TCP_SYN)
 	{
-		logf( "tcp: bad packet for listen socket!\n" );
+	//	logf( "tcp: bad packet for listen socket!\n" );
 	//	tcp_sendpacket_ex( conn, 0, 0, TCP_RST, 0, p->src_addr, t->src_port );
 		return;
 	}
@@ -257,6 +271,20 @@ void kill_connection( tcp_conn * conn )
 	tcp_unbuffer( conn, 0xfffffffful );	// free all the buffers
 	conn->handler( tcp_sock_from_conn( conn ), ev_closed, 0, 0, 0 );
 	memset( conn, 0, sizeof( tcp_conn ) );
+}
+
+void tcp_close( tcp_sock sock )
+{
+	tcp_conn * conn = tcp_conn_from_sock( sock );
+	if (conn->state == TCP_STATE_ESTABLISHED)
+	{
+		tcp_sendpacket( conn, 0, 0, TCP_FIN | TCP_ACK );
+		conn->state = TCP_STATE_CLOSING;
+	}
+	else
+	{
+		logf( "tcp: tcp_close() on socket in bad state\n" );
+	}
 }
 
 u08 handle_connection( tcp_conn * conn, ip_header * p, tcp_header * t, u16 len )
@@ -297,10 +325,15 @@ u08 handle_connection( tcp_conn * conn, ip_header * p, tcp_header * t, u16 len )
 	if (t->flags & TCP_FIN)
 	{
 		logf( "tcp: connection closed\n" );
-		conn->incoming_seq_no++;	// this is wanky, but it works
+		conn->incoming_seq_no++;
 		tcp_sendpacket( conn, 0, 0, TCP_ACK );
-		tcp_sendpacket( conn, 0, 0, TCP_FIN | TCP_ACK );
-		conn->state = TCP_STATE_LAST_ACK;	// todo: check this
+		if (conn->state == TCP_STATE_ESTABLISHED)
+		{
+			tcp_sendpacket( conn, 0, 0, TCP_FIN | TCP_ACK );
+			conn->state = TCP_STATE_LAST_ACK;
+		}
+		else
+			kill_connection(conn);
 		return 1;
 	}
 
@@ -331,13 +364,13 @@ u08 tcp_receive_packet( ip_header * p, u16 len )
 	conn = tcp_find_listener( tcph->dest_port );
 	if( conn && conn->state == TCP_STATE_LISTENING )
 	{
-		logf( "tcp: packet for socket %x (from %u.%u.%u.%u:%u)\n",
-			conn - tcp_conns,
-			p->src_addr & 0xff,
-			p->src_addr >> 8 & 0xff,
-			p->src_addr >> 16 & 0xff,
-			p->src_addr >> 24 & 0xff,
-			__ntohs( tcph->src_port ) );
+		//logf( "tcp: packet for socket %x (from %u.%u.%u.%u:%u)\n",
+		//	conn - tcp_conns,
+		//	p->src_addr & 0xff,
+		//	p->src_addr >> 8 & 0xff,
+		//	p->src_addr >> 16 & 0xff,
+		//	p->src_addr >> 24 & 0xff,
+		//	__ntohs( tcph->src_port ) );
 
 		handle_listen_port( conn, p, tcph );
 		return 1;

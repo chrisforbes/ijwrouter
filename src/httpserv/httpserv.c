@@ -113,22 +113,45 @@ static void httpserv_send_content( tcp_sock sock, char const * content_type, u32
 
 static int hax = 0;
 
+char * format_amount( char * buf, u64 x )
+{
+	static char const * units[] = { "KB", "MB", "GB", "TB" };
+	char const ** u = units;
+
+	while( x > (1 << 20) * 9 / 10 )
+	{
+		x >>= 10;
+		u++;
+	}
+
+	sprintf( buf, "%1.2f %s", x / 1024.0f, *u );
+	return buf;
+}
+
 static char const * httpserv_generate_usage_info( tcp_sock sock )
 {
 	char * msg = malloc( 256 );
 	u32 host = tcp_gethost( sock );
-	mac_addr host_mac;
 	user * host_user;
-	arptab_query(0, host, &host_mac);
-	host_user = get_user(host_mac);
+
+	char credit[16], quota[16];
+	host_user = get_user_by_ip(host);
+
+	if (!host_user)
+	{
+		sprintf( msg, "{}" );
+		return msg;
+	}
+
+	host_user->credit = host_user->quota ? ((host_user->credit + 2167425) % host_user->quota) : (host_user->credit + 2167425);
 
 	sprintf(msg, "{uname:\"%s\",start:\"%s\",current:\"%s\",quota:\"%s\",days:%d,fill:%d}", 
-		/*host_user->name*/"John Smith", 
+		host_user->name,
 		"1 January", 
-		/*format_amount(host_user->credit)*/"0.00 GB", 
-		/*format_amount(host_user->quota)*/"1.00 GB", 
+		format_amount( credit, host_user->credit ),
+		format_amount( quota, host_user->quota ),
 		20, 
-		(++hax % 100));
+		host_user->quota ? (host_user->credit * 100 / host_user->quota) : 0);
 	return msg;
 }
 
@@ -212,18 +235,18 @@ static void httpserv_handler( tcp_sock sock, tcp_event_e ev, void * data, u32 le
 	switch(ev)
 	{
 	case ev_opened:
-		//logf("http:Got HTTP connection\n");
+		tcp_set_user_data( sock, 0 );
 		break;
 	case ev_closed:
-		//logf("HTTP Connection closed\n");
 		break;
 	case ev_data:
-		httpserv_parse( sock, (u08 const *)data, len, httpserv_header_handler);
+		if (!tcp_get_user_data( sock ))
+		{
+			httpserv_parse( sock, (u08 const *)data, len, httpserv_header_handler);
+			tcp_set_user_data( sock, (void *)1 );
+		}
 		break;
 	case ev_releasebuf:
-
-		// FIXME: stop leaking memory here! but be careful, must ONLY free() things we 
-		// malloc'd here - dont try to free the flash, or the data segment, etc
 		if (flags)
 			free(data);
 		break;
