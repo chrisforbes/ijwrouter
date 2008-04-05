@@ -133,10 +133,6 @@ static char const * httpserv_user_usage( user * u, u08 comma )
 	char * msg = malloc( 256 );
 	char credit[16], quota[16];
 
-	char const * format_str = comma ? 
-		"{uname:\"%s\",start:\"%s\",current:\"%s\",quota:\"%s\",days:%d,fill:%d}," :
-		"{uname:\"%s\",start:\"%s\",current:\"%s\",quota:\"%s\",days:%d,fill:%d}";	//WTF
-
 	if (!u)
 	{
 		sprintf( msg, "{}" );
@@ -145,13 +141,14 @@ static char const * httpserv_user_usage( user * u, u08 comma )
 
 	u->credit = u->quota ? ((u->credit + 2167425) % u->quota) : (u->credit + 2167425); //hack
 
-	sprintf(msg, format_str,
+	sprintf(msg, "{uname:\"%s\",start:\"%s\",current:\"%s\",quota:\"%s\",days:%d,fill:%d}%c",
 		u->name,
 		"1 January", 
 		format_amount( credit, u->credit ),
 		format_amount( quota, u->quota ),
 		20,
-		(u->quota ? (u->credit * 100 / u->quota) : 0));
+		(u08)(u->quota ? (u->credit * 100 / u->quota) : 0),
+		comma ? ',' : ' ');
 	return msg;
 }
 
