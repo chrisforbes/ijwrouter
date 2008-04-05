@@ -207,7 +207,7 @@ static void httpserv_get_request( tcp_sock sock, char const * uri )
 			content = httpserv_get_usage_from_sock(sock);
 			httpserv_send_content(sock, "application/x-json", 18, content, strlen(content), 1);
 		}
-		if (strcmp(uri, "") == 0)
+		if (strcmp(uri, "list") == 0)
 		{
 			httpserv_send_all_usage(sock);
 		}
