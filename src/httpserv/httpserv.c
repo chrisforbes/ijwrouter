@@ -160,7 +160,8 @@ static char const * httpserv_get_usage_from_sock( tcp_sock sock )
 
 static void httpserv_send_all_usage( tcp_sock sock )
 {
-	char const * usage;
+	char * foo = 0;
+	u32 foosize = 0;
 
 	user * users;
 	u32 num_users;
@@ -169,10 +170,16 @@ static void httpserv_send_all_usage( tcp_sock sock )
 
 	for (i = 0; i < num_users; i++)
 	{
-		usage = httpserv_user_usage(users, i == num_users - 1);
-		httpserv_send_content(sock, "application/x-json", 18, usage, strlen(usage), 1);
+		char const * usage = httpserv_user_usage(users, i == num_users - 1);
+		u32 usize = strlen(usage);
+		foo = realloc( foo, foosize ? foosize + usize - 1 : usize ); // kill one of the null bytes
+		memcpy( foo + (foosize ? foosize - 1 : 0), usage, usize );
+		free( (void *)usage );
 		users += sizeof(user);
+		foosize += foosize ? usize - 1 : usize;
 	}
+
+	httpserv_send_content(sock, "application/x-json", 18, foo, foosize, 1);
 }
 
 static void httpserv_send_error_status( tcp_sock sock, u32 status, char const * error_msg )
