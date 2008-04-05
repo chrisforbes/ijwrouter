@@ -133,6 +133,10 @@ static char const * httpserv_user_usage( user * u, u08 comma )
 	char * msg = malloc( 256 );
 	char credit[16], quota[16];
 
+	char const * format_str = comma ? 
+		"{uname:\"%s\",start:\"%s\",current:\"%s\",quota:\"%s\",days:%d,fill:%d}," :
+		"{uname:\"%s\",start:\"%s\",current:\"%s\",quota:\"%s\",days:%d,fill:%d}";	//WTF
+
 	if (!u)
 	{
 		sprintf( msg, "{}" );
@@ -141,14 +145,13 @@ static char const * httpserv_user_usage( user * u, u08 comma )
 
 	u->credit = u->quota ? ((u->credit + 2167425) % u->quota) : (u->credit + 2167425); //hack
 
-	sprintf(msg, "{uname:\"%s\",start:\"%s\",current:\"%s\",quota:\"%s\",days:%d,fill:%d}%c",
+	sprintf(msg, format_str,
 		u->name,
 		"1 January", 
 		format_amount( credit, u->credit ),
 		format_amount( quota, u->quota ),
-		20, 
-		u->quota ? (u->credit * 100 / u->quota) : 0,
-		comma ? ',' : ' ');
+		20,
+		(u->quota ? (u->credit * 100 / u->quota) : 0));
 	return msg;
 }
 
@@ -170,13 +173,13 @@ static void httpserv_send_all_usage( tcp_sock sock )
 
 	for (i = 0; i < num_users; i++)
 	{
-		char const * usage = httpserv_user_usage(users, i == num_users - 1);
+		char const * usage = httpserv_user_usage(users, i != num_users - 1);
 		u32 usize = strlen(usage);
-		foo = realloc( foo, foosize ? foosize + usize - 1 : usize ); // kill one of the null bytes
-		memcpy( foo + (foosize ? foosize - 1 : 0), usage, usize );
+		foo = realloc( foo, foosize + usize + 100 );
+		memcpy( foo + foosize, usage, usize+1 );
 		free( (void *)usage );
-		users += sizeof(user);
-		foosize += foosize ? usize - 1 : usize;
+		users++;
+		foosize += usize;
 	}
 
 	httpserv_send_content(sock, "application/x-json", 18, foo, foosize, 1);

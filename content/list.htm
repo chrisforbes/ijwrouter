@@ -1,0 +1,96 @@
+<html>
+	<head>
+		<title>Your Internet Usage</title>
+		<style>
+			body { background-color: #888888; font-family: Segoe UI, Trebuchet MS }
+			#foo { background-color: #eeeeee; border: 2px solid black; padding: 1em; position: absolute }
+			#barfill { background-color: #004488; border: 0px; margin: 0px; height: 28px; width: 0% }
+			.bartext { position: absolute; color: white; margin-top: -3px; margin-left: 0.3em }
+			
+			h1 { text-align: center }
+			
+			.user { font-size: 18pt; font-weight: bold }
+			.uname { padding-right: 1em }
+			.usage { border: 2px solid black; }
+		</style>
+		<script>
+		<!--
+			var size_installed = false;
+			var dsx = 600;
+			
+			function do_size()
+			{
+				if (!size_installed)
+					window.onresize = do_size;
+		
+				var e = document.getElementById( "foo" );
+				var w = window.innerWidth;
+				
+				if (w == null) w = document.body.clientWidth;
+					
+				e.style.position = "absolute";				
+				e.style.left = (w - dsx) / 2;
+				e.style.width = dsx;
+			}
+			
+			function do_ajax()
+			{
+				var req = window.XMLHttpRequest ?
+					new XMLHttpRequest() : new ActiveXObject( "Microsoft.XMLHTTP" );
+				req.onreadystatechange = function()
+				{
+					if (req.readyState == 4)
+					{
+					//	alert( req.status + ":" + req.responseText );
+						merge_data( eval( "(" + req.responseText + ")" ) );
+						setTimeout( "do_ajax()", 2000 );
+					}
+				}
+				req.open( "GET", "/usage", true );
+				req.send(null);
+			}
+			
+			function merge_data( d )
+			{
+				for( var k in d )
+				{
+					var e = document.getElementById( k );
+					if (e)
+						e.innerHTML = d[k];
+				}
+				
+				document.getElementById( "barfill" )
+					.style.width = d.fill + "%";
+			}
+			
+		//-->
+		</script>
+	</head>
+	<body>
+		<div id="foo">
+		<h1>Usage Summary</h1>
+			<table width="100%">
+				<tr class="user">
+					<td class="uname">Chris</td>
+					<td class="usage" width="100%">
+						<div class="bartext">1.21 GB</div>
+						<div id="barfill" style="width:30%"></div>
+					</td>
+				</tr>
+				
+				<tr class="user">
+					<td class="uname">Matthew</td>
+					<td class="usage" width="100%">
+					<div class="bartext">0.03 GB</div>
+					<div id="barfill" style="width:1%"></div>
+				</td>
+				</tr>
+			</table>
+		</div>
+		<script>
+		<!--
+			do_size(); do_ajax();
+		//-->
+		</script>
+	</body>
+</html>
