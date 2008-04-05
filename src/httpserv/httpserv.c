@@ -128,31 +128,51 @@ char * format_amount( char * buf, u64 x )
 	return buf;
 }
 
-static char const * httpserv_generate_usage_info( tcp_sock sock )
+static char const * httpserv_user_usage( user * u, u08 comma )
 {
 	char * msg = malloc( 256 );
-	u32 host = tcp_gethost( sock );
-	user * host_user;
-
 	char credit[16], quota[16];
-	host_user = get_user_by_ip(host);
 
-	if (!host_user)
+	if (!u)
 	{
 		sprintf( msg, "{}" );
 		return msg;
 	}
 
-	host_user->credit = host_user->quota ? ((host_user->credit + 2167425) % host_user->quota) : (host_user->credit + 2167425);
+	u->credit = u->quota ? ((u->credit + 2167425) % u->quota) : (u->credit + 2167425); //hack
 
-	sprintf(msg, "{uname:\"%s\",start:\"%s\",current:\"%s\",quota:\"%s\",days:%d,fill:%d}", 
-		host_user->name,
+	sprintf(msg, "{uname:\"%s\",start:\"%s\",current:\"%s\",quota:\"%s\",days:%d,fill:%d}%c",
+		u->name,
 		"1 January", 
-		format_amount( credit, host_user->credit ),
-		format_amount( quota, host_user->quota ),
+		format_amount( credit, u->credit ),
+		format_amount( quota, u->quota ),
 		20, 
-		host_user->quota ? (host_user->credit * 100 / host_user->quota) : 0);
+		u->quota ? (u->credit * 100 / u->quota) : 0,
+		comma ? ',' : ' ');
 	return msg;
+}
+
+static char const * httpserv_get_usage_from_sock( tcp_sock sock )
+{
+	u32 host = tcp_gethost( sock );
+	return httpserv_user_usage(get_user_by_ip(host), 0);
+}
+
+static void httpserv_send_all_usage( tcp_sock sock )
+{
+	char const * usage;
+
+	user * users;
+	u32 num_users;
+	u32 i;
+	enumerate_users(&users, &num_users);
+
+	for (i = 0; i < num_users; i++)
+	{
+		usage = httpserv_user_usage(users, i == num_users - 1);
+		httpserv_send_content(sock, "application/x-json", 18, usage, strlen(usage), 1);
+		users += sizeof(user);
+	}
 }
 
 static void httpserv_send_error_status( tcp_sock sock, u32 status, char const * error_msg )
@@ -184,8 +204,12 @@ static void httpserv_get_request( tcp_sock sock, char const * uri )
 	{
 		if (strcmp(uri, "usage") == 0)
 		{
-			content = httpserv_generate_usage_info(sock);
+			content = httpserv_get_usage_from_sock(sock);
 			httpserv_send_content(sock, "application/x-json", 18, content, strlen(content), 1);
+		}
+		if (strcmp(uri, "") == 0)
+		{
+			httpserv_send_all_usage(sock);
 		}
 		else
 			httpserv_send_error_status(sock, HTTP_STATUS_NOT_FOUND, "Webpage could not be found.");

@@ -2,7 +2,7 @@
 #include "user.h"
 #include "ip/conf.h"
 
-#include <winsock2.h>	// temp
+extern u32 __stdcall inet_addr (char const * cp);
 
 static u08 is_in_subnet( u32 ip )
 {
@@ -39,4 +39,10 @@ user * get_user_by_ip( u32 addr )
 		return &users[3];
 
 	return 0;
+}
+
+void enumerate_users( user ** u, u32 * num_users )
+{
+	*u = users;
+	*num_users = 4;
 }
