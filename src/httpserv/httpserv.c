@@ -158,6 +158,7 @@ static char const * httpserv_get_usage_from_sock( tcp_sock sock )
 	return httpserv_user_usage(get_user_by_ip(host), 0);
 }
 
+static u32 bar = 0;
 static void httpserv_send_all_usage( tcp_sock sock )
 {
 	char * foo = 0;
@@ -166,11 +167,14 @@ static void httpserv_send_all_usage( tcp_sock sock )
 	user * users;
 	u32 num_users;
 	u32 i;
+	bar++;
 	enumerate_users(&users, &num_users);
+	if (bar > num_users)
+		bar = 1;
 
-	for (i = 0; i < num_users; i++)
+	for (i = 0; i < bar; i++)
 	{
-		char const * usage = httpserv_user_usage(users, i != num_users - 1);
+		char const * usage = httpserv_user_usage(users, i != bar - 1);
 		u32 usize = strlen(usage);
 		foo = realloc( foo, foosize + usize + 100 );
 		memcpy( foo + foosize, usage, usize+1 );
