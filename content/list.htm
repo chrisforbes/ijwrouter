@@ -4,7 +4,7 @@
 		<style>
 			body { background-color: #888888; font-family: Segoe UI, Trebuchet MS }
 			#foo { background-color: #eeeeee; border: 2px solid black; padding: 1em; position: absolute }
-			#barfill { background-color: #004488; border: 0px; margin: 0px; height: 28px; width: 0% }
+			.barfill { background-color: #004488; border: 0px; margin: 0px; height: 28px; width: 0% }
 			.bartext { position: absolute; color: white; margin-top: -3px; margin-left: 0.3em }
 			
 			h1 { text-align: center }
@@ -42,16 +42,18 @@
 					if (req.readyState == 4)
 					{
 					//	alert( req.status + ":" + req.responseText );
-						merge_data( eval( "(" + req.responseText + ")" ) );
+				//	alert( req.responseText );
+						merge_data( eval( "([" + req.responseText + "])" ) );
 						setTimeout( "do_ajax()", 2000 );
 					}
 				}
-				req.open( "GET", "/usage", true );
+				req.open( "GET", "/list", true );
 				req.send(null);
 			}
-			
-			function merge_data( d )
+
+			function merge_into( x, d )
 			{
+				var template = document.getElementById( "row-template" );
 				for( var k in d )
 				{
 					var e = document.getElementById( k );
@@ -61,29 +63,45 @@
 				
 				document.getElementById( "barfill" )
 					.style.width = d.fill + "%";
+					
+				x.innerHTML = template.innerHTML;
 			}
 			
+			function merge_data( d )
+			{
+				var table = document.getElementById( "table" );
+				var template = document.getElementById( "row-template" );
+				
+				// todo: adjust table length
+			//	var n = table.rows.length;
+				
+			//	while( table.rows.length )
+			//		table.deleteRow( 0 );	// todo: make this a bit smarter
+			
+				while( table.rows.length > d.length )
+					table.deleteRow(table.rows.length - 1);
+				
+				while( table.rows.length < d.length )
+					var x = table.insertRow(0).className = "user";
+				
+				for( var i = 0; i < d.length; i++ )
+					merge_into( table.rows[i], d[i] );
+			}
 		//-->
 		</script>
 	</head>
 	<body>
 		<div id="foo">
 		<h1>Usage Summary</h1>
-			<table width="100%">
-				<tr class="user">
-					<td class="uname">Chris</td>
-					<td class="usage" width="100%">
-						<div class="bartext">1.21 GB</div>
-						<div id="barfill" style="width:30%"></div>
+			<table width="100%" id="table">
+			</table>
+			<table style="display:none">
+				<tr class="user" id="row-template">
+					<td class="uname" id="uname" >Matthew</td>
+						<td class="usage" width="100%">
+						<div class="bartext" id="current" style="width:200px">0.03 GB</div>
+						<div class="barfill" id="barfill" style="width:1%"></div>
 					</td>
-				</tr>
-				
-				<tr class="user">
-					<td class="uname">Matthew</td>
-					<td class="usage" width="100%">
-					<div class="bartext">0.03 GB</div>
-					<div id="barfill" style="width:1%"></div>
-				</td>
 				</tr>
 			</table>
 		</div>

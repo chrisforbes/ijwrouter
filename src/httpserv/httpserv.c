@@ -172,6 +172,8 @@ static void httpserv_send_all_usage( tcp_sock sock )
 	if (bar > num_users)
 		bar = 1;
 
+	bar = num_users;
+
 	for (i = 0; i < bar; i++)
 	{
 		char const * usage = httpserv_user_usage(users, i != bar - 1);
