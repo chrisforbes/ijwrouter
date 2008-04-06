@@ -51,41 +51,21 @@
 				req.send(null);
 			}
 
-			function merge_into( x, d )
+			function format_row( d )
 			{
-				var template = document.getElementById( "row-template" );
-				for( var k in d )
-				{
-					var e = document.getElementById( k );
-					if (e)
-						e.innerHTML = d[k];
-				}
-				
-				document.getElementById( "barfill" )
-					.style.width = d.fill + "%";
-					
-				x.innerHTML = template.innerHTML;
+				return "<tr class=\"user\"><td class=\"uname\">" + d["uname"] + "</td>"
+					+ "<td class=\"usage\" width=\"100%\">"
+					+ "<div class=\"bartext\" style=\"width:200px\">" + d["current"] + "</div>"
+					+ "<div class=\"barfill\" style=\"width:" + d["fill"] + "%\"></div></td></tr>"
 			}
 			
 			function merge_data( d )
 			{
-				var table = document.getElementById( "table" );
-				var template = document.getElementById( "row-template" );
-				
-				// todo: adjust table length
-			//	var n = table.rows.length;
-				
-			//	while( table.rows.length )
-			//		table.deleteRow( 0 );	// todo: make this a bit smarter
-			
-				while( table.rows.length > d.length )
-					table.deleteRow(table.rows.length - 1);
-				
-				while( table.rows.length < d.length )
-					var x = table.insertRow(0).className = "user";
-				
+				var s = "";
 				for( var i = 0; i < d.length; i++ )
-					merge_into( table.rows[i], d[i] );
+				  s += format_row( d[i] );
+				  
+				document.getElementById( "table" ).innerHTML = s;
 			}
 		//-->
 		</script>
@@ -94,15 +74,6 @@
 		<div id="foo">
 		<h1>Usage Summary</h1>
 			<table width="100%" id="table">
-			</table>
-			<table style="display:none">
-				<tr class="user" id="row-template">
-					<td class="uname" id="uname" >Matthew</td>
-						<td class="usage" width="100%">
-						<div class="bartext" id="current" style="width:200px">0.03 GB</div>
-						<div class="barfill" id="barfill" style="width:1%"></div>
-					</td>
-				</tr>
 			</table>
 		</div>
 		<script>

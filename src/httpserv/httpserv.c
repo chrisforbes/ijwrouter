@@ -11,6 +11,8 @@
 #include "httpserv.h"
 #include "httpcommon.h"
 
+#pragma warning( disable: 4204 )
+
 // http pseudoheaders from request line
 #define ph_method	((char const *)1)
 #define ph_uri		((char const *)2)
@@ -23,6 +25,12 @@ typedef void http_header_f( tcp_sock sock, char const * name, char const * value
 
 #define __COPYINTO( ptr, base, value, max )\
 	{ *ptr++ = value; if (ptr - base >= max) ptr = base; }
+
+typedef struct str_t
+{
+	char * str;
+	u32 len;
+} str_t;
 
 static void httpserv_parse( tcp_sock sock, u08 const * data, u32 len, http_header_f * f )
 {
@@ -98,17 +106,17 @@ static void __inline __memcpyz( char * dest, char const * src, u32 len )
 	dest[len] = 0;
 }
 
-static void httpserv_send_content( tcp_sock sock, char const * content_type, u32 content_type_len, char const * content, u32 content_len, u32 flags )
+static void httpserv_send_content( tcp_sock sock, str_t mime_type, str_t content, u32 flags )
 {
-	char * msg = malloc( 128 );
+	str_t str = { malloc(128), 0 };
 	char mime[64];
-	__memcpyz( mime, content_type, content_type_len );
+	__memcpyz( mime, mime_type.str, mime_type.len );
 
-	sprintf(msg, 
+	str.len = sprintf(str.str, 
 		"HTTP/1.0 200 OK\r\nContent-Length: %d\r\nContent-Type: %s\r\nCache-Control: no-cache\r\nExpires: -1\r\n\r\n", 
-		content_len, mime);
-	tcp_send( sock, msg, strlen(msg), 1 );
-	tcp_send( sock, content, content_len, flags );
+		content.len, mime);
+	tcp_send( sock, str.str, str.len, 1 );
+	tcp_send( sock, content.str, content.len, flags );
 }
 
 static int hax = 0;
@@ -128,20 +136,21 @@ char * format_amount( char * buf, u64 x )
 	return buf;
 }
 
-static char const * httpserv_user_usage( user * u, u08 comma )
+static str_t httpserv_user_usage( user * u, u08 comma )
 {
-	char * msg = malloc( 256 );
 	char credit[16], quota[16];
+	str_t str = { malloc( 256 ), 0 };
 
 	if (!u)
 	{
-		sprintf( msg, "{}" );
-		return msg;
+		memcpy( str.str, "{}", 3 );
+		str.len = 2;
+		return str;
 	}
 
 	u->credit = u->quota ? ((u->credit + 2167425) % u->quota) : (u->credit + 2167425); //hack
 
-	sprintf(msg, "{uname:\"%s\",start:\"%s\",current:\"%s\",quota:\"%s\",days:%d,fill:%d}%c",
+	str.len = sprintf(str.str, "{uname:\"%s\",start:\"%s\",current:\"%s\",quota:\"%s\",days:%d,fill:%d}%c",
 		u->name,
 		"1 January", 
 		format_amount( credit, u->credit ),
@@ -149,43 +158,45 @@ static char const * httpserv_user_usage( user * u, u08 comma )
 		20,
 		(u08)(u->quota ? (u->credit * 100 / u->quota) : 0),
 		comma ? ',' : ' ');
-	return msg;
+	return str;
 }
 
-static char const * httpserv_get_usage_from_sock( tcp_sock sock )
+static str_t httpserv_get_usage_from_sock( tcp_sock sock )
 {
 	u32 host = tcp_gethost( sock );
 	return httpserv_user_usage(get_user_by_ip(host), 0);
 }
 
-static u32 bar = 0;
+#define MAKE_STRING( x )	{ (x), sizeof(x) - 1 }
+
+static __inline void grow_string( str_t * s, u32 extra )
+{
+	s->len += extra;
+	s->str = realloc( s->str, s->len );
+}
+
 static void httpserv_send_all_usage( tcp_sock sock )
 {
-	char * foo = 0;
-	u32 foosize = 0;
+	str_t content = { 0, 0 };
+	str_t content_type = MAKE_STRING( "application/x-json" );
 
 	user * users;
 	u32 num_users;
 	u32 i;
-	bar++;
 	enumerate_users(&users, &num_users);
-	if (bar > num_users)
-		bar = 1;
 
-	bar = num_users;
-
-	for (i = 0; i < bar; i++)
+	for (i = 0; i < num_users; i++)
 	{
-		char const * usage = httpserv_user_usage(users, i != bar - 1);
-		u32 usize = strlen(usage);
-		foo = realloc( foo, foosize + usize + 100 );
-		memcpy( foo + foosize, usage, usize+1 );
-		free( (void *)usage );
+		str_t usage = httpserv_user_usage(users, i != num_users - 1);
+		content.str = realloc( content.str, content.len + usage.len + 100 );	// 100 doesnt mean anything
+		memcpy( content.str + content.len, usage.str, usage.len+1 );
+		free( usage.str );
 		users++;
-		foosize += usize;
+		content.len += usage.len;
 	}
 
-	httpserv_send_content(sock, "application/x-json", 18, foo, foosize, 1);
+	httpserv_send_content(sock, content_type, content, 1 );
+	logf( "200 OK %d bytes\n", content.len );
 }
 
 static void httpserv_send_error_status( tcp_sock sock, u32 status, char const * error_msg )
@@ -201,12 +212,13 @@ static void httpserv_send_error_status( tcp_sock sock, u32 status, char const * 
 static void httpserv_get_request( tcp_sock sock, char const * uri )
 {
 	struct file_entry const * entry;
-	char const * content;
-	char const * content_type;
+
+	logf( "GET %s : ", uri );
 
 	if (! *uri++)
 	{
 		httpserv_send_error_status( sock, HTTP_STATUS_SERVER_ERROR, "Internal server error" );
+		logf( "500 Internal Server Error\n" );
 		return;
 	}
 
@@ -217,8 +229,10 @@ static void httpserv_get_request( tcp_sock sock, char const * uri )
 	{
 		if (strcmp(uri, "usage") == 0)
 		{
-			content = httpserv_get_usage_from_sock(sock);
-			httpserv_send_content(sock, "application/x-json", 18, content, strlen(content), 1);
+			str_t content_type = MAKE_STRING( "application/x-json" );
+			str_t content = httpserv_get_usage_from_sock(sock);
+			httpserv_send_content(sock, content_type, content, 1);
+			logf( "200 OK %d bytes\n", content.len );
 		}
 		if (strcmp(uri, "list") == 0)
 		{
@@ -229,10 +243,13 @@ static void httpserv_get_request( tcp_sock sock, char const * uri )
 		return;
 	}
 
-	content_type = fs_get_mimetype(entry);
-	content = fs_get_content(entry);
+	{
+		str_t content_type = { (char *)fs_get_mimetype( entry ), entry->mime_pair.length };
+		str_t content = { (char *)fs_get_content( entry ), entry->content_pair.length };
 
-	httpserv_send_content(sock, content_type, entry->mime_pair.length, content, entry->content_pair.length, 0);
+		httpserv_send_content(sock, content_type, content, 0);
+		logf( "200 OK %d bytes\n", content.len );
+	}
 }
 
 static u08 current_method;

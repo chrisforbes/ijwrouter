@@ -324,7 +324,7 @@ u08 handle_connection( tcp_conn * conn, ip_header * p, tcp_header * t, u16 len )
 
 	if (t->flags & TCP_FIN)
 	{
-		logf( "tcp: connection closed\n" );
+		//logf( "tcp: connection closed\n" );
 		conn->incoming_seq_no++;
 		tcp_sendpacket( conn, 0, 0, TCP_ACK );
 		if (conn->state == TCP_STATE_ESTABLISHED)
