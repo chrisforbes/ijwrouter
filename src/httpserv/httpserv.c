@@ -201,12 +201,23 @@ static void httpserv_send_all_usage( tcp_sock sock )
 
 static void httpserv_send_error_status( tcp_sock sock, u32 status, char const * error_msg )
 {
-	char msg[128];
+	str_t msg = { malloc(128), 0 };
 	u32 errorlen = strlen( error_msg );
-	sprintf(msg, "HTTP/1.0 %d %s\r\nContent-Length: %d\r\nContent-Type: text/html; charset=UTF-8\r\n\r\n", 
+	msg.len = sprintf(msg.str, "HTTP/1.0 %d %s\r\nContent-Length: %d\r\nContent-Type: text/html; charset=UTF-8\r\n\r\n", 
 		status, http_get_status_message(status), errorlen);
-	tcp_send(sock, msg, strlen(msg), 0);
+	tcp_send(sock, msg.str, msg.len, 1);
 	tcp_send( sock, error_msg, errorlen, 0 );
+}
+
+static void httpserv_set_name( tcp_sock sock, char const * name )
+{
+	str_t msg = MAKE_STRING("HTTP/1.0 302 Found\r\nLocation: /usage.htm\r\n\r\n");
+	user * u = get_user_by_ip(tcp_gethost(sock));
+	if (!u) return;
+	strncpy(u->name, name, 16);
+	u->name[15] = 0;
+
+	tcp_send( sock, msg.str, msg.len, 0 );
 }
 
 static void httpserv_get_request( tcp_sock sock, char const * uri )
@@ -234,10 +245,10 @@ static void httpserv_get_request( tcp_sock sock, char const * uri )
 			httpserv_send_content(sock, content_type, content, 1);
 			logf( "200 OK %d bytes\n", content.len );
 		}
-		if (strcmp(uri, "list") == 0)
-		{
+		else if (strcmp(uri, "list") == 0)
 			httpserv_send_all_usage(sock);
-		}
+		else if (strncmp(uri, "name?", 5) == 0)
+			httpserv_set_name(sock, uri + 5);
 		else
 			httpserv_send_error_status(sock, HTTP_STATUS_NOT_FOUND, "Webpage could not be found.");
 		return;
