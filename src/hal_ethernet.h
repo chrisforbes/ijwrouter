@@ -20,6 +20,7 @@ u08 eth_inject( eth_packet * p );
 u08 eth_find_interface( mac_addr dest );
 
 #define IFACE_WAN		0x00
+#define IFACE_LAN0		0x01
 #define IFACE_BROADCAST	0xff
 #define IFACE_INTERNAL	0xfe
 

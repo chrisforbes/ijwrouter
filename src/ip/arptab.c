@@ -43,12 +43,12 @@ void arptab_insert( u08 iface, u32 net_addr, mac_addr phys_addr )
 	if (e->net_addr != net_addr)
 	{
 		char phys[32];
-		logf( "arp: new mapping %u.%u.%u.%u -> %s\n", 
+		logf( "arp: new mapping %u.%u.%u.%u -> %s iface=%d\n", 
 			net_addr & 0xff,
 			net_addr >> 8 & 0xff,
 			net_addr >> 16 & 0xff,
 			net_addr >> 24 & 0xff,
-			mac_to_str( phys, &phys_addr ) );
+			mac_to_str( phys, &phys_addr ), iface );
 	}
 
 	e->ttl = ARPTAB_TTL;

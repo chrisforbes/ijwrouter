@@ -32,4 +32,8 @@ pcap_t	*pcap_open_live(const char *, int, int, int, char *);
 u08 const * pcap_next(pcap_t *, pcap_pkthdr *);
 int	pcap_sendpacket(pcap_t *, const void *, int);
 
+// win32 extension
+HANDLE pcap_getevent( pcap_t * );
+int pcap_setmintocopy( pcap_t *, int );
+
 #endif

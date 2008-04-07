@@ -7,21 +7,30 @@
 #include "../hal_debug.h"
 
 #include <stdio.h>
+
+#define _WINSOCKAPI_
+#include <windows.h>
+
 #include "minpcap.h"
 
 #pragma comment( lib, "packet.lib" )
 #pragma comment( lib, "wpcap.lib" )
 
-static pcap_t * dev;
+
+#define NUMINTERFACES	2
+static pcap_t * interfaces[NUMINTERFACES];
+HANDLE interface_handles[NUMINTERFACES];
 u08 buf[2048];
 
 #define MAXBLOCKTIME	10
 
-u08 eth_init( void )
+u08 eth_init_interface( u08 iface, u08 real_iface )
 {
 	pcap_if_t * alldevs;
 	pcap_if_t * d;
 	char errbuf[ PCAP_ERRBUF_SIZE ];
+
+	interfaces[ iface ] = 0;
 
 	if (pcap_findalldevs( &alldevs, errbuf ) == -1)
 	{
@@ -35,21 +44,33 @@ u08 eth_init( void )
 		return 0;
 	}
 
-	d = alldevs->next;	// hack hack hack: interface 2 = ethernet interface on odd-socks/valkyrie
+	d = alldevs;
+	while( real_iface-- )
+		d = d->next;
 
-	dev = pcap_open_live( d->name, 65536, 1, MAXBLOCKTIME, errbuf );
+	interfaces[ iface ] = pcap_open_live( d->name, 65536, 1, 1000, errbuf );
 
-	if (!dev)
+	if (!interfaces[iface])
 	{
 		logf( "hal: failed opening interface %s\n", d->name );
 		return 0;
 	}
-	else
-		logf( "hal: opened interface %s\n (%s)\n", 
-			d->name, d->description );
+
+	logf( "hal: iface=%d -> %s\n", 
+		iface, d->description );
+
+	pcap_setmintocopy( interfaces[iface], 1 );
+
+	interface_handles[ iface ] = (HANDLE)pcap_getevent( interfaces[ iface ] );
 
 	pcap_freealldevs( alldevs );
+	return 1;
+}
 
+u08 eth_init( void )
+{
+	eth_init_interface( IFACE_WAN, 2 );
+	eth_init_interface( IFACE_LAN0, 1 );
 	return 1;
 }
 
@@ -57,11 +78,31 @@ u08 eth_getpacket( eth_packet * p )
 {
 	struct pcap_pkthdr h;
 	u08 const * data;
-	
-	if ( !dev )
-		return 0;
 
-	data = pcap_next( dev, &h );
+	u08 iface;
+	DWORD obj = WaitForMultipleObjects( NUMINTERFACES, interface_handles, FALSE, MAXBLOCKTIME );
+	
+	if (obj == WAIT_FAILED)
+	{
+		logf( "hal: WaitForMultipleObjects() failed with %u\n", GetLastError() );
+		return 0;
+	}
+
+	if (obj == WAIT_TIMEOUT)
+	{
+		//logf( "hal: WaitForMultipleObject() timed out\n" );
+		return 0;		// there was no packet
+	}
+
+	iface = (u08)(obj - WAIT_OBJECT_0);
+
+	if ( !interfaces[iface] )
+	{
+		logf( "hal: no interface for iface=%d\n", iface );
+		return 0;	// no interface??
+	}
+
+	data = pcap_next( interfaces[iface], &h );
 
 	if ( !data )
 		return 0;	// no packet
@@ -81,7 +122,7 @@ u08 eth_getpacket( eth_packet * p )
 
 	memcpy( buf, data, h.len );
 	p->packet = (eth_header *) buf;
-	p->src_iface = IFACE_WAN;	// we have only one
+	p->src_iface = iface;
 	p->dest_iface = eth_find_interface( p->packet->dest );
 	p->len = (u16)h.len;
 
@@ -102,13 +143,20 @@ u08 eth_forward( eth_packet * p )
 
 u08 eth_inject( eth_packet * p )
 {
-	if ( !dev )
+	if ( p->dest_iface == IFACE_BROADCAST )
 	{
-		logf( "hal: tried to inject packet without interface\n" );
+		p->dest_iface = IFACE_WAN; eth_inject( p );
+		p->dest_iface = IFACE_LAN0; eth_inject( p );
+		return 1;
+	}
+
+	if (p->dest_iface == IFACE_INTERNAL )
+	{
+		logf( "hal: tried to inject packet into IFACE_INTERNAL\n" );
 		return 0;
 	}
 
-	if (-1 == pcap_sendpacket( dev, p->packet, p->len ))
+	if (-1 == pcap_sendpacket( interfaces[ p->dest_iface ], p->packet, p->len ))
 		return 0;
 
 	return 1;
