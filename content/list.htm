@@ -13,6 +13,7 @@
 			.uname { padding-right: 1em }
 			.usage { border: 2px solid black; }
 		</style>
+		<script src="jquery-1.2.3.js"></script>
 		<script>
 		<!--
 			var size_installed = false;
@@ -35,20 +36,17 @@
 			
 			function do_ajax()
 			{
-				var req = window.XMLHttpRequest ?
-					new XMLHttpRequest() : new ActiveXObject( "Microsoft.XMLHTTP" );
-				req.onreadystatechange = function()
+				$.ajax({
+				type: "GET",
+				url: "list",
+				success: function(data, textStatus)
 				{
-					if (req.readyState == 4)
-					{
 					//	alert( req.status + ":" + req.responseText );
-				//	alert( req.responseText );
-						merge_data( eval( "([" + req.responseText + "])" ) );
+					//	alert( req.responseText );
+						merge_data( eval( "([" + data + "])" ) );
 						setTimeout( "do_ajax()", 2000 );
-					}
 				}
-				req.open( "GET", "/list", true );
-				req.send(null);
+				});
 			}
 
 			function format_row( d )
@@ -65,8 +63,10 @@
 				for( var i = 0; i < d.length; i++ )
 				  s += format_row( d[i] );
 				  
-				document.getElementById( "table" ).innerHTML = s;
+				$("table").html(s);
 			}
+			
+			$(document).ready(function(){ do_size(); do_ajax(); });
 		//-->
 		</script>
 	</head>
@@ -76,10 +76,5 @@
 			<table width="100%" id="table">
 			</table>
 		</div>
-		<script>
-		<!--
-			do_size(); do_ajax();
-		//-->
-		</script>
 	</body>
 </html>
