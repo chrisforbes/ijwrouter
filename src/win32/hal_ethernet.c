@@ -143,10 +143,12 @@ u08 eth_forward( eth_packet * p )
 
 u08 eth_inject( eth_packet * p )
 {
+	if (p->dest_iface == p->src_iface) return 0;	// dont allow route back to source port
+
 	if ( p->dest_iface == IFACE_BROADCAST )
 	{
-		p->dest_iface = IFACE_WAN; eth_inject( p );
-		p->dest_iface = IFACE_LAN0; eth_inject( p );
+		for( p->dest_iface = IFACE_WAN; p->dest_iface < NUMINTERFACES; p->dest_iface++ )
+			eth_inject( p );
 		return 1;
 	}
 

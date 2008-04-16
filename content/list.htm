@@ -4,8 +4,8 @@
 		<style>
 			body { background-color: #888888; font-family: Segoe UI, Trebuchet MS }
 			#foo { background-color: #eeeeee; border: 2px solid black; padding: 1em; position: absolute }
-			.barfill { background-color: #004488; border: 0px; margin: 0px; height: 28px; width: 0% }
-			.bartext { position: absolute; color: white; margin-top: -3px; margin-left: 0.3em }
+			.barfill { background-color: #48b4eb; border: 0px; margin: 0px; height: 28px; width: 0% }
+			.bartext { position: absolute; color: black; margin-top: -3px; margin-left: 0.3em }
 			
 			h1 { text-align: center }
 			
@@ -49,10 +49,10 @@
 
 			function format_row( d )
 			{
-				return "<tr class=\"user\"><td class=\"uname\">" + d["uname"] + "</td>"
+				return "<tr class=\"user\"><td class=\"uname\">" + d.uname + "</td>"
 					+ "<td class=\"usage\" width=\"100%\">"
-					+ "<div class=\"bartext\" style=\"width:200px\">" + d["current"] + "</div>"
-					+ "<div class=\"barfill\" style=\"width:" + d["fill"] + "%\"></div></td></tr>"
+					+ "<div class=\"bartext\" style=\"width:200px\">" + d.current + "</div>"
+					+ "<div class=\"barfill\" style=\"width:" + d.fill + "%\"></div></td></tr>"
 			}
 			
 			function merge_data( d )
