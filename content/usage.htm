@@ -11,6 +11,7 @@
 			
 			h1,h2 { font-family: Segoe UI, Trebuchet MS; text-align: center }
 		</style>
+		<script src="jquery-1.2.3.js"></script>
 		<script>
 		<!--
 			var size_installed = false;
@@ -21,7 +22,7 @@
 				if (!size_installed)
 					window.onresize = do_size;
 		
-				var e = document.getElementById( "foo" );
+				var e = $("#foo").get(0);
 				var w = window.innerWidth;
 				var h = window.innerHeight;
 				
@@ -37,34 +38,28 @@
 			
 			function do_ajax()
 			{
-				var req = window.XMLHttpRequest ?
-					new XMLHttpRequest() : new ActiveXObject( "Microsoft.XMLHTTP" );
-				req.onreadystatechange = function()
+				$.ajax({
+				type: "GET",
+				url: "usage",
+				success: function(data)
 				{
-					if (req.readyState == 4)
-					{
-					//	alert( req.status + ":" + req.responseText );
-						merge_data( eval( "(" + req.responseText + ")" ) );
-						setTimeout( "do_ajax()", 2000 );
-					}
+					merge_data( eval( "(" + data + ")" ) );
+					setTimeout( "do_ajax()", 2000 );
 				}
-				req.open( "GET", "/usage", true );
-				req.send(null);
+				});
 			}
 			
 			function merge_data( d )
 			{
 				for( var k in d )
 				{
-					var e = document.getElementById( k );
-					if (e)
-						e.innerHTML = d[k];
+					$( "#" + k ).html(d[k]);
 				}
 				
-				document.getElementById( "barfill" )
-					.style.width = d.fill + "%";
+				$("#barfill").css("width", d.fill + "%");
 			}
 			
+			$(function(){ do_size(); do_ajax(); });
 		//-->
 		</script>
 	</head>
@@ -79,10 +74,5 @@
 				<div id="barfill"></div>
 			</td></tr></table>
 		</div>
-		<script>
-		<!--
-			do_size(); do_ajax();
-		//-->
-		</script>
 	</body>
 </html>

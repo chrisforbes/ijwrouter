@@ -1,0 +1,3 @@
+jquery-1.2.3.js	=	gzip
+jquery-1.2.3.min.js =	gzip
+list.htm =		gzip

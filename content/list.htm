@@ -24,7 +24,7 @@
 				if (!size_installed)
 					window.onresize = do_size;
 		
-				var e = document.getElementById( "foo" );
+				var e = $("#foo").get(0);
 				var w = window.innerWidth;
 				
 				if (w == null) w = document.body.clientWidth;
@@ -41,10 +41,8 @@
 				url: "list",
 				success: function(data, textStatus)
 				{
-					//	alert( req.status + ":" + req.responseText );
-					//	alert( req.responseText );
-						merge_data( eval( "([" + data + "])" ) );
-						setTimeout( "do_ajax()", 2000 );
+					merge_data( eval( "([" + data + "])" ) );
+					setTimeout( "do_ajax()", 2000 );
 				}
 				});
 			}
@@ -66,7 +64,7 @@
 				$("table").html(s);
 			}
 			
-			$(document).ready(function(){ do_size(); do_ajax(); });
+			$(function(){ do_size(); do_ajax(); });
 		//-->
 		</script>
 	</head>
