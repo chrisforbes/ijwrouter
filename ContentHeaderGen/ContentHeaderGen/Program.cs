@@ -15,10 +15,11 @@ namespace ContentHeaderGen
 	enum Options
 	{
 		None = 0,
-		Gzip = 1
+		Gzip = 1,
+		Ignore = 2,
 	}
 
-	class Program
+	static class Program
 	{
 		static Dictionary<string, Options> ParseOptions(string optionsFilePath)
 		{
@@ -28,17 +29,14 @@ namespace ContentHeaderGen
 			foreach (string line in lines)
 			{
 				var m = pattern.Match(line);
-				if (!m.Success)
-					continue;
+				if (!m.Success)				// THIS IS NOT GOING TO WORK ONCE WE WANT
+					continue;				// MORE THAN ONE OPTION PER FILE
 				Options op = Options.None;
 				switch (m.Groups[2].Value)
 				{
-					case "gzip":
-						op |= Options.Gzip;
-						break;
-					default:
-						op = Options.None;
-						break;
+					case "gzip": op |= Options.Gzip; break;
+					case "ignore": op |= Options.Ignore; break;
+					default: op = Options.None; break;
 				}
 				options.Add(m.Groups[1].Value.Trim(), op);
 			}
@@ -64,15 +62,14 @@ namespace ContentHeaderGen
 
 			string dir = args.DefaultIfEmpty(Environment.CurrentDirectory).First();
 
-			Dictionary<string, Options> options = null;
 			string optionsFile = Path.Combine(dir, "options.txt");
-			if (File.Exists(optionsFile))
-				options = ParseOptions(optionsFile);
+			var options = File.Exists(optionsFile) 
+				? ParseOptions(optionsFile) : new Dictionary<string, Options>();
 
 			var files = new List<string>();
 			files.AddRange(Directory.GetFiles(dir)); 
 
-			var writer = new BinaryWriter(File.OpenWrite("content.blob"));
+			var writer = new BinaryWriter(File.Create("content.blob"));
 
 			foreach (var file in files)
 			{
@@ -86,20 +83,24 @@ namespace ContentHeaderGen
 
 				mime = mime ?? "application/octet-stream";
 
-				Options o;
-				if (options != null && options.TryGetValue(Path.GetFileName(file), out o))
+				var o = options.ValueOrDefault(Path.GetFileName(file));
+
+				if ((o & Options.Ignore) != 0)
 				{
-					if ((o & Options.Gzip) != 0)
-						using (var compressedStream = new MemoryStream())
-						{
-							var gzipStream = new GZipStream(compressedStream, CompressionMode.Compress, true);
-							gzipStream.Write(content, 0, content.Length);
-							gzipStream.Flush();
-							gzipStream.Close();
-							mime = "application/x-gzip";
-							content = compressedStream.ToArray();
-						}
+					Console.WriteLine("(ignored)");
+					continue;
 				}
+
+				if ((o & Options.Gzip) != 0)
+					using (var compressedStream = new MemoryStream())
+					{
+						var gzipStream = new GZipStream(compressedStream, CompressionMode.Compress, true);
+						gzipStream.Write(content, 0, content.Length);
+						gzipStream.Flush();
+						gzipStream.Close();
+						mime = "application/x-gzip";
+						content = compressedStream.ToArray();
+					}
 
 				Console.WriteLine(result + " " + mime);
 
@@ -121,5 +122,11 @@ namespace ContentHeaderGen
 		[DllImport("urlmon.dll", CharSet=CharSet.Unicode)]
 		static extern int FindMimeFromData(IntPtr bindContext, string url, IntPtr buf, int bufLen, IntPtr proposedMime, 
 			int flags, out string mime, int reserved);
+
+		static U ValueOrDefault<T, U>(this Dictionary<T, U> dict, T key)
+		{
+			U value;
+			return dict.TryGetValue(key, out value) ? value : default(U);
+		}
 	}
 }
