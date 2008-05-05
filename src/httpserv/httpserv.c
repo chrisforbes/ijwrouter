@@ -113,7 +113,7 @@ static void httpserv_send_content( tcp_sock sock, str_t mime_type, str_t content
 	__memcpyz( mime, mime_type.str, mime_type.len );
 
 	str.len = sprintf(str.str, 
-		"HTTP/1.0 200 OK\r\nContent-Length: %d\r\n%sContent-Type: %s\r\nCache-Control: no-cache\r\nExpires: -1\r\n\r\n", 
+		"HTTP/1.1 200 OK\r\nConnection: close\r\nContent-Length: %d\r\n%sContent-Type: %s\r\nCache-Control: no-cache\r\nExpires: -1\r\n\r\n", 
 		content.len, is_gzipped ? "Content-Encoding: gzip\r\n" : "", mime);
 	tcp_send( sock, str.str, str.len, 1 );
 	tcp_send( sock, content.str, content.len, flags );
@@ -203,7 +203,7 @@ static void httpserv_send_error_status( tcp_sock sock, u32 status, char const * 
 {
 	str_t msg = { malloc(128), 0 };
 	u32 errorlen = strlen( error_msg );
-	msg.len = sprintf(msg.str, "HTTP/1.0 %d %s\r\nContent-Length: %d\r\nContent-Type: text/html; charset=UTF-8\r\n\r\n", 
+	msg.len = sprintf(msg.str, "HTTP/1.1 %d %s\r\nConnection: close\r\nContent-Length: %d\r\nContent-Type: text/html; charset=UTF-8\r\n\r\n", 
 		status, http_get_status_message(status), errorlen);
 	tcp_send(sock, msg.str, msg.len, 1);
 	tcp_send( sock, error_msg, errorlen, 0 );
