@@ -41,7 +41,8 @@
 				url: "usage",
 				success: function(data)
 				{
-					merge_data( eval( "(" + data + ")" ) );
+					if (data != "{}")
+						merge_data( eval( "(" + data + ")" ) );
 					setTimeout( "do_ajax()", 2000 );
 				}
 				});
