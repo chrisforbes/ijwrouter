@@ -91,6 +91,8 @@ namespace ContentHeaderGen
 					continue;
 				}
 
+				byte flags = 0;
+
 				if ((o & Options.Gzip) != 0)
 					using (var compressedStream = new MemoryStream())
 					{
@@ -98,8 +100,10 @@ namespace ContentHeaderGen
 						gzipStream.Write(content, 0, content.Length);
 						gzipStream.Flush();
 						gzipStream.Close();
-						mime = "application/x-gzip";
+				//		mime = "application/x-gzip";
 						content = compressedStream.ToArray();
+
+						flags |= 0x81;	// ATTRIB_GZIP | ATTRIB_AWESOME :)
 					}
 
 				Console.WriteLine(result + " " + mime);
@@ -112,6 +116,8 @@ namespace ContentHeaderGen
 					writer.Write( x.First );
 					writer.Write( x.Second ); 
 				}
+
+				writer.Write(flags);
 			}
 
 			writer.Write((int)0);

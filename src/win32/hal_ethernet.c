@@ -17,7 +17,7 @@
 #pragma comment( lib, "wpcap.lib" )
 
 
-#define NUMINTERFACES	2
+#define NUMINTERFACES	1
 static pcap_t * interfaces[NUMINTERFACES];
 HANDLE interface_handles[NUMINTERFACES];
 u08 buf[2048];
@@ -69,8 +69,8 @@ u08 eth_init_interface( u08 iface, u08 real_iface )
 
 u08 eth_init( void )
 {
-	eth_init_interface( IFACE_WAN, 2 );
-	eth_init_interface( IFACE_LAN0, 1 );
+	eth_init_interface( IFACE_WAN, 1 );
+	//eth_init_interface( IFACE_LAN0, 1 );
 	return 1;
 }
 

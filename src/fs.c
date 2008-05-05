@@ -16,7 +16,7 @@ static char const * find_start_of_content( void )
 	while( f->filename_pair.offset || (f == fs) )
 		++f;
 
-	return ((char const *)f) + 4;
+	return ((char const *)f) + 4;	//skip 4 byte sentinel!
 }
 
 file_entry const * fs_find_file( char const * filename )
@@ -46,6 +46,12 @@ char const * fs_get_content( file_entry const * entry )
 	assert(entry);
 
 	return start + entry->content_pair.offset;
+}
+
+u08 fs_is_gzipped( file_entry const * entry )
+{
+	assert(entry);
+	return entry->attribs & ATTRIB_GZIP;
 }
 
 void fs_init( void )

@@ -106,15 +106,15 @@ static void __inline __memcpyz( char * dest, char const * src, u32 len )
 	dest[len] = 0;
 }
 
-static void httpserv_send_content( tcp_sock sock, str_t mime_type, str_t content, u32 flags )
+static void httpserv_send_content( tcp_sock sock, str_t mime_type, str_t content, u32 flags, u08 is_gzipped )
 {
-	str_t str = { malloc(128), 0 };
+	str_t str = { malloc(256), 0 };
 	char mime[64];
 	__memcpyz( mime, mime_type.str, mime_type.len );
 
 	str.len = sprintf(str.str, 
-		"HTTP/1.0 200 OK\r\nContent-Length: %d\r\nContent-Type: %s\r\nCache-Control: no-cache\r\nExpires: -1\r\n\r\n", 
-		content.len, mime);
+		"HTTP/1.0 200 OK\r\nContent-Length: %d\r\n%sContent-Type: %s\r\nCache-Control: no-cache\r\nExpires: -1\r\n\r\n", 
+		content.len, is_gzipped ? "Content-Encoding: gzip\r\n" : "", mime);
 	tcp_send( sock, str.str, str.len, 1 );
 	tcp_send( sock, content.str, content.len, flags );
 }
@@ -195,7 +195,7 @@ static void httpserv_send_all_usage( tcp_sock sock )
 		content.len += usage.len;
 	}
 
-	httpserv_send_content(sock, content_type, content, 1 );
+	httpserv_send_content(sock, content_type, content, 1, 0 );
 	logf( "200 OK %d bytes\n", content.len );
 }
 
@@ -242,7 +242,7 @@ static void httpserv_get_request( tcp_sock sock, char const * uri )
 		{
 			str_t content_type = MAKE_STRING( "application/x-json" );
 			str_t content = httpserv_get_usage_from_sock(sock);
-			httpserv_send_content(sock, content_type, content, 1);
+			httpserv_send_content(sock, content_type, content, 1, 0);
 			logf( "200 OK %d bytes\n", content.len );
 		}
 		else if (strcmp(uri, "list") == 0)
@@ -258,7 +258,7 @@ static void httpserv_get_request( tcp_sock sock, char const * uri )
 		str_t content_type = { (char *)fs_get_mimetype( entry ), entry->mime_pair.length };
 		str_t content = { (char *)fs_get_content( entry ), entry->content_pair.length };
 
-		httpserv_send_content(sock, content_type, content, 0);
+		httpserv_send_content(sock, content_type, content, 0, fs_is_gzipped( entry ));
 		logf( "200 OK %d bytes\n", content.len );
 	}
 }
