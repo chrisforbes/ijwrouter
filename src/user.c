@@ -18,18 +18,18 @@ user * get_user( mac_addr addr )
 
 user users[] = 
 {
-	{ "odd-socks", 0, 0 },
-	{ "other-woman", 104857600u, 1073741824u },
+	{ "192.168.2.5", 0, 0 },
+	{ "192.168.2.7", 104857600u, 1073741824u },
 	{ "laptop-0", 0, 104857600u },
 	{ "laptop-1", 0, 104857600u },
 };
 
 user * get_user_by_ip( u32 addr )
 {
-	if (addr == inet_addr( "192.168.2.4" ))
+	if (addr == inet_addr( "192.168.2.5" ))
 		return &users[0];
 
-	if (addr == inet_addr( "192.168.2.8" ))
+	if (addr == inet_addr( "192.168.2.7" ))
 		return &users[1];
 
 	if (addr == inet_addr( "192.168.2.9" ))
