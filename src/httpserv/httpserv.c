@@ -211,7 +211,7 @@ static void httpserv_send_error_status( tcp_sock sock, u32 status, char const * 
 
 static void httpserv_set_name( tcp_sock sock, char const * name )
 {
-	str_t msg = MAKE_STRING("HTTP/1.0 302 Found\r\nLocation: /usage.htm\r\n\r\n");
+	str_t msg = MAKE_STRING("HTTP/1.1 302 Found\r\nLocation: /usage.htm\r\nContent-Length: 0\r\nConnection: close\r\n\r\n");
 	user * u = get_user_by_ip(tcp_gethost(sock));
 	if (!u) return;
 	strncpy(u->name, name, 16);
