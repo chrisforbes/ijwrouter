@@ -25,8 +25,4 @@ void dump_packet( eth_packet * p )
 		srcbuf, p->src_iface, 
 		destbuf, p->dest_iface, 
 		__ntohs(p->packet->ethertype), p->len );
-
-/*	for( i = 0; i < p->len; i++ )
-		logf(" %02x", ((u08 const *)p->packet)[i]);
-	logf( "\n" );	*/
 }

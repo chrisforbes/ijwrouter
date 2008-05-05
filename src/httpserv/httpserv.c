@@ -180,18 +180,15 @@ static void httpserv_send_all_usage( tcp_sock sock )
 	str_t content = { 0, 0 };
 	str_t content_type = MAKE_STRING( "application/x-json" );
 
-	user * users;
-	u32 num_users;
-	u32 i;
-	enumerate_users(&users, &num_users);
+	user * u = get_next_user(0);
 
-	for (i = 0; i < num_users; i++)
+	while( u )
 	{
-		str_t usage = httpserv_user_usage(users, i != num_users - 1);
-		content.str = realloc( content.str, content.len + usage.len + 100 );	// 100 doesnt mean anything
-		memcpy( content.str + content.len, usage.str, usage.len+1 );
+		str_t usage = httpserv_user_usage(u, get_next_user(u) != 0);
+		content.str = realloc( content.str, content.len + usage.len + 100 );	// wtf is 100?
+		memcpy( content.str + content.len, usage.str, usage.len + 1 );
 		free( usage.str );
-		users++;
+		u = get_next_user(u);
 		content.len += usage.len;
 	}
 
