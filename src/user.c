@@ -85,12 +85,29 @@ static u08 is_in_subnet( u32 ip )
 	return (get_hostaddr() & mask) == (ip & mask);
 }
 
+user * get_user( mac_addr eth_addr )
+{
+	mac_mapping_t * m = get_mac_mapping( eth_addr, 1 );
+
+	if (!m->uid)
+	{
+		user * u = get_free_user();
+		if (!u) return 0;
+
+		m->uid = (u08)( 1 + ( u - usertab ) );
+		mac_to_str( u->name, &eth_addr );
+		u->credit = 0;
+		u->quota = 0;
+		return u;
+	}
+	else
+		return &usertab[ m->uid - 1 ];
+}
+
 user * get_user_by_ip( u32 addr )
 {
 	mac_addr eth_addr;
-	mac_mapping_t * m;
-	user * u = 0;
-
+	
 	if (!is_in_subnet( addr ))
 	{
 		logf( "user: ip not in subnet" );
@@ -103,61 +120,16 @@ user * get_user_by_ip( u32 addr )
 		return 0;	// cant translate to mac address
 	}
 
-	m = get_mac_mapping( eth_addr, 1 );
-	if (!m->uid)
-	{
-		u = get_free_user();
-		if (!u) return 0;
-
-		m->uid = (u08)( 1 + ( u - usertab ) );
-		mac_to_str( u->name, &addr );
-		u->credit = 0;
-		u->quota = 0;
-	}
-	else
-		u = &usertab[ m->uid - 1 ];
-
-	return u;
+	return get_user( eth_addr );
 }
 
 extern u32 __stdcall inet_addr (char const * cp);
-
-user * get_user( mac_addr addr )
-{
-	addr;	// todo: map the address to the user
-	return 0;
-}
-
-/*user users[] = 
-{
-	{ "192.168.2.5", 0, 0 },
-	{ "192.168.2.7", 104857600u, 1073741824u },
-	{ "laptop-0", 0, 104857600u },
-	{ "laptop-1", 0, 104857600u },
-};*/
-
-/*user * get_user_by_ip( u32 addr )
-{
-	if (addr == inet_addr( "192.168.2.5" ))
-		return &users[0];
-
-	if (addr == inet_addr( "192.168.2.7" ))
-		return &users[1];
-
-	if (addr == inet_addr( "192.168.2.9" ))
-		return &users[2];
-
-	if (addr == inet_addr( "192.168.0.105" ))
-		return &users[3];
-
-	return 0;
-}*/
 
 user * get_next_user( user * u )
 {
 	u08 i;
 	if (!u)
-		return &usertab[0];
+		return *usertab[0].name ? &usertab[0] : 0;
 
 	i = (u08)( u - usertab );
 	if (i >= MAX_USERS)

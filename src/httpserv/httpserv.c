@@ -267,13 +267,9 @@ static void httpserv_header_handler( tcp_sock sock, char const * name, char cons
 	if (name == ph_method)
 	{
 		if (strcmp(value, "GET") == 0)
-		{
 			current_method = http_method_get;
-		}
 		else if (strcmp(value, "HEAD") == 0)
-		{
 			current_method = http_method_head;
-		}
 		else
 		{
 			current_method = http_method_other;
