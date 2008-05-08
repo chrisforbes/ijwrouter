@@ -209,6 +209,14 @@
 				<File
 					RelativePath="..\src\win32\hal_time.c"
 					>
+					<FileConfiguration
+						Name="Debug|Win32"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+							WarnAsError="false"
+						/>
+					</FileConfiguration>
 				</File>
 				<File
 					RelativePath="..\src\win32\main.c"
