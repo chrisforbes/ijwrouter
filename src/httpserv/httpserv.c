@@ -206,13 +206,51 @@ static void httpserv_send_error_status( tcp_sock sock, u32 status, char const * 
 	tcp_send( sock, error_msg, errorlen, 0 );
 }
 
+static u08 httpserv_decode_hex( char c )
+{
+	if (c >= 'a' && c <= 'f')
+		return c - 'a' + 10;
+	if (c >= 'A' && c <= 'F')
+		return c - 'A' + 10;
+	if (c >= '0' && c <= '9')
+		return c - '0';
+	logf("char %c is not a valid hex digit\n", c);
+	return 0;
+}
+
+static void httpserv_url_decode( char * dest, u32 len, char const * src )
+{
+	u32 i = 0, j = 0;
+	u08 c, temp = 0;
+	u08 s = 0;
+	while ((c = src[i]) != 0 && j < len)
+	{
+		switch (s)
+		{
+		case 0:
+			if (c == '%') s = 1;
+			else dest[j++] = c;
+			break;
+		case 1:
+			temp = c;
+			s = 2;
+			break;
+		case 2:
+			dest[j++] = ((httpserv_decode_hex( temp ) << 4) + httpserv_decode_hex( c ));
+			s = 0;
+			break;
+		}
+		i++;
+	}
+	dest[j] = 0;
+}
+
 static void httpserv_set_name( tcp_sock sock, char const * name )
 {
 	str_t msg = MAKE_STRING("HTTP/1.1 302 Found\r\nLocation: /usage.htm\r\nContent-Length: 0\r\nConnection: close\r\n\r\n");
 	user * u = get_user_by_ip(tcp_gethost(sock));
 	if (!u) return;
-	strncpy(u->name, name, 16);
-	u->name[15] = 0;
+	strncpy(u->name, name, 32);
 
 	tcp_send( sock, msg.str, msg.len, 0 );
 }
@@ -220,6 +258,8 @@ static void httpserv_set_name( tcp_sock sock, char const * name )
 static void httpserv_get_request( tcp_sock sock, char const * uri )
 {
 	struct file_entry const * entry;
+
+	httpserv_url_decode((char *)uri, strlen(uri), uri);
 
 	logf( "GET %s : ", uri );
 
@@ -247,7 +287,10 @@ static void httpserv_get_request( tcp_sock sock, char const * uri )
 		else if (strncmp(uri, "name?", 5) == 0)
 			httpserv_set_name(sock, uri + 5);
 		else
+		{
+			logf("404\n");
 			httpserv_send_error_status(sock, HTTP_STATUS_NOT_FOUND, "Webpage could not be found.");
+		}
 		return;
 	}
 
@@ -284,7 +327,9 @@ static void httpserv_header_handler( tcp_sock sock, char const * name, char cons
 	case http_method_get:
 	case http_method_head:
 		if (name == ph_uri)
+		{
 			httpserv_get_request(sock, value);
+		}
 	}
 }
 
