@@ -13,10 +13,23 @@ char * mac_to_str( char * buf, void * _a )
 	return buf;
 }
 
+mac_addr str_to_mac( char const * buf )
+{
+	mac_addr result;
+	u08 i = 0;
+	u08 * p = result.addr;
+
+	for( i = 0; i < 6; i++ )
+	{
+		*p++ = (u08)strtol( buf, 0, 16 );
+		buf += 3;
+	}
+	return result;
+}
+
 void dump_packet( eth_packet * p )
 {
 	static char srcbuf[64], destbuf[64];
-//	int i = 0;
 
 	mac_to_str( srcbuf, &p->packet->src );
 	mac_to_str( destbuf, &p->packet->dest );
