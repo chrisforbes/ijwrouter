@@ -26,7 +26,7 @@ u08 __never( void *, void * );
 	(T*)__alloc_table_entry( name, &__ ## name ## _count, sizeof(T) )
 
 #define FREE_TABLE_ENTRY( T, name, entry, remap )\
-	__free_table_entry( name, sizeof(T), (u08*)name + sizeof(name), &__ ## name ## _count, entry, (generic_remap *)remap )
+	__free_table_entry( name, (u08*)name + sizeof(name), sizeof(T), &__ ## name ## _count, entry, (generic_remap *)remap )
 
 #define FOREACH( T, name, var )\
 	T* var = 0; while( 0 != (var = FIND_TABLE_ENTRY_FROM( T, name, __always, 0, var )))

@@ -32,6 +32,8 @@ typedef struct str_t
 	u32 len;
 } str_t;
 
+extern mac_addr str_to_mac( char const * buf );
+
 static void httpserv_parse( tcp_sock sock, u08 const * data, u32 len, http_header_f * f )
 {
 	char name[ MAXNAMESIZE + 1 ], * pname = name;
@@ -119,8 +121,6 @@ static void httpserv_send_content( tcp_sock sock, str_t mime_type, str_t content
 	tcp_send( sock, content.str, content.len, flags );
 }
 
-static int hax = 0;
-
 char * format_amount( char * buf, u64 x )
 {
 	static char const * units[] = { "KB", "MB", "GB", "TB" };
@@ -185,11 +185,11 @@ static void httpserv_send_all_usage( tcp_sock sock )
 	while( u )
 	{
 		str_t usage = httpserv_user_usage(u, get_next_user(u) != 0);
-		content.str = realloc( content.str, content.len + usage.len + 100 );	// wtf is 100?
-		memcpy( content.str + content.len, usage.str, usage.len + 1 );
+		u32 old_len = content.len;
+		grow_string( &content, usage.len );
+		memcpy( content.str + old_len, usage.str, usage.len );
 		free( usage.str );
 		u = get_next_user(u);
-		content.len += usage.len;
 	}
 
 	httpserv_send_content(sock, content_type, content, 1, 0 );
@@ -206,7 +206,7 @@ static void httpserv_send_error_status( tcp_sock sock, u32 status, char const * 
 	tcp_send( sock, error_msg, errorlen, 0 );
 }
 
-static u08 httpserv_decode_hex( char c )
+static u08 decode_hex( char c )
 {
 	if (c >= 'a' && c <= 'f')
 		return c - 'a' + 10;
@@ -218,48 +218,59 @@ static u08 httpserv_decode_hex( char c )
 	return 0;
 }
 
-static void httpserv_url_decode( char * dest, u32 len, char const * src )
+static void uri_decode( char * dest, u32 len, char const * src )
 {
-	u32 i = 0, j = 0;
-	u08 c, temp = 0;
-	u08 s = 0;
-	while ((c = src[i]) != 0 && j < len)
+	u08 c, s = 0;
+	while (0 != (c = *src++) && len--)
 	{
 		switch (s)
 		{
 		case 0:
 			if (c == '%') s = 1;
-			else dest[j++] = c;
+			else *dest++ = c;
 			break;
 		case 1:
-			temp = c;
+			*dest = decode_hex( c ) << 4;
 			s = 2;
 			break;
 		case 2:
-			dest[j++] = ((httpserv_decode_hex( temp ) << 4) + httpserv_decode_hex( c ));
+			*dest++ |= decode_hex( c );
 			s = 0;
 			break;
 		}
-		i++;
 	}
-	dest[j] = 0;
+	*dest = 0;
+}
+
+static void httpserv_redirect( tcp_sock sock )
+{
+	str_t msg = MAKE_STRING("HTTP/1.1 302 Found\r\nLocation: /usage.htm\r\nContent-Length: 0\r\nConnection: close\r\n\r\n");
+	tcp_send( sock, msg.str, msg.len, 0 );
 }
 
 static void httpserv_set_name( tcp_sock sock, char const * name )
 {
-	str_t msg = MAKE_STRING("HTTP/1.1 302 Found\r\nLocation: /usage.htm\r\nContent-Length: 0\r\nConnection: close\r\n\r\n");
 	user_t * u = get_user_by_ip(tcp_gethost(sock));
-	if (!u) return;
-	strncpy(u->name, name, 32);
+	if (u)
+		strncpy(u->name, name, 32);
+	httpserv_redirect( sock );	// send back to the usage page
+}
 
-	tcp_send( sock, msg.str, msg.len, 0 );
+static void httpserv_merge_mac( tcp_sock sock, char const * mac )
+{
+	mac_addr addr = str_to_mac( mac );
+	user_t * u = get_user_by_ip( tcp_gethost(sock) );
+	if (u)
+		add_mac_to_user( u, addr );
+	httpserv_redirect( sock );
 }
 
 static void httpserv_get_request( tcp_sock sock, char const * uri )
 {
 	struct file_entry const * entry;
 
-	httpserv_url_decode((char *)uri, strlen(uri), uri);
+	uri_decode((char *)uri, strlen(uri), uri);		// dirty but actually safe (decoded uri is never longer, and
+													// this buffer is always going to be in RAM)
 
 	logf( "GET %s : ", uri );
 
@@ -286,6 +297,8 @@ static void httpserv_get_request( tcp_sock sock, char const * uri )
 			httpserv_send_all_usage(sock);
 		else if (strncmp(uri, "name?", 5) == 0)
 			httpserv_set_name(sock, uri + 5);
+		else if (strncmp(uri, "merge?", 6) == 0)
+			httpserv_merge_mac(sock, uri + 6);
 		else
 		{
 			logf("404\n");
