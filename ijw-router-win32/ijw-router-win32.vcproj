@@ -184,6 +184,14 @@
 				>
 			</File>
 			<File
+				RelativePath="..\src\table.c"
+				>
+			</File>
+			<File
+				RelativePath="..\src\table.h"
+				>
+			</File>
+			<File
 				RelativePath="..\src\user.c"
 				>
 			</File>

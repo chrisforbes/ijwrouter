@@ -15,4 +15,11 @@ void set_macaddr( mac_addr x );
 
 u32 get_bcastaddr( void );
 
+
+__inline u08 is_in_subnet( u32 ip )
+{
+	u32 mask = get_netmask();
+	return (get_hostaddr() & mask) == (ip & mask);
+}
+
 #endif

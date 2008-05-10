@@ -4,107 +4,55 @@
 #include "hal_debug.h"
 #include "ip/arptab.h"
 #include <assert.h>
+#include "table.h"
 
 #define MAX_USERS	128
 #define MAX_MAPPINGS	512	// most people have <= 4 network cards
-
-static user usertab[ MAX_USERS ] = {0};
-static u08 _n = 0;
 
 char * mac_to_str( char * buf, void * _a );	// extern 
 
 typedef struct mac_mapping_t
 {
 	mac_addr eth_addr;
-	u08 uid;
+	user_t * user;
 } mac_mapping_t;
 
-static mac_mapping_t mappings[ MAX_MAPPINGS ] = {0};
-static int _last_mapping = 0;
+DEFINE_TABLE( mac_mapping_t, mappings, MAX_MAPPINGS );
+DEFINE_TABLE( user_t, users, MAX_USERS );
 
-static mac_mapping_t * get_mac_mapping( mac_addr addr, u08 create_if_missing )
+u08 pred_is_mac_equal( mac_mapping_t * mapping, mac_addr * addr )
+	{ return mac_equal( mapping->eth_addr, *addr ); }
+
+void remap_user( user_t * from, user_t * to ) 
 {
-	int i;
-	for( i = 0; i < MAX_MAPPINGS; i++ )
-	{
-		mac_mapping_t * m = &mappings[ i ];
-
-		if (mac_equal( addr, m->eth_addr ) && m->uid)
-			return m;
-
-		if (!m->uid && create_if_missing)
-		{
-			m->eth_addr = addr;
-			_last_mapping = i;
-			return m;
-		}
-	}
-
-	return 0;
+	FOREACH( mac_mapping_t, mappings, m )
+		if (m->user == from)
+			m->user = to;
 }
 
-static void remove_mapping( mac_mapping_t * m )
+user_t * get_user( mac_addr eth_addr )
 {
-	mac_mapping_t * last = &mappings[ _last_mapping ];
-	assert( m );
-	
-	if (last != m)
+	mac_mapping_t * m = FIND_TABLE_ENTRY( mac_mapping_t, mappings, pred_is_mac_equal, &eth_addr );
+	if (!m)
 	{
-		*m = *last;
-		--_last_mapping;
-	}
-
-	memset( last, 0, sizeof(mac_mapping_t) );
-}
-
-static user * get_free_user(void)
-{
-	u08 start_point = _n;
-	
-	do
-	{
-		user * u = &usertab[ _n ];
-		if ( *u->name )
-		{
-			++_n;
-			_n %= MAX_USERS;
-			continue;
-		}
-
-		return u;
-	}
-	while( _n != start_point );
-
-	logf( "user: no free entries in table" );
-	return 0;
-}
-
-static u08 is_in_subnet( u32 ip )
-{
-	u32 mask = get_netmask();
-	return (get_hostaddr() & mask) == (ip & mask);
-}
-
-user * get_user( mac_addr eth_addr )
-{
-	mac_mapping_t * m = get_mac_mapping( eth_addr, 1 );
-
-	if (!m->uid)
-	{
-		user * u = get_free_user();
+		user_t * u = ALLOC_TABLE_ENTRY( user_t, users );
 		if (!u) return 0;
 
-		m->uid = (u08)( 1 + ( u - usertab ) );
 		mac_to_str( u->name, &eth_addr );
 		u->credit = 0;
 		u->quota = 0;
-		return u;
+		
+		m = ALLOC_TABLE_ENTRY( mac_mapping_t, mappings ); 
+		m->eth_addr = eth_addr;
+
+		m->user = u;
 	}
-	else
-		return &usertab[ m->uid - 1 ];
+
+	assert( FIND_TABLE_ENTRY( mac_mapping_t, mappings, pred_is_mac_equal, &eth_addr ) == m );
+	return m->user;
 }
 
-user * get_user_by_ip( u32 addr )
+user_t * get_user_by_ip( u32 addr )
 {
 	mac_addr eth_addr;
 	
@@ -125,21 +73,7 @@ user * get_user_by_ip( u32 addr )
 
 extern u32 __stdcall inet_addr (char const * cp);
 
-user * get_next_user( user * u )
+user_t * get_next_user( user_t * u )
 {
-	u08 i;
-	if (!u)
-		return *usertab[0].name ? &usertab[0] : 0;
-
-	i = (u08)( u - usertab );
-	if (i >= MAX_USERS)
-		return 0;
-	
-	return (*(++u)->name) ? u : 0;
-}
-
-void enumerate_users( user ** u, u32 * num_users )
-{
-	*u = usertab;
-	*num_users = 0;
+	return FIND_TABLE_ENTRY_FROM( user_t, users, __always, 0, u );
 }

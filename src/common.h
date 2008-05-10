@@ -25,18 +25,7 @@ u16 __ntohs( u16 x );
 u32 __htonl( u32 x );
 u32 __ntohl( u32 x );
 
-typedef struct mac_addr
-{
-	u08 addr[6];
-} mac_addr;
-
-
-
-u32 __gethostaddr( void );
-u32 __getnetmask( void );
-
-void __sethostaddr( u32 x );
-void __setnetmask( u32 x );
+typedef struct mac_addr { u08 addr[6]; } mac_addr;
 
 __inline u08 mac_equal( mac_addr a, mac_addr b )
 {

@@ -22,7 +22,7 @@ u08 charge_for_packet( eth_packet * p )
 	mac_addr lanside = (p->dest_iface == IFACE_WAN) 
 		? p->packet->dest : p->packet->src;
 
-	user * u = get_user( lanside );
+	user_t * u = get_user( lanside );
 
 	if (!u)
 	{

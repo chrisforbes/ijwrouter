@@ -136,7 +136,7 @@ char * format_amount( char * buf, u64 x )
 	return buf;
 }
 
-static str_t httpserv_user_usage( user * u, u08 comma )
+static str_t httpserv_user_usage( user_t * u, u08 comma )
 {
 	char credit[16], quota[16];
 	str_t str = { malloc( 256 ), 0 };
@@ -180,7 +180,7 @@ static void httpserv_send_all_usage( tcp_sock sock )
 	str_t content = { 0, 0 };
 	str_t content_type = MAKE_STRING( "application/x-json" );
 
-	user * u = get_next_user(0);
+	user_t * u = get_next_user(0);
 
 	while( u )
 	{
@@ -248,7 +248,7 @@ static void httpserv_url_decode( char * dest, u32 len, char const * src )
 static void httpserv_set_name( tcp_sock sock, char const * name )
 {
 	str_t msg = MAKE_STRING("HTTP/1.1 302 Found\r\nLocation: /usage.htm\r\nContent-Length: 0\r\nConnection: close\r\n\r\n");
-	user * u = get_user_by_ip(tcp_gethost(sock));
+	user_t * u = get_user_by_ip(tcp_gethost(sock));
 	if (!u) return;
 	strncpy(u->name, name, 32);
 

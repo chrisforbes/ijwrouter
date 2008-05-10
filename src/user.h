@@ -1,16 +1,16 @@
 #ifndef USER_H
 #define USER_H
 
-typedef struct user
+typedef struct user_t
 {
 	char name[32];
 	u64 credit;
 	u64 quota;
-} user;
+} user_t;
 
-user * get_user( mac_addr addr );
-user * get_user_by_ip( u32 addr );
+user_t * get_user( mac_addr addr );
+user_t * get_user_by_ip( u32 addr );
 
-user * get_next_user( user * );
+user_t * get_next_user( user_t * );
 
 #endif
