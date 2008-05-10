@@ -10,6 +10,7 @@
 #include "../user.h"
 #include "httpserv.h"
 #include "httpcommon.h"
+#include "../str.h"
 
 #pragma warning( disable: 4204 )
 
@@ -18,19 +19,13 @@
 #define ph_uri		((char const *)2)
 #define ph_version	((char const *)3)
 
-typedef void http_header_f( tcp_sock sock, char const * name, char const * value );
+typedef void http_header_f( tcp_sock sock, char const * name, str_t const value );
 
 #define MAXNAMESIZE		128
 #define MAXVALUESIZE	128
 
 #define __COPYINTO( ptr, base, value, max )\
 	{ *ptr++ = value; if (ptr - base >= max) ptr = base; }
-
-typedef struct str_t
-{
-	char * str;
-	u32 len;
-} str_t;
 
 extern mac_addr str_to_mac( char const * buf );
 
@@ -54,15 +49,15 @@ static void httpserv_parse( tcp_sock sock, u08 const * data, u32 len, http_heade
 		{
 			memcpy( value, p, isp - p );
 			value[ isp - p ] = 0;
-			f( sock, ph_method, value );
+			f( sock, ph_method, __make_string( value, isp - p ) );
 
 			memcpy( value, isp + 1, isp2 - isp - 1 );
 			value[ isp2 - isp - 1 ] = 0;
-			f( sock, ph_uri, value );
+			f( sock, ph_uri, __make_string( value, isp2 - isp - 1 ) );
 
 			memcpy( value, isp2 + 1, irr - isp2 - 1 );
 			value[ irr - isp2 - 1 ] = 0;
-			f( sock, ph_version, value );
+			f( sock, ph_version, __make_string( value, irr - isp2 - 1 ) );
 
 			p = irr + 2;
 		}
@@ -93,7 +88,7 @@ static void httpserv_parse( tcp_sock sock, u08 const * data, u32 len, http_heade
 			if ( c == '\r' )
 			{
 				*pvalue = 0;
-				f( sock, name, value );
+				f( sock, name, __make_string( value, pvalue - value ) );
 				pname = name;
 				isval = 0;
 			}
@@ -167,14 +162,6 @@ static str_t httpserv_get_usage_from_sock( tcp_sock sock )
 	return httpserv_user_usage(get_user_by_ip(host), 0);
 }
 
-#define MAKE_STRING( x )	{ (x), sizeof(x) - 1 }
-
-static __inline void grow_string( str_t * s, u32 extra )
-{
-	s->len += extra;
-	s->str = realloc( s->str, s->len );
-}
-
 static void httpserv_send_all_usage( tcp_sock sock )
 {
 	str_t content = { 0, 0 };
@@ -196,14 +183,13 @@ static void httpserv_send_all_usage( tcp_sock sock )
 	logf( "200 OK %d bytes\n", content.len );
 }
 
-static void httpserv_send_error_status( tcp_sock sock, u32 status, char const * error_msg )
+static void httpserv_send_error_status( tcp_sock sock, u32 status, str_t error_msg )
 {
 	str_t msg = { malloc(128), 0 };
-	u32 errorlen = strlen( error_msg );
 	msg.len = sprintf(msg.str, "HTTP/1.1 %d %s\r\nConnection: close\r\nContent-Length: %d\r\nContent-Type: text/html; charset=UTF-8\r\n\r\n", 
-		status, http_get_status_message(status), errorlen);
+		status, http_get_status_message(status), error_msg.len);
 	tcp_send(sock, msg.str, msg.len, 1);
-	tcp_send( sock, error_msg, errorlen, 0 );
+	tcp_send( sock, error_msg.str, error_msg.len, 0 );
 }
 
 static u08 decode_hex( char c )
@@ -265,18 +251,19 @@ static void httpserv_merge_mac( tcp_sock sock, char const * mac )
 	httpserv_redirect( sock );
 }
 
-static void httpserv_get_request( tcp_sock sock, char const * uri )
+static void httpserv_get_request( tcp_sock sock, str_t const _uri )
 {
 	struct file_entry const * entry;
+	char const * uri = _uri.str;
 
-	uri_decode((char *)uri, strlen(uri), uri);		// dirty but actually safe (decoded uri is never longer, and
-													// this buffer is always going to be in RAM)
+	uri_decode((char *)uri, _uri.len, uri);		// dirty but actually safe (decoded uri is never longer, and
+												// this buffer is always going to be in writable memory)
 
 	logf( "GET %s : ", uri );
 
 	if (! *uri++)
 	{
-		httpserv_send_error_status( sock, HTTP_STATUS_SERVER_ERROR, "Internal server error" );
+		httpserv_send_error_status( sock, HTTP_STATUS_SERVER_ERROR, MAKE_STRING("Internal server error") );
 		logf( "500 Internal Server Error\n" );
 		return;
 	}
@@ -302,7 +289,7 @@ static void httpserv_get_request( tcp_sock sock, char const * uri )
 		else
 		{
 			logf("404\n");
-			httpserv_send_error_status(sock, HTTP_STATUS_NOT_FOUND, "Webpage could not be found.");
+			httpserv_send_error_status(sock, HTTP_STATUS_NOT_FOUND, MAKE_STRING("Webpage could not be found."));
 		}
 		return;
 	}
@@ -318,18 +305,18 @@ static void httpserv_get_request( tcp_sock sock, char const * uri )
 
 static u08 current_method;
 
-static void httpserv_header_handler( tcp_sock sock, char const * name, char const * value )
+static void httpserv_header_handler( tcp_sock sock, char const * name, str_t const value )
 {
 	if (name == ph_method)
 	{
-		if (strcmp(value, "GET") == 0)
+		if (strcmp(value.str, "GET") == 0)
 			current_method = http_method_get;
-		else if (strcmp(value, "HEAD") == 0)
+		else if (strcmp(value.str, "HEAD") == 0)
 			current_method = http_method_head;
 		else
 		{
 			current_method = http_method_other;
-			httpserv_send_error_status(sock, HTTP_STATUS_NOT_IMPLEMENTED, "Method not implemented.");
+			httpserv_send_error_status(sock, HTTP_STATUS_NOT_IMPLEMENTED, MAKE_STRING("Method not implemented."));
 		}
 
 		return;

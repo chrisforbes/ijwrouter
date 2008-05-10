@@ -360,6 +360,10 @@
 				</File>
 			</Filter>
 		</Filter>
+		<File
+			RelativePath="..\src\str.h"
+			>
+		</File>
 	</Files>
 	<Globals>
 	</Globals>
