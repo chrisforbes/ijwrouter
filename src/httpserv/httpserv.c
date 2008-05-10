@@ -340,9 +340,7 @@ static void httpserv_header_handler( tcp_sock sock, char const * name, char cons
 	case http_method_get:
 	case http_method_head:
 		if (name == ph_uri)
-		{
 			httpserv_get_request(sock, value);
-		}
 	}
 }
 
