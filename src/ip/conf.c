@@ -4,7 +4,7 @@
 
 static u32 __hostaddr = 0;
 static u32 __netmask = 0xfffffffful;
-static mac_addr __macaddr = { { 0x00, 0x19, 0xe0, 0xff, 0x09, 0x08 } };
+static mac_addr __macaddr = { { 0x00, 0x19, 0xe0, 0xff, 0x09, 0x09 } };
 
 u32 get_hostaddr( void ) { return __hostaddr; }
 u32 get_netmask( void ) { return __netmask; }

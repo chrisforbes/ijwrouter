@@ -123,7 +123,7 @@ static void create_msg( dhcp_packet * p )
 	p->secs = 0;
 	p->flags = __htons( BOOTP_BROADCAST );
 
-	p->ciaddr = get_hostaddr();
+	p->ciaddr = 0;
 	p->yiaddr = 0;
 	p->siaddr = 0;
 	p->giaddr = 0;
