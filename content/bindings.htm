@@ -1,0 +1,67 @@
+<html>
+<head>
+	<title>MAC Address to User Bindings</title>
+	<link type="text/css" rel="Stylesheet" href="main.css" />
+	<script src="jquery-1.2.3.min.js"></script>
+	<script>
+	<!--
+		var size_installed = false;
+		var dsx = 600;
+			
+		function do_size()
+		{
+			if (!size_installed)
+				window.onresize = do_size;
+	
+			var e = $("#foo").get(0);
+			var w = window.innerWidth;
+			
+			if (w == null) w = document.body.clientWidth;
+				
+			e.style.position = "absolute";				
+			e.style.left = (w - dsx) / 2;
+			e.style.width = dsx;
+		}
+	
+		function do_ajax()
+		{
+			$.ajax({
+			type: "GET",
+			url: "query/bindings",
+			success: function(data)
+			{
+				if (data != "{}")
+					merge_data( eval( "([" + data + "])" ) );
+				setTimeout("do_ajax()", 2000);
+			}
+			});
+		}
+		
+		function format_row( d )
+		{
+			return "<tr class=\"user\"><td class=\"uname\">" + d.uname + "</td>"
+				+"<td class=\"macs\">" + d.macs + "</td>"
+				+"</tr>";
+		}
+		
+		function merge_data( data )
+		{
+			var s = "";
+			for ( var i = 0; i < data.length; i++ )
+				s += format_row( data[i] );
+				
+			$("table").html(s);
+		}
+		
+		$(function() { do_size(); do_ajax(); });
+	//-->
+	</script>
+</head>
+<body>
+	<div id="foo">
+	<h1>MAC address->User</h1>
+		<table width="100%" id="table">
+		</table>
+	</div>
+</body>
+</html>

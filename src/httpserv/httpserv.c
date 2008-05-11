@@ -11,6 +11,7 @@
 #include "httpserv.h"
 #include "httpcommon.h"
 #include "../str.h"
+#include "../table.h"
 
 #pragma warning( disable: 4204 )
 
@@ -28,6 +29,7 @@ typedef void http_header_f( tcp_sock sock, char const * name, str_t const value 
 	{ *ptr++ = value; if (ptr - base >= max) ptr = base; }
 
 extern mac_addr str_to_mac( char const * buf );
+extern char * mac_to_str( char * buf, void * mac );
 
 static void httpserv_parse( tcp_sock sock, u08 const * data, u32 len, http_header_f * f )
 {
@@ -137,11 +139,7 @@ static str_t httpserv_user_usage( user_t * u, u08 comma )
 	str_t str = { malloc( 256 ), 0 };
 
 	if (!u)
-	{
-		memcpy( str.str, "{}", 3 );
-		str.len = 2;
-		return str;
-	}
+		return MAKE_STRING("{}");
 
 	u->credit = u->quota ? ((u->credit + 2167425) % u->quota) : (u->credit + 2167425); //hack
 
@@ -180,6 +178,60 @@ static void httpserv_send_all_usage( tcp_sock sock )
 	}
 
 	httpserv_send_content(sock, content_type, content, 1, 0 );
+	logf( "200 OK %d bytes\n", content.len );
+}
+
+static str_t httpserv_user_binding( user_t * u, u08 comma )
+{
+	str_t str = { malloc(256), 0 };
+	str_t macs = { 0, 0 };
+	mac_mapping_t * m = get_next_mac(0);
+
+	if (!u)
+		return MAKE_STRING("{}");
+
+	while (m)
+	{
+		if (m->user == u)
+		{
+			char mac[18];
+			u32 old_len = macs.len;
+			mac_to_str( mac, &m->eth_addr );
+			mac[17] = ',';
+			grow_string( &macs, 18 );
+			memcpy( macs.str + old_len, mac, 18 );
+		}
+		m = get_next_mac(m);
+	}
+
+	macs.str[macs.len - 1] = 0;
+
+	str.len = sprintf(str.str, "{uname: \"%s\",macs: \"%s\"}%c",
+		u->name,
+		macs.str,
+		comma ? ',' : ' ');
+
+	return str;
+}
+
+static void httpserv_send_user_bindings( tcp_sock sock )
+{
+	str_t content = { 0, 0 };
+	str_t content_type = MAKE_STRING( "application/x-json" );
+
+	user_t * u = get_next_user(0);
+
+	while( u )
+	{
+		str_t binding = httpserv_user_binding(u, get_next_user(u) != 0);
+		u32 old_len = content.len;
+		grow_string( &content, binding.len );
+		memcpy( content.str + old_len, binding.str, binding.len );
+		free( binding.str );
+		u = get_next_user(u);
+	}
+
+	httpserv_send_content(sock, content_type, content, 1, 0);
 	logf( "200 OK %d bytes\n", content.len );
 }
 
@@ -251,6 +303,8 @@ static void httpserv_merge_mac( tcp_sock sock, char const * mac )
 	httpserv_redirect( sock );
 }
 
+
+
 static void httpserv_get_request( tcp_sock sock, str_t const _uri )
 {
 	struct file_entry const * entry;
@@ -280,6 +334,8 @@ static void httpserv_get_request( tcp_sock sock, str_t const _uri )
 			httpserv_send_content(sock, content_type, content, 1, 0);
 			logf( "200 OK %d bytes\n", content.len );
 		}
+		else if (strcmp(uri, "query/bindings") == 0)
+			httpserv_send_user_bindings(sock);
 		else if (strcmp(uri, "list") == 0)
 			httpserv_send_all_usage(sock);
 		else if (strncmp(uri, "name?", 5) == 0)

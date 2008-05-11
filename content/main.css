@@ -1,4 +1,20 @@
-h1
+body
+{
+	background-color: #888888;
+	font-family: Segoe UI, Trebuchet MS
+}
+
+h1,h2
 {
 	text-align: center
 }
+
+#foo 
+{ 
+	background-color: #eeeeee; 
+	border: 2px solid black; 
+	padding: 1em; 
+	position: absolute 
+}
+
+.user { font-size: 18pt; font-weight: bold }

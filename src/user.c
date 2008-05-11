@@ -12,12 +12,6 @@
 char * mac_to_str( char * buf, void * _a );	// extern 
 extern u32 __stdcall inet_addr (char const * cp);
 
-typedef struct mac_mapping_t
-{
-	mac_addr eth_addr;
-	user_t * user;
-} mac_mapping_t;
-
 DEFINE_TABLE( mac_mapping_t, mappings, MAX_MAPPINGS );
 DEFINE_TABLE( user_t, users, MAX_USERS );
 
@@ -67,6 +61,11 @@ user_t * get_user_by_ip( u32 addr )
 user_t * get_next_user( user_t * u )
 {
 	return FIND_TABLE_ENTRY_FROM( user_t, users, __always, 0, u );
+}
+
+mac_mapping_t * get_next_mac ( mac_mapping_t * m )
+{
+	return FIND_TABLE_ENTRY_FROM( mac_mapping_t, mappings, __always, 0, m );
 }
 
 void remap_user( user_t * from, user_t * to ) 

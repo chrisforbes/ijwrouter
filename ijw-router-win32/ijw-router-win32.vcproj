@@ -184,6 +184,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\src\str.h"
+				>
+			</File>
+			<File
 				RelativePath="..\src\table.c"
 				>
 			</File>
@@ -360,10 +364,6 @@
 				</File>
 			</Filter>
 		</Filter>
-		<File
-			RelativePath="..\src\str.h"
-			>
-		</File>
 	</Files>
 	<Globals>
 	</Globals>
