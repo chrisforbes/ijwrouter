@@ -284,6 +284,7 @@ static void httpserv_redirect( tcp_sock sock )
 {
 	str_t msg = MAKE_STRING("HTTP/1.1 302 Found\r\nLocation: /usage.htm\r\nContent-Length: 0\r\nConnection: close\r\n\r\n");
 	tcp_send( sock, msg.str, msg.len, 0 );
+	logf( "302 usage.htm\n" );
 }
 
 static void httpserv_set_name( tcp_sock sock, char const * name )
