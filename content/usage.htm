@@ -13,11 +13,11 @@
 			
 			function do_element_size( e, layout )
 			{
-				e.style.position = "absolute";
-				e.style.left = ( layout.frameWidth - layout.objectWidth ) / 2;
-				e.style.width = layout.objectWidth;
-				e.style.top = ( layout.frameHeight - layout.objectHeight ) / 2;
-				e.style.height = layout.objectHeight;
+				e.css("position", "absolute");
+				e.css("left", ( layout.frameWidth - layout.objectWidth ) / 2);
+				e.css("width", layout.objectWidth);
+				e.css("top", ( layout.frameHeight - layout.objectHeight ) / 2);
+				e.css("height", layout.objectHeight);
 			}
 			
 			function do_size()
@@ -31,8 +31,8 @@
 				if (w == null) w = document.body.clientWidth;
 				if (h == null) h = document.body.clientHeight;
 				
-				do_element_size( $("#foo").get(0), { frameWidth: w, frameHeight: h, objectWidth: 600, objectHeight: 320 } );
-				do_element_size( $("#error").get(0), { frameWidth: w, frameHeight: h, objectWidth: 650, objectHeight: 80 } );
+				do_element_size( $("#foo:first"), { frameWidth: w, frameHeight: h, objectWidth: 600, objectHeight: 320 } );
+				do_element_size( $("#error:first"), { frameWidth: w, frameHeight: h, objectWidth: 650, objectHeight: 80 } );
 			}
 			
 			function do_ajax()
@@ -43,21 +43,13 @@
 				timeout: 2000,
 				success: function(data)
 				{
+					$("#foo").show();
+					$("#error").hide();
 					if (data != "{}")
 						merge_data( eval( "(" + data + ")" ) );
-					setTimeout( "do_ajax()", 2000 );
-					
-					$("#foo").css("display", "block");
-					$("#error").css("display", "none");
-					do_size();
 				},
-				error: function(xhr, status, e)
-				{
-					$("#foo").css("display", "none");
-					$("#error").css("display", "block");
-					do_size();
-					setTimeout( "do_ajax()", 2000 );
-				}
+				error: function() { $("#foo").hide(); $("#error").show(); },
+				complete: function() { do_size(); setTimeout( "do_ajax()", 2000 ); }
 				});
 			}
 			
