@@ -93,6 +93,13 @@ u08 handle_arp_packet( u08 iface, arp_header * arp )
 
 u08 arp_make_eth_header( eth_header * h, u32 destip, u08 * iface )
 {	// returns 1 if successful; 0 if we needed to send some ARP instead.
+
+	if (get_default_router() && !is_in_subnet( destip ))
+	{
+		logf( "arp: query for foreign address; giving default router\n" );
+		destip = get_default_router();
+	}
+
 	if (!arptab_query( iface, destip, &h->dest ))
 	{
 		logf( "arp: no arp cache for host %u.%u.%u.%u, refreshing...\n",

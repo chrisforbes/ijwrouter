@@ -91,6 +91,9 @@ extern void dhcp_process( void );
 extern void nbns_process( void );
 extern void nbns_init( void );
 
+//extern void sntp_init( void );
+extern void sntp_process( void );
+
 int main( void )
 {
 	u08 interfaces = eth_init();
@@ -114,5 +117,6 @@ int main( void )
 			handle_packet( &p );
 		dhcp_process();
 		nbns_process();
+		sntp_process();
 	}
 }

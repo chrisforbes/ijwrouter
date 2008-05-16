@@ -66,7 +66,14 @@ u08 arptab_query( u08 * iface, u32 net_addr, mac_addr * phys_addr )
 		*iface = 0xff;
 		return 1;
 	}
-	else
+
+	if (!is_in_subnet( net_addr ))
+	{
+		logf( "arp: query for foreign address; giving default router\n" );
+		net_addr = get_default_router();
+	}
+	
+	// bogus scope so we can introduce a var
 	{
 		arptab_entry * e = arptab_findslot( net_addr );
 

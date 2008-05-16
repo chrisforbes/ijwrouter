@@ -172,10 +172,6 @@
 			Name="src"
 			>
 			<File
-				RelativePath="..\src\common.h"
-				>
-			</File>
-			<File
 				RelativePath="..\src\dhcp.c"
 				>
 			</File>
@@ -188,15 +184,7 @@
 				>
 			</File>
 			<File
-				RelativePath="..\src\str.h"
-				>
-			</File>
-			<File
-				RelativePath="..\src\table.c"
-				>
-			</File>
-			<File
-				RelativePath="..\src\table.h"
+				RelativePath="..\src\sntp.c"
 				>
 			</File>
 			<File
@@ -364,6 +352,26 @@
 				</File>
 				<File
 					RelativePath="..\src\httpserv\httpserv.h"
+					>
+				</File>
+			</Filter>
+			<Filter
+				Name="utility"
+				>
+				<File
+					RelativePath="..\src\common.h"
+					>
+				</File>
+				<File
+					RelativePath="..\src\str.h"
+					>
+				</File>
+				<File
+					RelativePath="..\src\table.c"
+					>
+				</File>
+				<File
+					RelativePath="..\src\table.h"
 					>
 				</File>
 			</Filter>

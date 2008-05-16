@@ -82,9 +82,8 @@ static void nbns_event( udp_sock sock, udp_event_e evt,
 	nbns_query const * q;
 
 	if (evt != UDP_EVENT_PACKET) return;
-	sock; evt; from_ip; from_port; data; len;
+	sock; len;
 	
-	// todo: interpret this
 	q = (nbns_query const *) data;
 	
 	if ( q->flags == 0x1001 && q->questions )	// query			todo: fix this for other cases
@@ -92,15 +91,15 @@ static void nbns_event( udp_sock sock, udp_event_e evt,
 		nbns_record const * r = (nbns_record const *) (q+1);
 		u16 questions = __ntohs(q->questions);
 
-		logf( "nbns: got query\n" );
-
 		while( questions-- )
 		{
 			u08 name[17];
 			unpack_name( name, r->name );
-			logf( "nbns: got name request for %s\n", name );
 			if( stricmp( (char const *)get_hostname(), (char const *)name ) == 0 )
+			{
+				logf( "nbns: got name request\n" );
 				send_response( from_ip, from_port, q, r );
+			}
 			++r;
 		}
 	}

@@ -8,10 +8,12 @@
 u32 get_hostaddr( void );
 u32 get_netmask( void );
 mac_addr get_macaddr( void );
+u32 get_default_router( void );
 
 void set_hostaddr( u32 x );
 void set_netmask( u32 x );
 void set_macaddr( mac_addr x );
+void set_default_router( u32 router );
 
 u32 get_bcastaddr( void );
 

@@ -184,12 +184,14 @@ static u08 parse_options( u08 * opt, int len )
 	{
 		switch( *opt )
 		{
-		case DHCP_OPTION_NETMASK:
-			set_netmask( *( u32 * ) (opt + 2) );
-			break;
 
 		case DHCP_OPTION_MSG_TYPE:
 			type = *( u08 *) (opt + 2);
+			break;
+
+		case DHCP_OPTION_NETMASK:
+			if (type == DHCP_ACK)
+				set_netmask( *( u32 * ) (opt + 2) );
 			break;
 
 		case DHCP_OPTION_SERVER_ID:
@@ -198,6 +200,11 @@ static u08 parse_options( u08 * opt, int len )
 
 		case DHCP_OPTION_LEASE_TIME:
 			s.lease_time = *( u32 * ) (opt + 2);
+			break;
+
+		case DHCP_OPTION_ROUTER:
+			if (type == DHCP_ACK)
+				set_default_router( *( u32 * ) (opt + 2) );
 			break;
 
 		case DHCP_OPTION_END:
@@ -237,6 +244,8 @@ void dhcp_process( void )
 	}
 }
 
+extern void sntp_init( void );	// set after dhcp completes
+
 static void dhcp_event( udp_sock sock, udp_event_e evt, 
 					   u32 from_ip, u16 from_port, u08 const * data, u16 len )
 {
@@ -253,6 +262,8 @@ static void dhcp_event( udp_sock sock, udp_event_e evt,
 		logf( "dhcp: got ack\n" );
 		logf( "dhcp: host configuration complete\n" );
 		s.state = DHCP_STATE_IDLE;
+
+		sntp_init();
 		break;
 	case DHCP_NAK:
 		logf( "dhcp: got nak\n" );
