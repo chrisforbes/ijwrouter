@@ -328,7 +328,7 @@ static void httpserv_get_request( tcp_sock sock, str_t const _uri )
 	
 	if (!entry)
 	{
-		if (strcmp(uri, "usage") == 0)
+		if (strcmp(uri, "query/usage") == 0)
 		{
 			str_t content_type = MAKE_STRING( "application/x-json" );
 			str_t content = httpserv_get_usage_from_sock(sock);
@@ -337,7 +337,7 @@ static void httpserv_get_request( tcp_sock sock, str_t const _uri )
 		}
 		else if (strcmp(uri, "query/bindings") == 0)
 			httpserv_send_user_bindings(sock);
-		else if (strcmp(uri, "list") == 0)
+		else if (strcmp(uri, "query/list") == 0)
 			httpserv_send_all_usage(sock);
 		else if (strncmp(uri, "name?", 5) == 0)
 			httpserv_set_name(sock, uri + 5);

@@ -34,7 +34,7 @@
 			{
 				$.ajax({
 				type: "GET",
-				url: "list",
+				url: "query/list",
 				success: function(data, textStatus)
 				{
 					merge_data( eval( "([" + data + "])" ) );
