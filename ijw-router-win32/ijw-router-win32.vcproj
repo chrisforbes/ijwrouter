@@ -184,6 +184,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\src\nbns.c"
+				>
+			</File>
+			<File
 				RelativePath="..\src\str.h"
 				>
 			</File>

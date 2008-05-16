@@ -88,6 +88,9 @@ u08 handle_packet( eth_packet * p )
 extern void dhcp_init( void );
 extern void dhcp_process( void );
 
+extern void nbns_process( void );
+extern void nbns_init( void );
+
 int main( void )
 {
 	u08 interfaces = eth_init();
@@ -98,6 +101,7 @@ int main( void )
 		logf( "! no interfaces available\n" );
 
 	dhcp_init();
+	nbns_init();
 
 	fs_init();
 
@@ -109,5 +113,6 @@ int main( void )
 		if (eth_getpacket( &p ))
 			handle_packet( &p );
 		dhcp_process();
+		nbns_process();
 	}
 }
