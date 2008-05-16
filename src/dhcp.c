@@ -1,3 +1,5 @@
+#include <string.h>
+
 #include "common.h"
 #include "hal_debug.h"
 #include "hal_time.h"
@@ -5,8 +7,6 @@
 #include "ip/rfc.h"
 #include "ip/udp.h"
 #include "ip/conf.h"
-
-#define HOSTNAME	"ijw-router"
 
 #pragma warning( disable: 4127 )
 #pragma warning( disable: 4310 )
@@ -89,7 +89,7 @@ typedef enum dhcp_option
 static const u32 xid = 0xadde1223;
 static const u08 cookie[] = { 0x63, 0x82, 0x53, 0x63 };
 
-static u08 * append_opt( u08 * p, u08 optname, u08 len, u08 * option )
+static u08 * append_opt( u08 * p, u08 optname, u08 len, u08 const * option )
 {
 	*p++ = optname;
 	if (len)
@@ -139,13 +139,14 @@ static void send_discover( void )
 	dhcp_packet p;
 	u08 * start = (u08 *)&p;
 	u08 * end = p.options + 4;
+	u08 const * hostname = get_hostname();
 	u08 opts[] = { DHCP_OPTION_NETMASK, DHCP_OPTION_ROUTER, DHCP_OPTION_DNS_SERVER };
 
 	create_msg( &p );
 
 	end = append_opt_u08( end, DHCP_OPTION_MSG_TYPE, DHCP_DISCOVER );
 	end = append_opt( end, DHCP_OPTION_REQ_LIST, sizeof(opts), opts );
-	end = append_opt( end, DHCP_OPTION_HOSTNAME, sizeof(HOSTNAME), (u08 *)HOSTNAME );
+	end = append_opt( end, DHCP_OPTION_HOSTNAME, (u08)strlen( (char const *)hostname ) + 1, hostname );
 	end = append_opt_void( end, DHCP_OPTION_END );
 
 	udp_send( s.socket, 0xfffffffful, DHCP_SERVER_PORT, start, (u16)(end - start) );
@@ -160,12 +161,13 @@ static void send_request( void )
 	dhcp_packet p;
 	u08 * start = (u08 *)&p;
 	u08 * end = p.options + 4;
+	u08 const * hostname = get_hostname();
 
 	create_msg( &p );
 	
 	end = append_opt_u08( end, DHCP_OPTION_MSG_TYPE, DHCP_REQUEST );
 	end = append_opt_u32( end, DHCP_OPTION_SERVER_ID, s.serverid );
-	end = append_opt( end, DHCP_OPTION_HOSTNAME, sizeof(HOSTNAME), (u08 *)HOSTNAME );
+	end = append_opt( end, DHCP_OPTION_HOSTNAME, (u08)strlen( (char const *)hostname ) + 1, hostname );
 	end = append_opt_u32( end, DHCP_OPTION_REQ_IPADDR, get_hostaddr());
 
 	udp_send( s.socket, 0xfffffffful, DHCP_SERVER_PORT, start, (u16)(end-start));

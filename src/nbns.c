@@ -1,3 +1,4 @@
+#pragma warning( disable: 4996 )
 #include <string.h>
 #include "common.h"
 #include "hal_debug.h"
@@ -98,7 +99,7 @@ static void nbns_event( udp_sock sock, udp_event_e evt,
 			u08 name[17];
 			unpack_name( name, r->name );
 			logf( "nbns: got name request for %s\n", name );
-			if( strcmp( "IJW-ROUTER", (char const *)name ) == 0 )
+			if( stricmp( (char const *)get_hostname(), (char const *)name ) == 0 )
 				send_response( from_ip, from_port, q, r );
 			++r;
 		}

@@ -15,6 +15,7 @@ void set_macaddr( mac_addr x );
 
 u32 get_bcastaddr( void );
 
+u08 const * get_hostname( void );
 
 __inline u08 is_in_subnet( u32 ip )
 {

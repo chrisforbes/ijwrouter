@@ -5,10 +5,13 @@
 static u32 __hostaddr = 0;
 static u32 __netmask = 0xfffffffful;
 static mac_addr __macaddr = { { 0x00, 0x19, 0xe0, 0xff, 0x09, 0x09 } };
+static u08 __hostname[32] = "ijw-router";
 
 u32 get_hostaddr( void ) { return __hostaddr; }
 u32 get_netmask( void ) { return __netmask; }
 mac_addr get_macaddr( void ) { return __macaddr; }
+
+u08 const * get_hostname( void ) { return __hostname; }
 
 void set_hostaddr( u32 x )
 { 
