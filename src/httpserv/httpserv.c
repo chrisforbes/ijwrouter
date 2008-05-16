@@ -265,7 +265,7 @@ static void uri_decode( char * dest, u32 len, char const * src )
 		{
 		case 0:
 			if (c == '%') s = 1;
-			else if (c == '+') *dest++ = ' ';
+			else if (c == '+') *dest++ = ' '; //hack to get around form encoding of space characters
 			else *dest++ = c;
 			break;
 		case 1:
