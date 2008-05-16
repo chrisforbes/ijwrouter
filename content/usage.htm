@@ -10,25 +10,29 @@
 		<script>
 		<!--
 			var size_installed = false;
-			var dsx = 600; var dsy = 320;
+			
+			function do_element_size( e, layout )
+			{
+				e.style.position = "absolute";
+				e.style.left = ( layout.frameWidth - layout.objectWidth ) / 2;
+				e.style.width = layout.objectWidth;
+				e.style.top = ( layout.frameHeight - layout.objectHeight ) / 2;
+				e.style.height = layout.objectHeight;
+			}
 			
 			function do_size()
 			{
 				if (!size_installed)
 					window.onresize = do_size;
-		
-				var e = $("#foo").get(0);
+					
 				var w = window.innerWidth;
 				var h = window.innerHeight;
 				
 				if (w == null) w = document.body.clientWidth;
 				if (h == null) h = document.body.clientHeight;
-					
-				e.style.position = "absolute";				
-				e.style.left = (w - dsx) / 2;
-				e.style.width = dsx;
-				e.style.top = (h - dsy) / 2;
-				e.style.height = dsy;
+				
+				do_element_size( $("#foo").get(0), { frameWidth: w, frameHeight: h, objectWidth: 600, objectHeight: 320 } );
+				do_element_size( $("#error").get(0), { frameWidth: w, frameHeight: h, objectWidth: 650, objectHeight: 80 } );
 			}
 			
 			function do_ajax()
@@ -36,10 +40,22 @@
 				$.ajax({
 				type: "GET",
 				url: "query/usage",
+				timeout: 2000,
 				success: function(data)
 				{
 					if (data != "{}")
 						merge_data( eval( "(" + data + ")" ) );
+					setTimeout( "do_ajax()", 2000 );
+					
+					$("#foo").css("display", "block");
+					$("#error").css("display", "none");
+					do_size();
+				},
+				error: function(xhr, status, e)
+				{
+					$("#foo").css("display", "none");
+					$("#error").css("display", "block");
+					do_size();
 					setTimeout( "do_ajax()", 2000 );
 				}
 				});
@@ -48,9 +64,7 @@
 			function merge_data( d )
 			{
 				for( var k in d )
-				{
 					$( "#" + k ).html(d[k]);
-				}
 				
 				$("#barfill").css("width", d.fill + "%");
 			}
@@ -73,6 +87,9 @@
 				<p><label>Change the name associated with your account:</label></p>
 				<p><input name="name"><button type="submit">Submit</button></p>
 			</form>
+		</div>
+		<div id="error">
+			<h2>We're having trouble retrieving data from the router.</h2>
 		</div>
 	</body>
 </html>
