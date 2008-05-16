@@ -265,6 +265,7 @@ static void uri_decode( char * dest, u32 len, char const * src )
 		{
 		case 0:
 			if (c == '%') s = 1;
+			else if (c == '+') *dest++ = ' ';
 			else *dest++ = c;
 			break;
 		case 1:
@@ -339,8 +340,8 @@ static void httpserv_get_request( tcp_sock sock, str_t const _uri )
 			httpserv_send_user_bindings(sock);
 		else if (strcmp(uri, "query/list") == 0)
 			httpserv_send_all_usage(sock);
-		else if (strncmp(uri, "name?", 5) == 0)
-			httpserv_set_name(sock, uri + 5);
+		else if (strncmp(uri, "name?name=", 10) == 0)
+			httpserv_set_name(sock, uri + 10);
 		else if (strncmp(uri, "merge?", 6) == 0)
 			httpserv_merge_mac(sock, uri + 6);
 		else
