@@ -16,7 +16,7 @@ typedef enum http_method_e
 	http_method_other,
 } http_method_e;
 
-char * http_get_status_message(u32 status)
+__inline char * http_get_status_message(u32 status)
 {
 	switch(status)
 	{

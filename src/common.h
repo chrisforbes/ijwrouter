@@ -18,6 +18,7 @@ typedef signed __int64 i64;
 #include <stdlib.h>
 #include <stdio.h>
 #include <memory.h>
+#include <string.h>
 
 u16 __htons( u16 x );
 u16 __ntohs( u16 x );

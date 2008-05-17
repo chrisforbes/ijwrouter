@@ -343,6 +343,10 @@
 					>
 				</File>
 				<File
+					RelativePath="..\src\http_endpoints.c"
+					>
+				</File>
+				<File
 					RelativePath="..\src\httpserv\httpcommon.h"
 					>
 				</File>
