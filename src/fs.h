@@ -1,6 +1,8 @@
 #ifndef FS_H
 #define FS_H
 
+#include "str.h"
+
 void fs_init( void );
 
 typedef struct string_t
@@ -12,9 +14,10 @@ typedef struct string_t
 #pragma pack(push,1)
 typedef struct file_entry
 {
-	string_t filename_pair;
-	string_t mime_pair;
-	string_t content_pair;
+	string_t filename;
+	string_t content_type;
+	string_t content;
+	string_t digest;
 	u08 attribs;
 } file_entry;
 #pragma pack(pop)
@@ -23,9 +26,8 @@ typedef struct file_entry
 #define ATTRIB_GZIP		0x01
 
 file_entry const * fs_find_file ( char const * filename );
-char const * fs_get_mimetype ( struct file_entry const * entry );
-char const * fs_get_content ( struct file_entry const * entry );
 u08 fs_is_gzipped( file_entry const * entry );
-u08 fs_is_static_buf( void * p );
+
+str_t fs_get_str( struct string_t const * fs_str );
 
 #endif

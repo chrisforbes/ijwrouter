@@ -98,11 +98,20 @@ static void httpserv_parse( tcp_sock sock, u08 const * data, u32 len, http_heade
 		}
 	}
 }
-	// zero-terminating memcpy
-static void __inline __memcpyz( char * dest, char const * src, u32 len )
+
+static void httpserv_send_static_content( tcp_sock sock, str_t mime_type, str_t content, str_t _digest, u32 flags, u08 is_gzipped )
 {
-	memcpy( dest, src, len );
-	dest[len] = 0;
+	str_t str = { malloc(512), 0 };	// bigger, to have space for the digest
+	char mime[64];
+	char digest[64];
+	__memcpyz( mime, mime_type.str, mime_type.len );
+	__memcpyz( digest, _digest.str, _digest.len );
+
+	str.len = sprintf(str.str, 
+		"HTTP/1.1 200 OK\r\nConnection: close\r\nContent-Length: %d\r\n%sContent-Type: %s\r\nETag: \"%s\"\r\n\r\n", 
+		content.len, is_gzipped ? "Content-Encoding: gzip\r\n" : "", mime, digest);
+	tcp_send( sock, str.str, str.len, 1 );
+	tcp_send( sock, content.str, content.len, flags );
 }
 
 static void httpserv_send_content( tcp_sock sock, str_t mime_type, str_t content, u32 flags, u08 is_gzipped )
@@ -116,21 +125,6 @@ static void httpserv_send_content( tcp_sock sock, str_t mime_type, str_t content
 		content.len, is_gzipped ? "Content-Encoding: gzip\r\n" : "", mime);
 	tcp_send( sock, str.str, str.len, 1 );
 	tcp_send( sock, content.str, content.len, flags );
-}
-
-char * format_amount( char * buf, u64 x )
-{
-	static char const * units[] = { "KB", "MB", "GB", "TB" };
-	char const ** u = units;
-
-	while( x > (1 << 20) * 9 / 10 )
-	{
-		x >>= 10;
-		u++;
-	}
-
-	sprintf( buf, "%1.2f %s", x / 1024.0f, *u );
-	return buf;
 }
 
 static str_t httpserv_user_usage( user_t * u, u08 comma )
@@ -164,17 +158,13 @@ static void httpserv_send_all_usage( tcp_sock sock )
 {
 	str_t content = { 0, 0 };
 	str_t content_type = MAKE_STRING( "application/x-json" );
+	user_t * u = 0;
 
-	user_t * u = get_next_user(0);
-
-	while( u )
+	while( (u = get_next_user(u)) != 0 )
 	{
 		str_t usage = httpserv_user_usage(u, get_next_user(u) != 0);
-		u32 old_len = content.len;
-		grow_string( &content, usage.len );
-		memcpy( content.str + old_len, usage.str, usage.len );
+		append_string( &content, &usage );
 		free( usage.str );
-		u = get_next_user(u);
 	}
 
 	httpserv_send_content(sock, content_type, content, 1, 0 );
@@ -244,43 +234,6 @@ static void httpserv_send_error_status( tcp_sock sock, u32 status, str_t error_m
 	tcp_send( sock, error_msg.str, error_msg.len, 0 );
 }
 
-static u08 decode_hex( char c )
-{
-	if (c >= 'a' && c <= 'f')
-		return c - 'a' + 10;
-	if (c >= 'A' && c <= 'F')
-		return c - 'A' + 10;
-	if (c >= '0' && c <= '9')
-		return c - '0';
-	logf("char %c is not a valid hex digit\n", c);
-	return 0;
-}
-
-static void uri_decode( char * dest, u32 len, char const * src )
-{
-	u08 c, s = 0;
-	while (0 != (c = *src++) && len--)
-	{
-		switch (s)
-		{
-		case 0:
-			if (c == '%') s = 1;
-			else if (c == '+') *dest++ = ' '; //hack to get around form encoding of space characters
-			else *dest++ = c;
-			break;
-		case 1:
-			*dest = decode_hex( c ) << 4;
-			s = 2;
-			break;
-		case 2:
-			*dest++ |= decode_hex( c );
-			s = 0;
-			break;
-		}
-	}
-	*dest = 0;
-}
-
 static void httpserv_redirect( tcp_sock sock )
 {
 	str_t msg = MAKE_STRING("HTTP/1.1 302 Found\r\nLocation: /usage.htm\r\nContent-Length: 0\r\nConnection: close\r\n\r\n");
@@ -305,8 +258,6 @@ static void httpserv_merge_mac( tcp_sock sock, char const * mac )
 	httpserv_redirect( sock );
 }
 
-
-
 static void httpserv_get_request( tcp_sock sock, str_t const _uri )
 {
 	struct file_entry const * entry;
@@ -314,7 +265,6 @@ static void httpserv_get_request( tcp_sock sock, str_t const _uri )
 
 	uri_decode((char *)uri, _uri.len, uri);		// dirty but actually safe (decoded uri is never longer, and
 												// this buffer is always going to be in writable memory)
-
 	logf( "GET %s : ", uri );
 
 	if (! *uri++)
@@ -353,11 +303,10 @@ static void httpserv_get_request( tcp_sock sock, str_t const _uri )
 	}
 
 	{
-		str_t content_type = { (char *)fs_get_mimetype( entry ), entry->mime_pair.length };
-		str_t content = { (char *)fs_get_content( entry ), entry->content_pair.length };
+		httpserv_send_static_content(sock, 
+			fs_get_str( &entry->content_type ), fs_get_str( &entry->content ), fs_get_str( &entry->digest ), 0, fs_is_gzipped( entry ));
 
-		httpserv_send_content(sock, content_type, content, 0, fs_is_gzipped( entry ));
-		logf( "200 OK %d bytes\n", content.len );
+		logf( "200 OK %d bytes\n", entry->content.length );
 	}
 }
 

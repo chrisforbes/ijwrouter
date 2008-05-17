@@ -8,6 +8,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using IjwFramework.Collections;
 using IjwFramework.Types;
+using System.Security.Cryptography;
 
 namespace ContentHeaderGen
 {
@@ -100,7 +101,6 @@ namespace ContentHeaderGen
 						gzipStream.Write(content, 0, content.Length);
 						gzipStream.Flush();
 						gzipStream.Close();
-				//		mime = "application/x-gzip";
 						content = compressedStream.ToArray();
 
 						flags |= 0x81;	// ATTRIB_GZIP | ATTRIB_AWESOME :)
@@ -111,7 +111,8 @@ namespace ContentHeaderGen
 				foreach (var x in new Pair<int, int>[] {  
 					blob[namecache[Path.GetFileName(file)]],
 					blob[namecache[mime]],
-					blob[content] } )
+					blob[content],
+					blob[content.Md5Digest()]} )
 				{
 					writer.Write( x.First );
 					writer.Write( x.Second ); 
@@ -133,6 +134,13 @@ namespace ContentHeaderGen
 		{
 			U value;
 			return dict.TryGetValue(key, out value) ? value : default(U);
+		}
+
+		static byte[] Md5Digest(this byte[] src)
+		{
+			using( var md5 = MD5.Create() )
+				return Encoding.ASCII.GetBytes(
+					string.Join("", md5.ComputeHash(src).Select(b => b.ToString("x2")).ToArray()));
 		}
 	}
 }

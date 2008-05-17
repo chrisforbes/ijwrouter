@@ -363,6 +363,10 @@
 					>
 				</File>
 				<File
+					RelativePath="..\src\str.c"
+					>
+				</File>
+				<File
 					RelativePath="..\src\str.h"
 					>
 				</File>
