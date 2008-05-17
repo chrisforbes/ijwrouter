@@ -175,23 +175,23 @@ static str_t httpserv_user_binding( user_t * u, u08 comma )
 {
 	str_t str = { malloc(256), 0 };
 	str_t macs = { 0, 0 };
-	mac_mapping_t * m = get_next_mac(0);
+	mac_mapping_t * m = 0;
 
 	if (!u)
 		return MAKE_STRING("{}");
 
-	while (m)
+	while (0 != (m = get_next_mac(m)))
 	{
 		if (m->user == u)
 		{
 			char mac[18];
-			u32 old_len = macs.len;
+			str_t mac_str = __make_string( mac, 18 );
+
 			mac_to_str( mac, &m->eth_addr );
 			mac[17] = ',';
-			grow_string( &macs, 18 );
-			memcpy( macs.str + old_len, mac, 18 );
+
+			append_string( &macs, &mac_str );
 		}
-		m = get_next_mac(m);
 	}
 
 	macs.str[macs.len - 1] = 0;
@@ -209,16 +209,13 @@ static void httpserv_send_user_bindings( tcp_sock sock )
 	str_t content = { 0, 0 };
 	str_t content_type = MAKE_STRING( "application/x-json" );
 
-	user_t * u = get_next_user(0);
+	user_t * u = 0;
 
-	while( u )
+	while( 0 != (u = get_next_user(u) ))
 	{
 		str_t binding = httpserv_user_binding(u, get_next_user(u) != 0);
-		u32 old_len = content.len;
-		grow_string( &content, binding.len );
-		memcpy( content.str + old_len, binding.str, binding.len );
+		append_string( &content, &binding );
 		free( binding.str );
-		u = get_next_user(u);
 	}
 
 	httpserv_send_content(sock, content_type, content, 1, 0);
@@ -258,6 +255,21 @@ static void httpserv_merge_mac( tcp_sock sock, char const * mac )
 	httpserv_redirect( sock );
 }
 
+static void httpserv_get_usage( tcp_sock sock )
+{
+	str_t content_type = MAKE_STRING( "application/x-json" );
+	str_t content = httpserv_get_usage_from_sock(sock);
+	httpserv_send_content(sock, content_type, content, 1, 0);
+	logf( "200 OK %d bytes\n", content.len );
+}
+
+#define DISPATCH_ENDPOINT_V( endpoint_uri, endpoint_f )\
+	if (strcmp( uri, endpoint_uri ) == 0)\
+		{ endpoint_f( sock ); return; }
+#define DISPATCH_ENDPOINT_S( endpoint_uri, endpoint_f )\
+	if (strncmp( uri, endpoint_uri, sizeof(endpoint_uri) - 1 ) == 0)\
+		{ endpoint_f( sock, uri + sizeof(endpoint_uri) - 1 ); return; }
+
 static void httpserv_get_request( tcp_sock sock, str_t const _uri )
 {
 	struct file_entry const * entry;
@@ -279,26 +291,14 @@ static void httpserv_get_request( tcp_sock sock, str_t const _uri )
 	
 	if (!entry)
 	{
-		if (strcmp(uri, "query/usage") == 0)
-		{
-			str_t content_type = MAKE_STRING( "application/x-json" );
-			str_t content = httpserv_get_usage_from_sock(sock);
-			httpserv_send_content(sock, content_type, content, 1, 0);
-			logf( "200 OK %d bytes\n", content.len );
-		}
-		else if (strcmp(uri, "query/bindings") == 0)
-			httpserv_send_user_bindings(sock);
-		else if (strcmp(uri, "query/list") == 0)
-			httpserv_send_all_usage(sock);
-		else if (strncmp(uri, "name?name=", 10) == 0)
-			httpserv_set_name(sock, uri + 10);
-		else if (strncmp(uri, "merge?", 6) == 0)
-			httpserv_merge_mac(sock, uri + 6);
-		else
-		{
-			logf("404\n");
-			httpserv_send_error_status(sock, HTTP_STATUS_NOT_FOUND, MAKE_STRING("Webpage could not be found."));
-		}
+		DISPATCH_ENDPOINT_V( "query/usage",		httpserv_get_usage );
+		DISPATCH_ENDPOINT_V( "query/bindings",	httpserv_send_user_bindings );
+		DISPATCH_ENDPOINT_V( "query/list",		httpserv_send_all_usage );
+		DISPATCH_ENDPOINT_S( "name?name=",		httpserv_set_name );
+		DISPATCH_ENDPOINT_S( "merge?",			httpserv_merge_mac );
+
+		logf("404\n");
+		httpserv_send_error_status(sock, HTTP_STATUS_NOT_FOUND, MAKE_STRING("Webpage could not be found."));
 		return;
 	}
 
