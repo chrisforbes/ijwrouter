@@ -11,7 +11,7 @@
 #include <assert.h>
 
 #define TCP_MAX_CONNS	40
-#define MAXSEGSIZE		1024		// todo: tune this to not suck
+#define MAXSEGSIZE		1024
 
 enum tcp_state_e
 {
@@ -44,7 +44,6 @@ typedef struct tcp_conn
 	u16 remoteport;
 	u16 localport;
 	u32 incoming_seq_no;
-//	u32 outgoing_seq_no;
 	tcp_event_f * handler;
 	tcp_buf * sendbuf;
 	void * user;
@@ -60,12 +59,12 @@ static u32 tcp_commit_sequence_range( tcp_conn * conn, u32 count )
 
 static tcp_conn tcp_conns[ TCP_MAX_CONNS ];
 
-__inline tcp_sock tcp_sock_from_conn( tcp_conn * conn )
+static __inline tcp_sock tcp_sock_from_conn( tcp_conn * conn )
 {
 	return conn ? ((tcp_sock) (conn - tcp_conns)) : INVALID_TCP_SOCK;
 }
 
-__inline tcp_conn * tcp_conn_from_sock( tcp_sock sock )
+static __inline tcp_conn * tcp_conn_from_sock( tcp_sock sock )
 {
 	return (sock == INVALID_TCP_SOCK) ? 0 : &tcp_conns[ sock ];
 }
@@ -142,25 +141,19 @@ static void tcp_unbuffer( tcp_conn * conn, u32 bytes )
 	while( bytes && conn->sendbuf )
 	{
 		u32 n = __min( bytes, conn->sendbuf->len - conn->sendbuf->ofs );
+		bytes -= n;
 		
 		if (n < conn->sendbuf->len - conn->sendbuf->ofs)
-		{
 			conn->sendbuf->ofs += n;
-			bytes -= n;
-//			conn->outgoing_seq_no += n;
-		}
 		else
-		{
-			// free this buffer chunk
+		{	// free this buffer chunk
 			tcp_buf * b = conn->sendbuf;
-			bytes -= n;
-//			conn->outgoing_seq_no += n;
 			conn->sendbuf = conn->sendbuf->next;
 
 			conn->handler( tcp_sock_from_conn( conn ), ev_releasebuf, 
 				(void *)b->data, b->len, b->flags );
 
-			free( b );	// would be really nice to make this non-heap-alloc'd too.
+			free( b );
 		}
 	}
 }
@@ -196,13 +189,6 @@ static void tcp_sendpacket_ex( tcp_conn * conn, void const * data, u16 datalen,
 		sizeof( eth_header ) + sizeof( ip_header ) + sizeof( tcp_header ) + datalen );
 }
 
-static u32 get_earliest_unacked( tcp_conn const * conn )
-{
-	return conn->sendbuf ? 
-		conn->sendbuf->seq + conn->sendbuf->ofs 
-		: conn->next_outgoing_seq_no;
-}
-
 static void tcp_send_synack( tcp_conn * conn, tcp_header * inc_packet )
 {
 	conn->incoming_seq_no = __ntohl( inc_packet->seq_no ) + 1;
@@ -211,7 +197,7 @@ static void tcp_send_synack( tcp_conn * conn, tcp_header * inc_packet )
 
 static void tcp_send_ack( tcp_conn * conn )
 {
-	tcp_sendpacket_ex( conn, 0, 0, TCP_ACK, conn->next_outgoing_seq_no - 1 );	// even vaguely right?
+	tcp_sendpacket_ex( conn, 0, 0, TCP_ACK, conn->next_outgoing_seq_no );
 }
 
 static void tcp_send_buffer( tcp_conn * conn, tcp_buf * b )
@@ -220,44 +206,11 @@ static void tcp_send_buffer( tcp_conn * conn, tcp_buf * b )
 	for(;;)
 	{
 		u32 chunklen = __min( b->len - ofs, MAXSEGSIZE );
-		if (chunklen)
-		{
-			tcp_sendpacket_ex( conn, (void const *)(b->data + ofs),
-				(u16) chunklen, TCP_ACK, b->seq + ofs );
-		}
-		else
-			break;
-	}
-}
+		if (!chunklen) return;
 
-static void tcp_send_outstanding( tcp_conn * conn, u32 skip )
-{
-	tcp_buf * b = conn->sendbuf;
-	u32 ofs = 0;
-
-	if ( !b )
-		return;	// nothing to send
-
-	while( b )
-	{
-		u32 chunklen = __min( b->len - b->ofs - ofs, MAXSEGSIZE );
-		if (skip)
-			chunklen = __min( chunklen, skip );
-
-		if ( chunklen )
-		{
-			if (skip)
-				skip -= chunklen;
-			else
-				tcp_sendpacket_ex( conn, (void const*)(b->data + b->ofs + ofs), 
-				(u16) chunklen, TCP_ACK, b->seq + b->ofs + ofs );
-			ofs += chunklen;
-		}
-		else
-		{
-			b = b->next;
-			ofs = 0;
-		}
+		tcp_sendpacket_ex( conn, (void const *)(b->data + ofs),
+			(u16) chunklen, TCP_ACK, b->seq + ofs );
+		ofs += chunklen;
 	}
 }
 
@@ -270,14 +223,13 @@ static void handle_listen_port( tcp_conn * conn, ip_header * p, tcp_header * t )
 
 	newconn = tcp_find_unused();
 
-	assert( newconn );	// please!
+	assert( newconn );
 
 	newconn->state = TCP_STATE_SYN;
 	newconn->localport = conn->localport;
 	newconn->remotehost = p->src_addr;
 	newconn->remoteport = t->src_port;
 	newconn->incoming_seq_no = __ntohl( t->seq_no );
-//	newconn->outgoing_seq_no = 0x400;
 	newconn->next_outgoing_seq_no = 0x400;
 	newconn->handler = conn->handler;
 	newconn->sendbuf = 0;
@@ -305,11 +257,17 @@ void tcp_close( tcp_sock sock )
 		logf( "tcp: tcp_close() on socket in bad state\n" );
 }
 
+static u32 get_earliest_unacked( tcp_conn const * conn )
+{
+	return conn->sendbuf ? 
+		conn->sendbuf->seq + conn->sendbuf->ofs 
+		: conn->next_outgoing_seq_no;
+}
+
 static u08 handle_connection( tcp_conn * conn, ip_header * p, tcp_header * t, u16 len )
 {
 	u32 datalen = __ip_payload_length( p ) - (t->data_offset >> 2);
-
-	len;	// unused
+	u32 drop; len;
 
 	if (conn->state == TCP_STATE_SYN)
 	{
@@ -326,23 +284,23 @@ static u08 handle_connection( tcp_conn * conn, ip_header * p, tcp_header * t, u1
 
 	if( t->flags & TCP_ACK )
 	{
-		u32 drop = __ntohl(t->ack_no) - get_earliest_unacked(conn);
-
 		if (conn->state == TCP_STATE_LAST_ACK)
 		{
 			kill_connection( conn );
 			return 1;
 		}
-
-		if (drop)
-			tcp_unbuffer( conn, drop );	// drop the stuff they acked from our buffer
-		
-		tcp_send_outstanding( conn, 0 );
+		else
+		{
+			if (0 != (drop = __ntohl(t->ack_no) - get_earliest_unacked(conn) + 1)) 
+			{
+				tcp_unbuffer( conn, drop );
+				if (conn->sendbuf) tcp_send_buffer( conn, conn->sendbuf );
+			}
+		}
 	}
 
 	if (t->flags & TCP_FIN)
 	{
-		//logf( "tcp: connection closed\n" );
 		conn->incoming_seq_no++;
 		tcp_send_ack(conn);
 		if (conn->state == TCP_STATE_ESTABLISHED)
@@ -367,10 +325,8 @@ static u08 handle_connection( tcp_conn * conn, ip_header * p, tcp_header * t, u1
 
 u08 tcp_receive_packet( ip_header * p, u16 len )
 {
-	tcp_header * tcph;
 	tcp_conn * conn;
-
-	tcph = ( tcp_header * )__ip_payload( p );
+	tcp_header * tcph = ( tcp_header * )__ip_payload( p );
 
 	if( p->dest_addr != get_hostaddr() )
 		return 0;
@@ -390,10 +346,7 @@ u08 tcp_receive_packet( ip_header * p, u16 len )
 
 tcp_sock tcp_new_listen_sock( u16 port, tcp_event_f * handler )
 {
-	tcp_conn * conn;
-
-	port = __htons( port );
-	conn = tcp_find_listener( port );
+	tcp_conn * conn = tcp_find_listener( port = __htons( port ) );
 
 	if( conn->state != TCP_STATE_CLOSED )
 	{
@@ -408,19 +361,6 @@ tcp_sock tcp_new_listen_sock( u16 port, tcp_event_f * handler )
 	conn->sendbuf = 0;
 
 	return tcp_sock_from_conn( conn );
-}
-
-u32 get_outstanding_size( tcp_conn * sock )
-{
-	tcp_buf * p = sock->sendbuf;
-	u32 size = 0;
-	while( p )
-	{
-		size += p->len - p->ofs;
-		p = p->next;
-	}
-
-	return size;
 }
 
 static void tcp_append_buffer( tcp_conn * conn, tcp_buf * b )
@@ -441,31 +381,21 @@ void tcp_send( tcp_sock sock, void const * buf, u32 buf_len, u32 flags )
 {
 	tcp_conn * conn = tcp_conn_from_sock( sock );
 	tcp_buf * b;
-	u32 skip;
 
 	assert( conn );
 
-	skip = get_outstanding_size( conn );
-
-	if ( conn->state != TCP_STATE_ESTABLISHED )
-		return;	// todo: are we allowed to do this at any other time?
+	if ( conn->state != TCP_STATE_ESTABLISHED ) return;
 	
-	b = malloc( sizeof( tcp_buf ) );	// todo: dont use heap here
-	b->next = 0;
-	b->ofs = 0;
-	b->len = buf_len;
-	b->data = buf;
-	b->flags = flags;
+	b = malloc( sizeof( tcp_buf ) );
+	b->next = 0;	b->ofs = 0;		b->len = buf_len; 
+	b->data = buf;	b->flags = flags;
 	b->seq = tcp_commit_sequence_range( conn, buf_len );
 
 	tcp_append_buffer( conn, b );
-	tcp_send_outstanding( conn, skip );
-	//tcp_send_buffer( conn, b );
+	tcp_send_buffer( conn, b );
 }
 
 u32 tcp_gethost( tcp_sock sock )
 {
-	tcp_conn * conn = tcp_conn_from_sock( sock );
-	assert( conn ); // someone fails at passing us a valid socket
-	return conn->remotehost;
+	return tcp_conn_from_sock( sock )->remotehost;
 }
