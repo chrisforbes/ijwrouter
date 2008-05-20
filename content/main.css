@@ -19,11 +19,21 @@ h1,h2
 
 .user { font-size: 18pt; font-weight: bold }
 
-#error
+#error, #wait
 {
-	background-color: Yellow;
 	border: 2px solid black;
 	padding: 0.3em;
 	position: absolute;
+}
+
+#error
+{
+	background-color: Yellow;
 	display: none;
 }
+
+#wait
+{
+	background-color: #eeeeee
+}
+
