@@ -1,4 +1,5 @@
-#pragma once
+#ifndef STR_H
+#define STR_H
 
 #pragma warning(disable:4204)
 
@@ -49,3 +50,5 @@ __inline char * format_amount( char * buf, u64 x )
 	sprintf( buf, "%1.2f %s", x / 1024.0f, *u );
 	return buf;
 }
+
+#endif

@@ -25,6 +25,6 @@ u32 tcp_gethost( tcp_sock sock );
 
 void * tcp_get_user_data( tcp_sock sock );
 void tcp_set_user_data( tcp_sock sock, void * ctx );
-void tcp_close( tcp_sock sock );
+void tcp_close( tcp_sock sock ); 
 
 #endif

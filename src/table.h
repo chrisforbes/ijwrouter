@@ -1,3 +1,6 @@
+#ifndef TABLE_H
+#define TABLE_H
+
 // table maintenance helpers for ijw-router
 
 #define DEFINE_TABLE( T, name, size )\
@@ -30,3 +33,5 @@ u08 __never( void *, void * );
 
 #define FOREACH( T, name, var )\
 	T* var = 0; while( 0 != (var = FIND_TABLE_ENTRY_FROM( T, name, __always, 0, var )))
+
+#endif
