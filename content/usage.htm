@@ -9,68 +9,65 @@
 		<script src="jquery-1.2.3.min.js"></script>
 		<script>
 		<!--
-			var size_installed = false;
+			var dialogs;
+			var current_dialog = null;
 			
-			function center( e, w, h )
+			function show_dialog( e )
 			{
-				e.css("left", (w - $(e).width()) / 2);
-				e.css("top", (h - $(e).height()) / 2);
-			}
-			
-			function do_size()
-			{
-				if (!size_installed)
-					window.onresize = do_size;
-					
+				dialogs.not( e ).hide();
+				e.show();
+				
 				var w = window.innerWidth;
 				var h = window.innerHeight;
 				
 				if (w == null) w = document.body.clientWidth;
 				if (h == null) h = document.body.clientHeight;
 				
-				center( $("#foo"), w, h );
-				center( $("#error"), w, h );
-				center( $("#wait"), w, h );
+				e.css("left", (w - e.width()) / 2);
+				e.css("top", (h - e.height()) / 2);
+				
+				current_dialog = e;
 			}
-			
+					
 			function do_ajax()
 			{
 				$.ajax({
 				type: "GET",
 				url: "query/usage",
-				timeout: 2000,
+				timeout: 4000,
 				success: function(data)
 				{
-					$("#foo").show();
-					$("#error").hide();
-					$("#wait").hide();
+					show_dialog( $("#foo") );
 					if (data != "{}")
 						merge_data( eval( "(" + data + ")" ) );
 				},
 				error: function(xhr, status, e)
 				{
-					$("#foo").hide();
-					$("#error").show();
-					$("#wait").hide();
+					show_dialog( $("#error") );
 				},
-				complete: function() { do_size(); setTimeout( "do_ajax()", 2000 ); }
+				complete: function() { setTimeout( "do_ajax()", 2000 ); }
 				});
 			}
 			
 			function merge_data( d )
 			{
-				for( var k in d )
-					$( "#" + k ).html(d[k]);
-				
+				for( var k in d ) $( "#" + k ).html(d[k]);
 				$("#barfill").css("width", d.fill + "%");
 			}
 			
-			$(function(){ do_size(); do_ajax(); $("#foo").hide(); });
+			$(function()
+			{ 
+				dialogs = $("#foo, #error, #wait");
+				
+				show_dialog( $("#wait") );
+				do_ajax(); 
+				window.onresize = function() { show_dialog( current_dialog ); };
+			});
 		//-->
 		</script>
 	</head>
 	<body>
-		<div id="foo" style="width: 600px; height: 320px">
+		<div id="foo" style="width: 600px; height: 320px; display: none">
 		<h1>Welcome, <span id="uname" class="field">---</span>!</h1>
 				<h2> Since <span id="start" class="field">---</span>, you've used<br/>
 				<span id="current" class="field">---</span> 
@@ -84,10 +81,10 @@
 				<p><input name="name"><button type="submit">Submit</button></p>
 			</form>
 		</div>
-		<div id="error" style="width: 650px; height: 80px">
+		<div id="error" style="width: 650px; height: 80px; display: none">
 			<h2>We're having trouble retrieving data from the router.</h2>
 		</div>
-		<div id="wait" style="width: 650px; height: 80px">
+		<div id="wait" style="width: 650px; height: 80px; display: none">
 			<h2>Downloading usage data...</h2>
 		</div>
 	</body>
