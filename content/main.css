@@ -24,12 +24,14 @@ h1,h2
 	border: 2px solid black;
 	padding: 0.3em;
 	position: absolute;
+	width: 650px;
+	height: 80px;
+	display: none;
 }
 
 #error
 {
 	background-color: Yellow;
-	display: none;
 }
 
 #wait

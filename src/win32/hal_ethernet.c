@@ -5,6 +5,7 @@
 #include "../ip/conf.h"
 #include "../hal_ethernet.h"
 #include "../hal_debug.h"
+#include "../stats.h"
 
 #include <stdio.h>
 
@@ -23,6 +24,9 @@ HANDLE interface_handles[NUMINTERFACES];
 u08 buf[2048];
 
 #define MAXBLOCKTIME	10
+
+static void * in_packet_counter = 0;
+static void * out_packet_counter = 0;
 
 u08 eth_init_interface( u08 iface, u08 real_iface )
 {
@@ -69,8 +73,12 @@ u08 eth_init_interface( u08 iface, u08 real_iface )
 
 u08 eth_init( void )
 {
-	eth_init_interface( IFACE_WAN, 1 );
+	eth_init_interface( IFACE_WAN, 3 );
 	//eth_init_interface( IFACE_LAN0, 1 );
+
+	in_packet_counter = stats_new_counter("Total Incoming Packets");
+	out_packet_counter = stats_new_counter("Total Outgoing Packets");
+
 	return 1;
 }
 
@@ -120,6 +128,8 @@ u08 eth_getpacket( eth_packet * p )
 		return 0;
 	}
 
+	stats_inc_counter(in_packet_counter);
+
 	memcpy( buf, data, h.len );
 	p->packet = (eth_header *) buf;
 	p->src_iface = iface;
@@ -149,6 +159,8 @@ u08 eth_inject( eth_packet * p )
 	{
 		for( p->dest_iface = IFACE_WAN; p->dest_iface < NUMINTERFACES; p->dest_iface++ )
 			eth_inject( p );
+
+		stats_inc_counter(out_packet_counter);
 		return 1;
 	}
 
@@ -160,6 +172,8 @@ u08 eth_inject( eth_packet * p )
 
 	if (-1 == pcap_sendpacket( interfaces[ p->dest_iface ], p->packet, p->len ))
 		return 0;
+
+	stats_inc_counter(out_packet_counter);
 
 	return 1;
 }

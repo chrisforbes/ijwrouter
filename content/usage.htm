@@ -7,48 +7,9 @@
 			#barfill { background-color: #48b4eb; border: 0px; margin: 0px; height: 28px; width: 0% }
 		</style>
 		<script src="jquery-1.2.3.min.js"></script>
+		<script src="common.js"></script>
 		<script>
 		<!--
-			var dialogs;
-			var current_dialog = null;
-			
-			function show_dialog( e )
-			{
-				dialogs.not( e ).hide();
-				e.show();
-				
-				var w = window.innerWidth;
-				var h = window.innerHeight;
-				
-				if (w == null) w = document.body.clientWidth;
-				if (h == null) h = document.body.clientHeight;
-				
-				e.css("left", (w - e.width()) / 2);
-				e.css("top", (h - e.height()) / 2);
-				
-				current_dialog = e;
-			}
-					
-			function do_ajax()
-			{
-				$.ajax({
-				type: "GET",
-				url: "query/usage",
-				timeout: 4000,
-				success: function(data)
-				{
-					show_dialog( $("#foo") );
-					if (data != "{}")
-						merge_data( eval( "(" + data + ")" ) );
-				},
-				error: function(xhr, status, e)
-				{
-					show_dialog( $("#error") );
-				},
-				complete: function() { setTimeout( "do_ajax()", 2000 ); }
-				});
-			}
-			
 			function merge_data( d )
 			{
 				for( var k in d ) $( "#" + k ).html(d[k]);
@@ -60,7 +21,15 @@
 				dialogs = $("#foo, #error, #wait");
 				
 				show_dialog( $("#wait") );
-				do_ajax(); 
+				
+				var f = function(data)
+				{
+					show_dialog( $("#foo") );
+					if (data != "{}")
+						merge_data( eval( "(" + data + ")" ) );
+				};
+				
+				do_ajax("query/usage", f); 
 				window.onresize = function() { show_dialog( current_dialog ); };
 			});
 		//-->
@@ -81,10 +50,10 @@
 				<p><input name="name"><button type="submit">Submit</button></p>
 			</form>
 		</div>
-		<div id="error" style="width: 650px; height: 80px; display: none">
+		<div id="error">
 			<h2>We're having trouble retrieving data from the router.</h2>
 		</div>
-		<div id="wait" style="width: 650px; height: 80px; display: none">
+		<div id="wait">
 			<h2>Downloading usage data...</h2>
 		</div>
 	</body>

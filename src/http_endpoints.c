@@ -7,6 +7,7 @@
 #include "user.h"
 #include "httpserv/httpserv.h"
 #include "httpserv/httpcommon.h"
+#include "stats.h"
 #include "str.h"
 
 extern mac_addr str_to_mac( char const * buf );
@@ -129,11 +130,43 @@ static void httpapp_send_user_bindings( tcp_sock sock )
 	logf( "200 OK %d bytes\n", content.len );
 }
 
+static str_t httpapp_make_counter_json(void * counter, u08 comma)
+{
+	str_t str = { malloc(128), 0 };
+
+	if (!counter) return MAKE_STRING("{}");
+
+	str.len = sprintf(str.str, "{counter_name: \"%s\",count: %I64u}%c",
+		stats_get_counter_name(counter),
+		stats_get_counter_count(counter),
+		comma ? ',' : ' ');
+
+	return str;
+}
+
+static void httpapp_send_stat_counts( tcp_sock sock )
+{
+	str_t content = { 0, 0 };
+	str_t content_type = MAKE_STRING( "application/x-json" );
+
+	void * c = 0;
+	while( 0 != (c = stats_get_next_counter(c) ))
+	{
+		str_t counter = httpapp_make_counter_json(c, stats_get_next_counter(c) != 0);
+		append_string( &content, &counter );
+		free( counter.str );
+	}
+
+	httpserv_send_content(sock, content_type, content, 1, 0);
+	logf( "200 OK %d bytes\n", content.len );
+}
+
 u08 httpapp_dispatch_dynamic_request( tcp_sock sock, char const * uri )
 {
 	DISPATCH_ENDPOINT_V( "query/usage",		httpapp_get_usage );
 	DISPATCH_ENDPOINT_V( "query/bindings",	httpapp_send_user_bindings );
 	DISPATCH_ENDPOINT_V( "query/list",		httpapp_send_all_usage );
+	DISPATCH_ENDPOINT_V( "query/stats",		httpapp_send_stat_counts );
 	DISPATCH_ENDPOINT_S( "name?name=",		httpapp_set_name );
 	DISPATCH_ENDPOINT_S( "merge?",			httpapp_merge_mac );
 	return 0;

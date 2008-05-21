@@ -1,0 +1,57 @@
+<html>
+	<head>
+		<title>Statistics</title>
+		<link type="text/css" rel="Stylesheet" href="main.css" />
+		<script type="text/javascript" src="jquery-1.2.3.min.js"></script>
+		<script type="text/javascript" src="common.js"></script>
+		<script type="text/javascript">
+		<!--
+			function format_row( d )
+			{
+				return "<tr class=\"user\"><td>"+ d.counter_name +"</td>"
+					+"<td>"+ d.count +"</td>"
+					+"</tr>";
+			}
+			
+			function merge_data( d )
+			{
+				var s = "";
+				for (var i = 0; i < d.length; i++)
+					s += format_row(d[i]);
+				
+				$("table").html(s);
+			}
+			
+			$(function()
+			{
+				dialogs = $("#foo, #error, #wait");
+			
+				show_dialog( $( "#wait" ) );
+				
+				var f = function(data)
+				{
+					show_dialog( $( "#foo" ) );
+					if (data != "{}")
+						merge_data( eval( "([" + data + "])" ) );
+				};
+				
+				do_ajax("query/stats", f);
+				window.onresize = function() { show_dialog( current_dialog ); }; 
+			});
+		//-->
+		</script>
+	</head>
+	<body>
+		<div id="foo" style="width: 500px">
+		<h1>Statistics Counters</h1>
+			<table width="100%" id="table">
+			</table>
+		</div>
+		<div id="error">
+			<h2>We're having trouble retrieving data from the router.</h2>
+		</div>
+		<div id="wait">
+			<h2>Downloading usage data...</h2>
+		</div>
+	</body>
+</html>

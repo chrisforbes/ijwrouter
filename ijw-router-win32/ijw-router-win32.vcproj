@@ -188,6 +188,14 @@
 				>
 			</File>
 			<File
+				RelativePath="..\src\stats.c"
+				>
+			</File>
+			<File
+				RelativePath="..\src\stats.h"
+				>
+			</File>
+			<File
 				RelativePath="..\src\user.c"
 				>
 			</File>

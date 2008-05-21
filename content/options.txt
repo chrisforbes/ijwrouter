@@ -1,6 +1,8 @@
 jquery-1.2.3.js	=	ignore
+common.js =		gzip
 jquery-1.2.3.min.js =	gzip
 list.htm =		gzip
 usage.htm =		gzip
 bindings.htm =		gzip
+stats.htm =		gzip
 ajax-loader.gif =	ignore
