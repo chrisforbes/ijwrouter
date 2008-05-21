@@ -15,78 +15,87 @@
 
 typedef void http_header_f( tcp_sock sock, char const * name, str_t const value );
 
-#define MAXNAMESIZE		128
-#define MAXVALUESIZE	128
+typedef enum http_state_e 
+{ 
+	s_init,
+	s_method, s_uri, s_version, 
+	s_name, s_value, s_done 
+} http_state_e;
 
-#define __COPYINTO( ptr, base, value, max )\
-	{ *ptr++ = value; if (ptr - base >= max) ptr = base; }
-
-static void httpserv_parse( tcp_sock sock, u08 const * data, u32 len, http_header_f * f )
+typedef struct http_state_t
 {
-	char name[ MAXNAMESIZE + 1 ], * pname = name;
-	char value[ MAXVALUESIZE + 1 ], * pvalue = value;
+	http_state_e state;
+	char n[128], v[128];
+	char * p;
+} http_state_t;
 
-	char const * p = (char const *) data;
-	char const * end = p + len;
-
-	u08 isval = 0;
-
-	char const * isp = memchr( p, ' ', len );
-	char const * irr = memchr( p, '\r', len );
-
-	if (isp && irr && isp < irr)
-	{
-		char const * isp2 = memchr( isp + 1, ' ', len - ( isp - p ) );
-		if (isp2 && isp2 < irr )
-		{
-			memcpy( value, p, isp - p );
-			value[ isp - p ] = 0;
-			f( sock, ph_method, __make_string( value, isp - p ) );
-
-			memcpy( value, isp + 1, isp2 - isp - 1 );
-			value[ isp2 - isp - 1 ] = 0;
-			f( sock, ph_uri, __make_string( value, isp2 - isp - 1 ) );
-
-			memcpy( value, isp2 + 1, irr - isp2 - 1 );
-			value[ irr - isp2 - 1 ] = 0;
-			f( sock, ph_version, __make_string( value, irr - isp2 - 1 ) );
-
-			p = irr + 2;
-		}
+#define TRANSITION_YIELDING_PH( c, newstate, ph )\
+	if (ch == c)\
+	{\
+		*(s->p) = 0;\
+		f( sock, ph, __make_string( s->n, s->p - s->n ));\
+		s->state = newstate;\
+		s->p = s->n;\
+		return;\
 	}
 
-	while( p < end )
+#define OTHERWISE_APPEND()\
+	*(s->p)++ = ch;\
+	return
+
+static void httpserv_parse2_ch( tcp_sock sock, http_state_t * s, http_header_f * f, char ch )
+{
+	switch( s->state )
 	{
-		char c = *p++;
+	case s_init:
+		s->state = s_method;
+		s->p = s->n;
+		// fall through
 
-		if ( !isval )
+	case s_method: 
+		TRANSITION_YIELDING_PH( ' ', s_uri, ph_method );
+		OTHERWISE_APPEND();
+
+	case s_uri:
+		TRANSITION_YIELDING_PH( ' ', s_version, ph_uri );
+		OTHERWISE_APPEND();
+
+	case s_version:
+		TRANSITION_YIELDING_PH( '\r', s_name, ph_version );
+		OTHERWISE_APPEND();		
+
+	case s_name:
+		if (ch == '\n') return;
+		if (ch == '\r') { s->state = s_done; return; }
+		if (ch == ':')
 		{
-			if ( c == '\n' )
-				continue;
-
-			if ( c == ':' )
-			{
-				*pname = 0;
-				pvalue = value;
-				isval = 1;
-			}
-			else __COPYINTO( pname, name, c, MAXNAMESIZE );
+			s->state = s_value;
+			*(s->p) = 0;	// ensure null-terminated
+			s->p = s->v;
+			return;
 		}
-		else
+		OTHERWISE_APPEND();
+
+	case s_value:
+		if (ch == ' ' && s->p == s->v) return;
+		if (ch == '\r')
 		{
-			if ( pvalue == value && c == ' ' )
-				continue;
-
-			if ( c == '\r' )
-			{
-				*pvalue = 0;
-				f( sock, name, __make_string( value, pvalue - value ) );
-				pname = name;
-				isval = 0;
-			}
-			else __COPYINTO( pvalue, value, c, MAXVALUESIZE );
+			s->state = s_name;
+			*(s->p) = 0;	// ensure null-terminated
+			f( sock, s->n, __make_string( s->v, s->p - s->v ) );
+			s->p = s->n;
+			return;
 		}
+		OTHERWISE_APPEND();
 	}
+}
+
+static void httpserv_parse2( tcp_sock sock, http_state_t * s, 
+					   u08 const * data, u32 len, http_header_f * f )
+{
+	u08 const * p = data;
+	while( len-- && s->state != s_done )
+		httpserv_parse2_ch( sock, s, f, *p++ );
 }
 
 void httpserv_send_static_content( tcp_sock sock, str_t mime_type, str_t content, str_t _digest, u32 flags, u08 is_gzipped )
@@ -133,10 +142,22 @@ void httpserv_redirect( tcp_sock sock )
 	logf( "302 usage.htm\n" );
 }
 
-static void httpserv_get_request( tcp_sock sock, str_t const _uri )
+typedef struct http_request_t
+{
+	http_state_t parser_state;
+	u08 _uri[128];
+	str_t uri;
+	u08 method;
+	u08 digest[32];
+	u08 has_digest;
+} http_request_t;
+
+static void httpserv_get_request( tcp_sock sock, str_t const _uri, http_request_t * req )
 {
 	struct file_entry const * entry;
 	char const * uri = _uri.str;
+
+	req;
 
 	uri_decode((char *)uri, _uri.len, uri);		// dirty but actually safe (decoded uri is never longer, and
 												// this buffer is always going to be in writable memory)
@@ -162,6 +183,14 @@ static void httpserv_get_request( tcp_sock sock, str_t const _uri )
 		return;
 	}
 
+	if ( req->has_digest && 0 == memcmp( fs_get_str( &entry->digest ).str, req->digest, 32 ) )
+	{
+		// the client already has this resource
+		httpserv_send_error_status( sock, HTTP_STATUS_NOT_MODIFIED, MAKE_STRING( "Not Modified" ) );
+		logf( "304 Not Modified\n" );
+		return;
+	}
+
 	{
 		httpserv_send_static_content(sock, 
 			fs_get_str( &entry->content_type ), fs_get_str( &entry->content ), fs_get_str( &entry->digest ), 0, fs_is_gzipped( entry ));
@@ -170,31 +199,38 @@ static void httpserv_get_request( tcp_sock sock, str_t const _uri )
 	}
 }
 
-static u08 current_method;
-
 static void httpserv_header_handler( tcp_sock sock, char const * name, str_t const value )
 {
+	http_request_t * req = (http_request_t *)tcp_get_user_data( sock );
+
 	if (name == ph_method)
 	{
-		if (strcmp(value.str, "GET") == 0)
-			current_method = http_method_get;
-		else if (strcmp(value.str, "HEAD") == 0)
-			current_method = http_method_head;
+		if (strcmp(value.str, "GET") == 0) req->method = http_method_get;
+		else if (strcmp(value.str, "HEAD") == 0) req->method = http_method_head;
 		else
 		{
-			current_method = http_method_other;
+			req->method = http_method_other;
 			httpserv_send_error_status(sock, HTTP_STATUS_NOT_IMPLEMENTED, MAKE_STRING("Method not implemented."));
 		}
 
 		return;
 	}
 
-	switch (current_method)
+	if (name == ph_uri)
 	{
-	case http_method_get:
-	case http_method_head:
-		if (name == ph_uri)
-			httpserv_get_request(sock, value);
+		memcpy( req->_uri, value.str, value.len );
+		req->uri = __make_string( (char *)req->_uri, value.len );
+		return;
+	}
+
+	if (name > ph_version)
+	{
+		if (strcmp( name, "If-None-Match" ) == 0)
+		{
+			// grab the digest, if it exists
+			memcpy( req->digest, value.str + 1, 32 );
+			req->has_digest = 1;
+		}
 	}
 }
 
@@ -203,20 +239,28 @@ static void httpserv_handler( tcp_sock sock, tcp_event_e ev, void * data, u32 le
 	switch(ev)
 	{
 	case ev_opened:
-		tcp_set_user_data( sock, 0 );
+		{
+			http_request_t * req = malloc( sizeof( http_request_t ) );
+			memset( req, 0, sizeof(req) );
+			tcp_set_user_data( sock, req );
+		}
 		break;
 	case ev_closed:
+		free( tcp_get_user_data( sock ) );
 		break;
 	case ev_data:
-		if (!tcp_get_user_data( sock ))
 		{
-			httpserv_parse( sock, (u08 const *)data, len, httpserv_header_handler);
-			tcp_set_user_data( sock, (void *)1 );
+			http_request_t * req = tcp_get_user_data( sock );
+			httpserv_parse2( sock, &req->parser_state,
+				(u08 const *)data, len, httpserv_header_handler);
+
+			if (req->parser_state.state == s_done && 
+				(req->method == http_method_get || req->method == http_method_head))
+				httpserv_get_request( sock, req->uri, req );
 		}
 		break;
 	case ev_releasebuf:
-		if (flags)
-			free(data);
+		if (flags) free(data);
 		break;
 	}
 }

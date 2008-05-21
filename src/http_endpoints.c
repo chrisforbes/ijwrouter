@@ -36,8 +36,7 @@ static str_t httpapp_user_usage( user_t * u, u08 comma )
 
 static str_t httpapp_get_usage_from_sock( tcp_sock sock )
 {
-	u32 host = tcp_gethost( sock );
-	return httpapp_user_usage(get_user_by_ip(host), 0);
+	return httpapp_user_usage(get_user_by_ip(tcp_gethost( sock )), 0);
 }
 
 static void httpapp_send_all_usage( tcp_sock sock )
