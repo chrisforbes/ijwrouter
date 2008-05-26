@@ -26,11 +26,11 @@ void * stats_new_counter (char const * counter_name)
 	return c;
 }
 
-void stats_inc_counter (void * p_counter)
+void stats_inc_counter (void * p_counter, u64 amount)
 {
 	counter_t * c = (counter_t *)p_counter;
 
-	c->count++;
+	c->count += amount;
 }
 
 u64 stats_get_counter_count (void * p_counter)
