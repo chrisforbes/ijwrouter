@@ -128,7 +128,7 @@ u08 eth_getpacket( eth_packet * p )
 		return 0;
 	}
 
-	stats_inc_counter(in_packet_counter);
+	stats_inc_counter(in_packet_counter, 1);
 
 	memcpy( buf, data, h.len );
 	p->packet = (eth_header *) buf;
@@ -160,7 +160,7 @@ u08 eth_inject( eth_packet * p )
 		for( p->dest_iface = IFACE_WAN; p->dest_iface < NUMINTERFACES; p->dest_iface++ )
 			eth_inject( p );
 
-		stats_inc_counter(out_packet_counter);
+		stats_inc_counter(out_packet_counter, 1);
 		return 1;
 	}
 
@@ -173,7 +173,7 @@ u08 eth_inject( eth_packet * p )
 	if (-1 == pcap_sendpacket( interfaces[ p->dest_iface ], p->packet, p->len ))
 		return 0;
 
-	stats_inc_counter(out_packet_counter);
+	stats_inc_counter(out_packet_counter, 1);
 
 	return 1;
 }
