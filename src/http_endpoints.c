@@ -160,6 +160,12 @@ static void httpapp_send_stat_counts( tcp_sock sock )
 	logf( "200 OK %d bytes\n", content.len );
 }
 
+static void httpapp_force_commit( tcp_sock sock )
+{	// forces changes to account db to be committed immediately
+	save_users();
+	httpserv_redirect( sock );
+}
+
 u08 httpapp_dispatch_dynamic_request( tcp_sock sock, char const * uri )
 {
 	DISPATCH_ENDPOINT_V( "query/usage",		httpapp_get_usage );
@@ -168,5 +174,6 @@ u08 httpapp_dispatch_dynamic_request( tcp_sock sock, char const * uri )
 	DISPATCH_ENDPOINT_V( "query/stats",		httpapp_send_stat_counts );
 	DISPATCH_ENDPOINT_S( "name?name=",		httpapp_set_name );
 	DISPATCH_ENDPOINT_S( "merge?",			httpapp_merge_mac );
+	DISPATCH_ENDPOINT_V( "commit",			httpapp_force_commit );
 	return 0;
 }

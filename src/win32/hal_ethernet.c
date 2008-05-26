@@ -73,7 +73,7 @@ u08 eth_init_interface( u08 iface, u08 real_iface )
 
 u08 eth_init( void )
 {
-	eth_init_interface( IFACE_WAN, 3 );
+	eth_init_interface( IFACE_WAN, 1 );
 	//eth_init_interface( IFACE_LAN0, 1 );
 
 	in_packet_counter = stats_new_counter("Total Incoming Packets");

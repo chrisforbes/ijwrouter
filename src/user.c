@@ -2,9 +2,13 @@
 #include "user.h"
 #include "ip/conf.h"
 #include "hal_debug.h"
+#include "hal_time.h"
 #include "ip/arptab.h"
 #include <assert.h>
 #include "table.h"
+
+#include <stdio.h>
+#include <windows.h>
 
 #define MAX_USERS	128
 #define MAX_MAPPINGS	512	// most people have <= 4 network cards
@@ -94,5 +98,88 @@ void add_mac_to_user( user_t * u, mac_addr addr )
 	{
 		u->credit += other_user->credit;
 		FREE_TABLE_ENTRY( user_t, users, other_user, remap_user );
+	}
+}
+
+
+// --- NOT PORTABLE - WIN32 ONLY -------------------------
+
+typedef struct persist_header_t
+{
+	u32 num_users;
+	u32 num_mappings;
+	void * user_base;
+	void * mapping_base;
+} persist_header_t;
+
+void save_users( void )
+{
+#pragma warning( disable: 4204 )
+	persist_header_t h = 
+	{ 
+		NUM_ROWS( user_t, users ), 
+		NUM_ROWS( mac_mapping_t, mappings ),
+		users,
+		mappings
+	};
+#pragma warning( default: 4204 )
+
+	FILE * f = fopen( "../accounts.temp.dat", "wb" );
+	if (!f)
+	{
+		logf( "failed persisting account db: cannot open ../accounts.temp.dat\n" );
+		return;
+	}
+
+	fwrite( &h, sizeof( persist_header_t ), 1, f );
+	fwrite( users, sizeof( user_t ), h.num_users, f );
+	fwrite( mappings, sizeof( mac_mapping_t ), h.num_mappings, f );
+
+	fclose(f);
+
+	// finally, atomic overwrite
+	CopyFileA( "../accounts.temp.dat", "../accounts.dat", 0 );
+}
+
+void restore_users( void )
+{
+	FILE * f = fopen( "../accounts.dat", "rb" );
+	persist_header_t h;
+
+	if (!f)
+	{
+		logf( "failed restoring account db: cannot open ../accounts.dat\n" );
+		return;
+	}
+
+	fread( &h, sizeof( persist_header_t ), 1, f );
+	fread( users, sizeof( user_t ), h.num_users, f );
+	fread( mappings, sizeof( mac_mapping_t ), h.num_mappings, f );
+
+	fclose( f );
+
+	// patch the table sizes
+	NUM_ROWS( user_t, users ) = h.num_users;
+	NUM_ROWS( mac_mapping_t, mappings ) = h.num_mappings;
+
+	// patch the pointers in the mappings table (address space layout is NOT PORTABLE)
+	{
+		FOREACH( mac_mapping_t, mappings, x )
+			if (x->user)
+				x->user = (user_t *)( ((u08*) x->user) - 
+				(u08*)h.mapping_base + (u08 *)mappings );
+	}
+}
+
+#define SAVE_INTERVAL		300000	// 5 minutes
+
+void do_periodic_save( void )
+{
+	static u32 last_save = 0;
+
+	if (ticks() - last_save >= SAVE_INTERVAL)
+	{
+		save_users();
+		last_save = ticks();
 	}
 }

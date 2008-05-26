@@ -23,4 +23,9 @@ user_t * get_next_user( user_t * );
 mac_mapping_t * get_next_mac ( mac_mapping_t * m );
 void add_mac_to_user( user_t *, mac_addr );
 
+void save_users( void );
+void restore_users( void );
+void do_periodic_save( void );
+void do_periodic_save( void );
+
 #endif

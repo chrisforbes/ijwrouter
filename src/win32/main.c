@@ -91,7 +91,6 @@ extern void dhcp_process( void );
 extern void nbns_process( void );
 extern void nbns_init( void );
 
-//extern void sntp_init( void );
 extern void sntp_process( void );
 
 int main( void )
@@ -110,6 +109,8 @@ int main( void )
 
 	httpserv_init();
 
+	restore_users();
+
 	for(;;)
 	{
 		eth_packet p;
@@ -118,5 +119,7 @@ int main( void )
 		dhcp_process();
 		nbns_process();
 		sntp_process();
+
+		do_periodic_save();
 	}
 }
