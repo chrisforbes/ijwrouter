@@ -33,7 +33,7 @@ typedef struct http_state_t
 	if (ch == c)\
 	{\
 		*(s->p) = 0;\
-		f( sock, ph, __make_string( s->n, s->p - s->n ));\
+		f( sock, ph, __make_string2( s->n, s->p ));\
 		s->state = newstate;\
 		s->p = s->n;\
 		return;\
@@ -82,7 +82,7 @@ static void httpserv_parse2_ch( tcp_sock sock, http_state_t * s, http_header_f *
 		{
 			s->state = s_name;
 			*(s->p) = 0;	// ensure null-terminated
-			f( sock, s->n, __make_string( s->v, s->p - s->v ) );
+			f( sock, s->n, __make_string2( s->v, s->p ) );
 			s->p = s->n;
 			return;
 		}
@@ -193,7 +193,9 @@ static void httpserv_get_request( tcp_sock sock, str_t const _uri, http_request_
 
 	{
 		httpserv_send_static_content(sock, 
-			fs_get_str( &entry->content_type ), fs_get_str( &entry->content ), fs_get_str( &entry->digest ), 0, fs_is_gzipped( entry ));
+			fs_get_str( &entry->content_type ), 
+			fs_get_str( &entry->content ), 
+			fs_get_str( &entry->digest ), 0, fs_is_gzipped( entry ));
 
 		logf( "200 OK %d bytes\n", entry->content.length );
 	}
