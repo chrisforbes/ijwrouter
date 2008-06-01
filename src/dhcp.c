@@ -119,15 +119,8 @@ static void create_msg( dhcp_packet * p )
 	p->op = DHCP_OP_REQUEST;
 	p->htype = DHCP_HTYPE_ETHERNET;
 	p->hlen = DHCP_HLEN_ETHERNET;
-	p->hops = 0;
 	p->xid = xid;
-	p->secs = 0;
 	p->flags = __htons( BOOTP_BROADCAST );
-
-	p->ciaddr = 0;
-	p->yiaddr = 0;
-	p->siaddr = 0;
-	p->giaddr = 0;
 	p->chaddr = get_macaddr();
 	memset(p->crap, 0, sizeof(p->crap));
 	memcpy( p->options, cookie, sizeof(cookie) );
@@ -290,5 +283,3 @@ void dhcp_init( void )
 
 	send_discover();
 }
-
-

@@ -100,7 +100,7 @@ static void httpserv_parse2( tcp_sock sock, http_state_t * s,
 
 void httpserv_send_static_content( tcp_sock sock, str_t mime_type, str_t content, str_t _digest, u32 flags, u08 is_gzipped )
 {
-	str_t str = { malloc(512), 0 };	// bigger, to have space for the digest
+	str_t str = { malloc(512), 0 };
 	char mime[64];
 	char digest[64];
 	__memcpyz( mime, mime_type.str, mime_type.len );

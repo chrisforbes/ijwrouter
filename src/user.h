@@ -11,6 +11,7 @@ typedef struct user_t
 } user_t;
 
 #define USER_NEW	0x01
+#define USER_CUSTOM_NAME	0x02
 
 typedef struct mac_mapping_t
 {

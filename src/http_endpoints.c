@@ -23,13 +23,14 @@ static str_t httpapp_user_usage( user_t * u, u08 comma )
 
 	u->credit = u->quota ? ((u->credit + 2167425) % u->quota) : (u->credit + 2167425); //hack
 
-	str.len = sprintf(str.str, "{uname:\"%s\",start:\"%s\",current:\"%s\",quota:\"%s\",days:%d,fill:%d}%c",
+	str.len = sprintf(str.str, "{uname:\"%s\",start:\"%s\",current:\"%s\",quota:\"%s\",days:%d,fill:%d,flags:%u}%c",
 		u->name,
 		"1 January", 
 		format_amount( credit, u->credit ),
 		format_amount( quota, u->quota ),
 		20,
 		(u08)(u->quota ? (u->credit * 100 / u->quota) : 0),
+		u->flags,
 		comma ? ',' : ' ');
 	return str;
 }
@@ -59,7 +60,11 @@ static void httpapp_send_all_usage( tcp_sock sock )
 static void httpapp_set_name( tcp_sock sock, char const * name )
 {
 	user_t * u = get_user_by_ip(tcp_gethost(sock));
-	if (u) strncpy(u->name, name, 32);
+	if (u) 
+	{
+		strncpy(u->name, name, 32);
+		u->flags |= USER_CUSTOM_NAME;
+	}
 	httpserv_redirect_to( sock, "usage.htm" );
 }
 
