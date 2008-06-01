@@ -6,21 +6,37 @@
 		<script type="text/javascript" src="common.js"></script>
 		<script type="text/javascript">
 		<!--
+			function option1select()
+			{
+				$("#name_field").removeAttr("disabled");
+				$("#merge_select").attr("disabled", "disabled");
+			}
+			
+			function option2select()
+			{
+				$("#merge_select").removeAttr("disabled");
+				$("#name_field").attr("disabled", "disabled");
+			}
+			
+			function submit_form()
+			{
+				if ( $("#change_name_option:checked").length > 0 )
+				{
+					$("#hidden_name").val( $("#name_field").val() );
+					$("#name_form")[0].submit();
+				}
+				else
+				{
+					$("#hidden_merge").val( $("#merge_select").val() );
+					$("#merge_form")[0].submit();
+				}
+			}
+			
 			$(function()
 			{
 				dialogs = $("#foo");
 				
-				$.get("query/usage", function(data)
-				{
-					show_dialog( $("#foo") );
-					var d = eval( "(" + data + ")" );
-					$("#uname").html(d.uname);
-					if ((d.flags & 1) > 0)
-						$("#new_name").show();
-					else
-						$("#old_name").show();
-				});
-				
+				show_dialog( $("#foo") );
 				$.get("query/list", function(data)
 				{
 					var d = eval( "([" + data + "])" );
@@ -33,33 +49,29 @@
 		</script>
 	</head>
 	<body>
-		<div id="foo" style="width: 600px; height: 500px; display: none">
+		<div id="foo" style="width: 600px; height: 320px;">
 			<h1>Welcome to IJW Router</h1>
-			<p>
-				IJW Router is a system for monitoring internet usage by users on a small network.
-			</p>
-			
-			<h2>Your current username is <span id="uname">---</span>.</h2>
-			<p id="new_name" style="display: none">
-				Your current username is an ID that uniquely identifies your computer's network hardware.
-				If you would like to change your username to something more personally identifiable, you can
-				enter it below.
-			</p>
-			
-			<p id="old_name" style="display: none">
-				You can change your username below.
-			</p>
-			
-			<form action="name" method="get" style="text-align: center">
-					<p><input name="name"/><input type="submit" value="Submit" /></p>
+			<p>Boilerplate goes here.</p>
+			<form>
+				<p>
+					<input type="radio" id="change_name_option" name="options" onclick="option1select()" checked="checked"/>
+					<label for="change_name_option">Yes, I am a new user. My name is:</label>
+					<input type="text" id="name_field" name="name" />
+				</p>
+				<p>
+					<input type="radio" id="merge_user_option" name="options" onclick="option2select()"/>
+					<label for="merge_user_option">I already have an account. It is:</label>
+					<select id="merge_select" name="name" disabled="disabled"></select>
+				</p>
+				<p style="text-align: center">
+					<input type="button" value="Submit" onclick="submit_form(); return false" />
+				</p>
 			</form>
-			
-			<p>
-				If you have another account on this network, you can select it below and merge it with this account.
-			</p>
-			
-			<form action="merge" method="get" style="text-align: center">
-				<p><select id="merge_select" name="name"></select><input type="submit" value="Submit" /></p>
+			<form id="name_form" action="name" method="get" style="display: none">
+				<p><input id="hidden_name" name="name" type="hidden" /></p>
+			</form>
+			<form id="merge_form" action="merge" method="get" style="display: none">
+				<p><input id="hidden_merge" name="name" type="hidden" /></p>
 			</form>
 		</div>
 	</body>
