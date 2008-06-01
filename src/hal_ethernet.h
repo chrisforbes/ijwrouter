@@ -21,6 +21,10 @@ u08 eth_find_interface( mac_addr dest );
 
 #define IFACE_WAN		0x00
 #define IFACE_LAN0		0x01
+#define IFACE_LAN1		0x02
+#define IFACE_LAN2		0x03
+#define IFACE_LAN3		0x04
+
 #define IFACE_BROADCAST	0xff
 #define IFACE_INTERNAL	0xfe
 

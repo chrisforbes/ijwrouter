@@ -16,6 +16,7 @@ typedef enum dhcp_state_e
 	DHCP_STATE_IDLE = 0,
 	DHCP_STATE_WAIT_FOR_OFFER = 1,
 	DHCP_STATE_WAIT_FOR_ACK = 2,
+	DHCP_STATE_DONE = 3,
 } dhcp_state_e;
 
 typedef struct dhcp_state
@@ -251,6 +252,10 @@ static void dhcp_event( udp_sock sock, udp_event_e evt,
 {
 	u08 type = parse_msg((dhcp_packet *)data, len);
 	from_ip; from_port;	evt; sock;
+
+	if (s.state == DHCP_STATE_DONE)
+		return;	// todo: handle expiry properly
+
 	switch (type)
 	{
 	case DHCP_OFFER:
@@ -261,8 +266,7 @@ static void dhcp_event( udp_sock sock, udp_event_e evt,
 	case DHCP_ACK:
 		logf( "dhcp: got ack\n" );
 		logf( "dhcp: host configuration complete\n" );
-		s.state = DHCP_STATE_IDLE;
-
+		s.state = DHCP_STATE_DONE;	// todo: start lease timer
 		sntp_init();
 		break;
 	case DHCP_NAK:

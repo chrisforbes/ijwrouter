@@ -18,9 +18,10 @@
 #pragma comment( lib, "wpcap.lib" )
 
 
-#define NUMINTERFACES	1
-static pcap_t * interfaces[NUMINTERFACES];
-HANDLE interface_handles[NUMINTERFACES];
+#define MAXINTERFACES	5
+static pcap_t * interfaces[MAXINTERFACES];
+HANDLE interface_handles[MAXINTERFACES];
+int num_interfaces;
 u08 buf[2048];
 
 #define MAXBLOCKTIME	10
@@ -71,10 +72,41 @@ u08 eth_init_interface( u08 iface, u08 real_iface )
 	return 1;
 }
 
+static u08 __eth_init_interface( u08 internal_id, char const * keyname )
+{
+	u08 result = (u08)GetPrivateProfileIntA( "interfaces", 
+		keyname, 0x0ff, "../ijw-router-win32.ini" );
+	if (result == 0xff)
+		return 0;
+
+	if (eth_init_interface( internal_id, result ))
+	{
+		num_interfaces = internal_id + 1;
+		return 1;
+	}
+
+	return 0;
+}
+
 u08 eth_init( void )
 {
-	eth_init_interface( IFACE_WAN, 1 );
-	//eth_init_interface( IFACE_LAN0, 1 );
+	struct iface_info_t { u08 id; char const * name; } iface_infos[] = 
+	{
+		{ IFACE_WAN, "wan" },
+		{ IFACE_LAN0, "lan0" },
+		{ IFACE_LAN1, "lan1" },
+		{ IFACE_LAN2, "lan2" },
+		{ IFACE_LAN3, "lan3" },
+		{ 0, 0 }
+	};
+
+	struct iface_info_t const * p = iface_infos;
+	while( p->name )
+	{
+		if (!__eth_init_interface( p->id, p->name ))
+			break;
+		++p;
+	}
 
 	in_packet_counter = stats_new_counter("Total Incoming Packets");
 	out_packet_counter = stats_new_counter("Total Outgoing Packets");
@@ -88,7 +120,7 @@ u08 eth_getpacket( eth_packet * p )
 	u08 const * data;
 
 	u08 iface;
-	DWORD obj = WaitForMultipleObjects( NUMINTERFACES, interface_handles, FALSE, MAXBLOCKTIME );
+	DWORD obj = WaitForMultipleObjects( num_interfaces, interface_handles, FALSE, MAXBLOCKTIME );
 	
 	if (obj == WAIT_FAILED)
 	{
@@ -157,7 +189,7 @@ u08 eth_inject( eth_packet * p )
 
 	if ( p->dest_iface == IFACE_BROADCAST )
 	{
-		for( p->dest_iface = IFACE_WAN; p->dest_iface < NUMINTERFACES; p->dest_iface++ )
+		for( p->dest_iface = IFACE_WAN; p->dest_iface < num_interfaces; p->dest_iface++ )
 			eth_inject( p );
 
 		stats_inc_counter(out_packet_counter, 1);
