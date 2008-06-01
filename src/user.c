@@ -91,6 +91,12 @@ void remap_user( user_t * from, user_t * to )
 
 void merge_users( user_t * from, user_t * to )
 {
+	if (from == to)
+	{
+		logf("user: tried to merge self\n");
+		return;
+	}
+
 	logf("user: merged %s into %s\n", from->name, to->name);
 	to->credit += from->credit;
 	to->references += from->references;

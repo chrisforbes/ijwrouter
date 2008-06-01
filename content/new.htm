@@ -6,16 +6,10 @@
 		<script type="text/javascript" src="common.js"></script>
 		<script type="text/javascript">
 		<!--
-			function option1select()
+			function optionselect(x, y)
 			{
-				$("#name_field").removeAttr("disabled");
-				$("#merge_select").attr("disabled", "disabled");
-			}
-			
-			function option2select()
-			{
-				$("#merge_select").removeAttr("disabled");
-				$("#name_field").attr("disabled", "disabled");
+				$(x).removeAttr("disabled");
+				$(y).attr("disabled", "disabled");
 			}
 			
 			function submit_form()
@@ -54,12 +48,12 @@
 			<p>Boilerplate goes here.</p>
 			<form>
 				<p>
-					<input type="radio" id="change_name_option" name="options" onclick="option1select()" checked="checked"/>
+					<input type="radio" id="change_name_option" name="options" onclick="optionselect('#name_field', '#merge_select')" checked="checked"/>
 					<label for="change_name_option">Yes, I am a new user. My name is:</label>
 					<input type="text" id="name_field" name="name" />
 				</p>
 				<p>
-					<input type="radio" id="merge_user_option" name="options" onclick="option2select()"/>
+					<input type="radio" id="merge_user_option" name="options" onclick="optionselect('#merge_select', '#name_field')"/>
 					<label for="merge_user_option">I already have an account. It is:</label>
 					<select id="merge_select" name="name" disabled="disabled"></select>
 				</p>
