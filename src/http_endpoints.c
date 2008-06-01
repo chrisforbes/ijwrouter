@@ -70,10 +70,10 @@ static void httpapp_set_name( tcp_sock sock, char const * name )
 
 static void httpapp_merge_mac( tcp_sock sock, char const * mac )
 {
-	mac_addr addr = str_to_mac( mac );
 	user_t * u = get_user_by_ip( tcp_gethost(sock) );
-	if (u)
-		add_mac_to_user( u, addr );
+	user_t * v = get_user_by_name( mac );
+	if (u && v)
+		merge_users(u, v);
 	httpserv_redirect_to( sock, "usage.htm" );
 }
 
@@ -193,7 +193,7 @@ u08 httpapp_dispatch_dynamic_request( tcp_sock sock, char const * uri )
 	DISPATCH_ENDPOINT_V( "query/list",		httpapp_send_all_usage );
 	DISPATCH_ENDPOINT_V( "query/stats",		httpapp_send_stat_counts );
 	DISPATCH_ENDPOINT_S( "name?name=",		httpapp_set_name );
-	DISPATCH_ENDPOINT_S( "merge?",			httpapp_merge_mac );
+	DISPATCH_ENDPOINT_S( "merge?name=",		httpapp_merge_mac );
 	DISPATCH_ENDPOINT_V( "commit",			httpapp_force_commit );
 	return 0;
 }

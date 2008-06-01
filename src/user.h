@@ -21,10 +21,11 @@ typedef struct mac_mapping_t
 
 user_t * get_user( mac_addr addr );
 user_t * get_user_by_ip( u32 addr );
+user_t * get_user_by_name( char const * name );
 
 user_t * get_next_user( user_t * );
 mac_mapping_t * get_next_mac ( mac_mapping_t * m );
-void add_mac_to_user( user_t *, mac_addr );
+void merge_users( user_t * from, user_t * to );
 
 void save_users( void );
 void restore_users( void );

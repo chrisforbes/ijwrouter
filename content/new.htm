@@ -1,0 +1,66 @@
+<html>
+	<head>
+		<title>New User</title>
+		<link rel="Stylesheet" type="text/css" href="main.css" />
+		<script type="text/javascript" src="jquery-1.2.3.min.js"></script>
+		<script type="text/javascript" src="common.js"></script>
+		<script type="text/javascript">
+		<!--
+			$(function()
+			{
+				dialogs = $("#foo");
+				
+				$.get("query/usage", function(data)
+				{
+					show_dialog( $("#foo") );
+					var d = eval( "(" + data + ")" );
+					$("#uname").html(d.uname);
+					if ((d.flags & 1) > 0)
+						$("#new_name").show();
+					else
+						$("#old_name").show();
+				});
+				
+				$.get("query/list", function(data)
+				{
+					var d = eval( "([" + data + "])" );
+					for (var i = 0; i < d.length; i++)
+						if ((d[i].flags & 2) > 0) 
+							$("#merge_select").append("<option>" + d[i].uname + "</option>");
+				});
+			});
+		//-->
+		</script>
+	</head>
+	<body>
+		<div id="foo" style="width: 600px; height: 500px; display: none">
+			<h1>Welcome to IJW Router</h1>
+			<p>
+				IJW Router is a system for monitoring internet usage by users on a small network.
+			</p>
+			
+			<h2>Your current username is <span id="uname">---</span>.</h2>
+			<p id="new_name" style="display: none">
+				Your current username is an ID that uniquely identifies your computer's network hardware.
+				If you would like to change your username to something more personally identifiable, you can
+				enter it below.
+			</p>
+			
+			<p id="old_name" style="display: none">
+				You can change your username below.
+			</p>
+			
+			<form action="name" method="get" style="text-align: center">
+					<p><input name="name"/><input type="submit" value="Submit" /></p>
+			</form>
+			
+			<p>
+				If you have another account on this network, you can select it below and merge it with this account.
+			</p>
+			
+			<form action="merge" method="get" style="text-align: center">
+				<p><select id="merge_select" name="name"></select><input type="submit" value="Submit" /></p>
+			</form>
+		</div>
+	</body>
+</html>

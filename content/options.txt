@@ -5,4 +5,5 @@ list.htm =		gzip
 usage.htm =		gzip
 bindings.htm =		gzip
 stats.htm =		gzip
+new.htm =		gzip
 ajax-loader.gif =	ignore

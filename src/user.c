@@ -63,6 +63,15 @@ user_t * get_user_by_ip( u32 addr )
 	return get_user( eth_addr );
 }
 
+user_t * get_user_by_name( char const * name )
+{
+	FOREACH( user_t, users, x )
+		if (strcmp(x->name, name) == 0)
+			return x;
+
+	return 0;
+}
+
 user_t * get_next_user( user_t * u )
 {
 	return FIND_TABLE_ENTRY_FROM( user_t, users, __always, 0, u );
@@ -80,26 +89,13 @@ void remap_user( user_t * from, user_t * to )
 			m->user = to;
 }
 
-void add_mac_to_user( user_t * u, mac_addr addr )
+void merge_users( user_t * from, user_t * to )
 {
-	user_t * other_user = get_user( addr );	// note: forces user creation if not mapped yet
-	mac_mapping_t * m = FIND_TABLE_ENTRY( mac_mapping_t, mappings, pred_is_mac_equal, &addr );
-	
-	if (other_user == u)
-	{
-		logf("tried to merge to same user\n");
-		return;
-	}
-
-	other_user->references--;
-	u->references++;
-	m->user = u;
-
-	if (!other_user->references)
-	{
-		u->credit += other_user->credit;
-		FREE_TABLE_ENTRY( user_t, users, other_user, remap_user );
-	}
+	logf("user: merged %s into %s\n", from->name, to->name);
+	to->credit += from->credit;
+	to->references += from->references;
+	remap_user(from, to);
+	FREE_TABLE_ENTRY( user_t, users, from, remap_user );
 }
 
 
