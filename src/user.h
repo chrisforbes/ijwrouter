@@ -10,6 +10,8 @@ typedef struct user_t
 	u08 flags;
 } user_t;
 
+#define USER_NEW	0x01
+
 typedef struct mac_mapping_t
 {
 	mac_addr eth_addr;

@@ -34,6 +34,7 @@ user_t * get_user( mac_addr eth_addr )
 		u->credit = 0;
 		u->quota = 0;
 		u->references = 1;
+		u->flags = USER_NEW;
 		
 		m = ALLOC_TABLE_ENTRY( mac_mapping_t, mappings ); 
 		m->eth_addr = eth_addr;

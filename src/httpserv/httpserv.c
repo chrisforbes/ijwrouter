@@ -135,11 +135,13 @@ static void httpserv_send_error_status( tcp_sock sock, u32 status, str_t error_m
 	tcp_send( sock, error_msg.str, error_msg.len, 0 );
 }
 
-void httpserv_redirect( tcp_sock sock )
+void httpserv_redirect_to( tcp_sock sock, char const * uri )
 {
-	str_t msg = MAKE_STRING("HTTP/1.1 302 Found\r\nLocation: /usage.htm\r\nContent-Length: 0\r\nConnection: close\r\n\r\n");
-	tcp_send( sock, msg.str, msg.len, 0 );
-	logf( "302 usage.htm\n" );
+	str_t msg = { malloc(512), 0 };
+	msg.len = sprintf(msg.str, "HTTP/1.1 302 Found\r\nLocation: /%s\r\n"
+		"Content-Length: 0\r\nConnection: close\r\n\r\n", uri);
+	tcp_send( sock, msg.str, msg.len, 1 );
+	logf( "302 %s\n", uri );
 }
 
 typedef struct http_request_t
@@ -170,8 +172,7 @@ static void httpserv_get_request( tcp_sock sock, str_t const _uri, http_request_
 		return;
 	}
 
-	entry = ( *uri ) ? 
-		fs_find_file( uri ) : fs_find_file( "index.htm" );
+	entry = fs_find_file( uri );
 	
 	if (!entry)
 	{
@@ -191,14 +192,12 @@ static void httpserv_get_request( tcp_sock sock, str_t const _uri, http_request_
 		return;
 	}
 
-	{
-		httpserv_send_static_content(sock, 
-			fs_get_str( &entry->content_type ), 
-			fs_get_str( &entry->content ), 
-			fs_get_str( &entry->digest ), 0, fs_is_gzipped( entry ));
+	httpserv_send_static_content(sock, 
+		fs_get_str( &entry->content_type ), 
+		fs_get_str( &entry->content ), 
+		fs_get_str( &entry->digest ), 0, fs_is_gzipped( entry ));
 
-		logf( "200 OK %d bytes\n", entry->content.length );
-	}
+	logf( "200 OK %d bytes\n", entry->content.length );
 }
 
 static void httpserv_header_handler( tcp_sock sock, char const * name, str_t const value )
