@@ -194,7 +194,7 @@ void do_periodic_save( void )
 			is_billing_inited = 1;
 		}
 
-		if (period_end != last_period_end)
+		if (get_time() > last_period_end)	// todo: fix corner cases
 		{
 			FOREACH( user_t, users, x )
 			{

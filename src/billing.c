@@ -56,3 +56,7 @@ u32 get_end_of_period(void)
 	t->tm_mday = rollover_day;
 	return (u32)mktime( t );
 }
+
+void set_rollover_day(u08 day) { rollover_day = day; }
+
+u08 get_rollover_day(void) { return rollover_day; }
