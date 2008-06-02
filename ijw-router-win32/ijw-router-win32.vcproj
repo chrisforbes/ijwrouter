@@ -172,6 +172,14 @@
 			Name="src"
 			>
 			<File
+				RelativePath="..\src\billing.c"
+				>
+			</File>
+			<File
+				RelativePath="..\src\billing.h"
+				>
+			</File>
+			<File
 				RelativePath="..\src\dhcp.c"
 				>
 			</File>

@@ -5,6 +5,7 @@ typedef struct user_t
 {
 	char name[32];
 	u64 credit;
+	u64 last_credit;
 	u64 quota;
 	u08 references;
 	u08 flags;

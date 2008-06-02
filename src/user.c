@@ -6,6 +6,7 @@
 #include "ip/arptab.h"
 #include <assert.h>
 #include "table.h"
+#include "billing.h"
 
 #include <stdio.h>
 #include <windows.h>
@@ -100,6 +101,7 @@ void merge_users( user_t * from, user_t * to )
 	logf("user: merged %s into %s\n", from->name, to->name);
 	to->credit += from->credit;
 	to->references += from->references;
+	to->last_credit += from->last_credit;
 	remap_user(from, to);
 	FREE_TABLE_ENTRY( user_t, users, from, remap_user );
 }
@@ -179,9 +181,31 @@ void restore_users( void )
 void do_periodic_save( void )
 {
 	static u32 last_save = 0;
+	static u08 is_billing_inited = 0;
+	static u32 last_period_end = 0;
 
 	if (ticks() - last_save >= SAVE_INTERVAL)
-	{
+	{		
+		u32 period_end = get_end_of_period();
+
+		if (!is_billing_inited)
+		{
+			last_period_end = period_end;
+			is_billing_inited = 1;
+		}
+
+		if (period_end != last_period_end)
+		{
+			FOREACH( user_t, users, x )
+			{
+				x->last_credit = x->credit;
+				x->credit = 0;
+			}
+
+			logf("user: --- started new billing period ---\n");
+			last_period_end = period_end;
+		}
+
 		save_users();
 		last_save = ticks();
 	}
