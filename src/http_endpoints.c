@@ -9,6 +9,7 @@
 #include "httpserv/httpcommon.h"
 #include "stats.h"
 #include "str.h"
+#include "billing.h"
 
 extern mac_addr str_to_mac( char const * buf );
 extern char * mac_to_str( char * buf, void * mac );
@@ -185,6 +186,13 @@ static void httpapp_handle_new_user( tcp_sock sock )
 		httpserv_redirect_to( sock, "usage.htm" );
 }
 
+static void httpapp_set_billing_period ( tcp_sock sock, char const * day )
+{
+	set_rollover_day( atoi(day) );
+	logf("Set billing period rollover day to %s", day);
+	httpserv_redirect_to( sock, "usage.htm" );
+}
+
 u08 httpapp_dispatch_dynamic_request( tcp_sock sock, char const * uri )
 {
 	DISPATCH_ENDPOINT_V( "",				httpapp_handle_new_user );
@@ -194,6 +202,7 @@ u08 httpapp_dispatch_dynamic_request( tcp_sock sock, char const * uri )
 	DISPATCH_ENDPOINT_V( "query/stats",		httpapp_send_stat_counts );
 	DISPATCH_ENDPOINT_S( "name?name=",		httpapp_set_name );
 	DISPATCH_ENDPOINT_S( "merge?name=",		httpapp_merge_mac );
+	DISPATCH_ENDPOINT_S( "period?day=",		httpapp_set_billing_period );
 	DISPATCH_ENDPOINT_V( "commit",			httpapp_force_commit );
 	return 0;
 }
