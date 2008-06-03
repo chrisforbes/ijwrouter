@@ -13,6 +13,11 @@
 #define TIMEOUT			3000				// 5 seconds
 #define RESYNC_INTERVAL	7200000			// once every two hours
 
+#define _USE_32BIT_TIME_T
+#pragma warning( disable: 4133 )
+#pragma warning( disable: 4244 )
+#include <time.h>
+
 static enum { SNTP_NOT_READY, SNTP_IDLE, SNTP_WAITING_FOR_RESPONSE } state;
 static u32 interval = MIN_INTERVAL;
 static u32 next_sync_time = 0;
@@ -60,7 +65,7 @@ void sntp_get_response( sntp_t const * resp )
 	state = SNTP_IDLE;
 
 	// todo: set time offset
-	set_time( resp->txtime.seconds );
+	set_time( __ntohl(resp->txtime.seconds) - 2208984820 - 3600 - 360 - 13 );
 
 	logf( "sntp: clock synchronized.\n" );
 }
