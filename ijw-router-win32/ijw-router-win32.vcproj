@@ -25,9 +25,12 @@
 			>
 			<Tool
 				Name="VCPreBuildEventTool"
+				Description="Rebuilding content blob..."
+				CommandLine="pushd $(ProjectDir)&#x0D;&#x0A;$(ProjectDir)build-content.cmd&#x0D;&#x0A;popd"
 			/>
 			<Tool
 				Name="VCCustomBuildTool"
+				Description=""
 			/>
 			<Tool
 				Name="VCXMLDataGeneratorTool"
@@ -87,6 +90,8 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
+				Description=""
+				CommandLine=""
 			/>
 		</Configuration>
 		<Configuration
