@@ -8,6 +8,9 @@
 			
 			.uname { width: 42%; }
 			.usage { border: 2px solid black; }
+			
+			#spin_button_top { width: 15px; height: 16px; background-image: url(spin.png); background-position: -17 0; background-repeat: no-repeat }
+			#spin_button_bottom { width: 15px; height: 16px; background-image: url(spin.png); background-position: -17 -16; background-repeat: no-repeat }
 		</style>
 		<script type="text/javascript" src="jquery-1.2.3.min.js"></script>
 		<script type="text/javascript" src="common.js"></script>
@@ -27,7 +30,7 @@
 				for( var i = 0; i < d.length; i++ )
 				  s += format_row( d[i] );
 				  
-				$("table").html(s);
+				$("#table").html(s);
 			}
 			
 			function change_day(x)
@@ -39,6 +42,28 @@
 				if (n > max) n = min;
 				if (n < min) n = max;
 				$("#day").html(n);
+			}
+			
+			function spin_button_down(b)
+			{
+				if (b)
+					$("#spin_button_top").css("background-position", "0 0");
+				else
+					$("#spin_button_bottom").css("background-position", "0 -16");
+			}
+			
+			function spin_button_up(b)
+			{
+				if (b)
+					$("#spin_button_top").css("background-position", "-17 0");
+				else
+					$("#spin_button_bottom").css("background-position", "-17 -16");
+			}
+			
+			function populate_day(data)
+			{
+				var d = eval("(" + data + ")");
+				$("#day").html(d.day);
 			}
 			
 			$(function()
@@ -56,6 +81,8 @@
 				
 				do_ajax("query/list", f);
 				
+				$.get("query/billing", populate_day);
+				
 				window.onresize = function() { show_dialog( current_dialog ); };
 			});
 		//-->
@@ -66,7 +93,15 @@
 		<h1>Usage Summary</h1>
 			<table width="100%" id="table">
 			</table>
-			<span style="width: 30px; border: solid 1px black" id="day" max="28" min="1">1</span><span onclick="change_day(1)">up</span><span onclick="change_day(-1)">down</span>
+			<table border="0">
+				<tr>
+					<td rowspan="2" style="width: 20px; border: solid 2px black; text-align: right; background-color: #ffffff" id="day" max="28" min="1"></td>
+					<td id="spin_button_top" onmousedown="spin_button_down(true)" onmouseup="spin_button_up(true)" onmouseout="spin_button_up(true)" onclick="change_day(1)"></td>
+				</tr>
+				<tr>
+					<td id="spin_button_bottom" onmousedown="spin_button_down(false)" onmouseup="spin_button_up(false)" onmouseout="spin_button_up(false)" onclick="change_day(-1)"></td>
+				</tr>
+			</table>
 			<input type="button" onclick="window.location.assign('period?day=' + $('#day').html())" value="Submit" />
 		</div>
 		<div id="error">
