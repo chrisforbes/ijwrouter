@@ -405,6 +405,63 @@
 				</File>
 			</Filter>
 		</Filter>
+		<Filter
+			Name="content"
+			>
+			<File
+				RelativePath="..\content\bindings.htm"
+				DeploymentContent="true"
+				>
+			</File>
+			<File
+				RelativePath="..\content\common.js"
+				>
+			</File>
+			<File
+				RelativePath="..\content\favicon.ico"
+				>
+			</File>
+			<File
+				RelativePath="..\content\jquery-1.2.3.js"
+				>
+			</File>
+			<File
+				RelativePath="..\content\jquery-1.2.3.min.js"
+				>
+			</File>
+			<File
+				RelativePath="..\content\list.htm"
+				DeploymentContent="true"
+				>
+			</File>
+			<File
+				RelativePath="..\content\main.css"
+				>
+			</File>
+			<File
+				RelativePath="..\content\new.htm"
+				DeploymentContent="true"
+				>
+			</File>
+			<File
+				RelativePath="..\content\options.txt"
+				>
+			</File>
+			<File
+				RelativePath="..\content\spin.png"
+				>
+			</File>
+			<File
+				RelativePath="..\content\stats.htm"
+				DeploymentContent="true"
+				>
+			</File>
+			<File
+				RelativePath="..\content\usage.htm"
+				DeploymentContent="true"
+				>
+			</File>
+		</Filter>
 	</Files>
 	<Globals>
 	</Globals>

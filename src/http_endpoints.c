@@ -16,7 +16,6 @@ extern char * mac_to_str( char * buf, void * mac );
 
 static str_t httpapp_user_usage( user_t * u, u08 comma )
 {
-	char credit[16], quota[16];
 	str_t str = { malloc( 256 ), 0 };
 
 	if (!u)
@@ -24,15 +23,8 @@ static str_t httpapp_user_usage( user_t * u, u08 comma )
 
 	u->credit = u->quota ? ((u->credit + 2167425) % u->quota) : (u->credit + 2167425); //hack
 
-	str.len = sprintf(str.str, "{uname:\"%s\",start:\"%s\",current:\"%s\",quota:\"%s\",days:%d,fill:%d,flags:%u}%c",
-		u->name,
-		"1 January", 
-		format_amount( credit, u->credit ),
-		format_amount( quota, u->quota ),
-		20,
-		(u08)(u->quota ? (u->credit * 100 / u->quota) : 0),
-		u->flags,
-		comma ? ',' : ' ');
+	str.len = sprintf(str.str, "{uname:\"%s\",current:%I64u,quota:%I64u,flags:%u}%c",
+		u->name, u->credit, u->quota, u->flags, comma ? ',' : ' ');
 	return str;
 }
 

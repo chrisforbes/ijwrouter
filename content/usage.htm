@@ -7,13 +7,16 @@
 			#barfill { background-color: #48b4eb; border: 0px; margin: 0px; height: 28px; width: 0% }
 		</style>
 		<script src="jquery-1.2.3.min.js"></script>
+		<script src="jquery.printf.js"></script>
 		<script src="common.js"></script>
 		<script>
 		<!--
 			function merge_data( d )
 			{
 				for( var k in d ) $( "#" + k ).html(d[k]);
-				$("#barfill").css("width", d.fill + "%");
+				$("#current").html( format_amount( d.current ) );
+				$("#quota").html( format_amount( d.quota ) );
+				//$("#barfill").css("width", d.fill + "%");
 			}
 			
 			$(function()
@@ -25,11 +28,29 @@
 				var f = function(data)
 				{
 					show_dialog( $("#foo") );
-					if (data != "{}")
-						merge_data( eval( "(" + data + ")" ) );
+					if (data == "{}") return;
+					merge_data( eval( "(" + data + ")" ) );
 				};
 				
+				var g = function(data)
+				{
+					// merge billing info
+					var q = eval( "(" + data + ")" );
+					
+					var d = new Date();
+					d.setTime( q.start * 1000 );
+					
+					var months = [ "January", "February", "March", "April",
+									"May", "June", "July", "August", "September",
+									"October", "November", "December" ];
+					
+					$("#start").html(d.getDay() + " " + months[d.getMonth()]);
+					$("#days").html($.sprintf( "%d", (q.end - q.now + 86399)/86400));	// time left
+				}
+				
 				do_ajax("query/usage", f); 
+				do_ajax2("query/billing", g, 4000, 100000);
+				
 				window.onresize = function() { show_dialog( current_dialog ); };
 			});
 		//-->

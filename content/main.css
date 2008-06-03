@@ -19,6 +19,8 @@ h1,h2
 
 .user { font-size: 18pt; font-weight: bold }
 
+.field { color: #004488; }
+
 #error, #wait
 {
 	border: 2px solid black;

@@ -16,6 +16,8 @@ u32 get_start_of_period(void)
 	u32 current = get_time();
 	struct tm * t = gmtime( (time_t const *)&current );
 
+	if (!t) return 0;
+
 	if (t->tm_mday <= rollover_day)
 	{
 		if (t->tm_mon)
@@ -38,6 +40,8 @@ u32 get_end_of_period(void)
 {
 	u32 current = get_time();
 	struct tm * t = gmtime( (time_t const *)&current );
+
+	if (!t) return 0;
 
 	if (t->tm_mday > rollover_day)
 	{
