@@ -189,7 +189,7 @@ static void httpapp_handle_new_user( tcp_sock sock )
 static void httpapp_set_billing_period( tcp_sock sock, char const * day )
 {
 	set_rollover_day( (u08)atoi(day) );
-	logf("Set billing period rollover day to %s", day);
+	logf("Set billing period rollover day to %s\n", day);
 	httpserv_redirect_to( sock, "usage.htm" );
 }
 

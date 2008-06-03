@@ -30,6 +30,17 @@
 				$("table").html(s);
 			}
 			
+			function change_day(x)
+			{
+				var n = parseInt( $("#day").html() );
+				n += x;
+				var max = parseInt( $("#day").attr("max") );
+				var min = parseInt( $("#day").attr("min") );
+				if (n > max) n = min;
+				if (n < min) n = max;
+				$("#day").html(n);
+			}
+			
 			$(function()
 			{
 				dialogs = $("#foo, #error, #wait");
@@ -55,6 +66,8 @@
 		<h1>Usage Summary</h1>
 			<table width="100%" id="table">
 			</table>
+			<span style="width: 30px; border: solid 1px black" id="day" max="28" min="1">1</span><span onclick="change_day(1)">up</span><span onclick="change_day(-1)">down</span>
+			<input type="button" onclick="window.location.assign('period?day=' + $('#day').html())" value="Submit" />
 		</div>
 		<div id="error">
 			<h2>We're having trouble retrieving data from the router.</h2>
