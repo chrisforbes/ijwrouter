@@ -186,11 +186,27 @@ static void httpapp_handle_new_user( tcp_sock sock )
 		httpserv_redirect_to( sock, "usage.htm" );
 }
 
-static void httpapp_set_billing_period ( tcp_sock sock, char const * day )
+static void httpapp_set_billing_period( tcp_sock sock, char const * day )
 {
-	set_rollover_day( atoi(day) );
+	set_rollover_day( (u08)atoi(day) );
 	logf("Set billing period rollover day to %s", day);
 	httpserv_redirect_to( sock, "usage.htm" );
+}
+
+static void httpapp_get_billing_info( tcp_sock sock )
+{
+	str_t content = { malloc(128), 0 };
+	str_t content_type = MAKE_STRING( "application/x-json" );
+
+	content.len = sprintf( content.str, 
+		"{start: %u, end: %u, now: %u, day: %d}", 
+		get_start_of_period(),
+		get_end_of_period(),
+		get_time(),
+		get_rollover_day() );
+
+	httpserv_send_content(sock, content_type, content, 1, 0);
+	logf( "200 OK %d bytes\n", content.len );
 }
 
 u08 httpapp_dispatch_dynamic_request( tcp_sock sock, char const * uri )
@@ -200,6 +216,7 @@ u08 httpapp_dispatch_dynamic_request( tcp_sock sock, char const * uri )
 	DISPATCH_ENDPOINT_V( "query/bindings",	httpapp_send_user_bindings );
 	DISPATCH_ENDPOINT_V( "query/list",		httpapp_send_all_usage );
 	DISPATCH_ENDPOINT_V( "query/stats",		httpapp_send_stat_counts );
+	DISPATCH_ENDPOINT_V( "query/billing",	httpapp_get_billing_info );
 	DISPATCH_ENDPOINT_S( "name?name=",		httpapp_set_name );
 	DISPATCH_ENDPOINT_S( "merge?name=",		httpapp_merge_mac );
 	DISPATCH_ENDPOINT_S( "period?day=",		httpapp_set_billing_period );
