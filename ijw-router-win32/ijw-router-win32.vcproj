@@ -26,7 +26,7 @@
 			<Tool
 				Name="VCPreBuildEventTool"
 				Description="Rebuilding content blob..."
-				CommandLine="pushd $(ProjectDir)&#x0D;&#x0A;$(ProjectDir)build-content.cmd&#x0D;&#x0A;popd"
+				CommandLine="pushd $(ProjectDir)&#x0D;&#x0A;$(ProjectDir)build-content.cmd&#x0D;&#x0A;popd&#x0D;&#x0A;"
 			/>
 			<Tool
 				Name="VCCustomBuildTool"
@@ -90,7 +90,6 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				Description=""
 				CommandLine=""
 			/>
 		</Configuration>
@@ -459,6 +458,14 @@
 			<File
 				RelativePath="..\content\usage.htm"
 				DeploymentContent="true"
+				>
+			</File>
+		</Filter>
+		<Filter
+			Name="include"
+			>
+			<File
+				RelativePath="..\include\marvell-hw.h"
 				>
 			</File>
 		</Filter>
