@@ -100,11 +100,10 @@ void sntp_init( void )
 
 void sntp_process( void )
 {
-	//logf( "sntp: state=%d dt=%d\n", state, ticks() - next_sync_time );
 	switch( state )
 	{
 	case SNTP_NOT_READY: 
-		return;	// we fail at being ready - probably host configuration isnt finished yet
+		return;	// host configuration not finished.
 
 	case SNTP_IDLE:
 		if (ticks() > next_sync_time)

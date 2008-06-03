@@ -41,8 +41,11 @@ function do_ajax(url, f)
 
 function format_amount(x)
 {
-	var units = [ "KB", "MB", "GB", "TB" ];
+	if (x == 0) return "0 MB";
+		
+	var units = [ "MB", "GB", "TB" ];
 	var n = 0;
+	x >>= 10;	// dont care about KB
 	
 	while( x > (1 << 20) * 9 / 10 )
 	{
@@ -50,5 +53,5 @@ function format_amount(x)
 		n++;
 	}
 	
-	return $.sprintf( "%1.2f %s", (x / 1024.0), units[n] );
+	return $.sprintf( "%-7.2f %s", (x / 1024.0), units[n] );
 }
