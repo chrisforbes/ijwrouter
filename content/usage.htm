@@ -44,7 +44,7 @@
 									"May", "June", "July", "August", "September",
 									"October", "November", "December" ];
 					
-					$("#start").html(d.getDay() + " " + months[d.getMonth()]);
+					$("#start").html(d.getDate() + " " + months[d.getMonth()]);
 					$("#days").html($.sprintf( "%d", (q.end - q.now + 86399)/86400));	// time left
 				}
 				
