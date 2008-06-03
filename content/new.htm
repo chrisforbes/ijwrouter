@@ -43,23 +43,42 @@
 		</script>
 	</head>
 	<body>
-		<div id="foo" style="width: 600px; height: 320px;">
+		<div id="foo" style="width: 500px; height: 320px;">
 			<h1>Welcome to IJW Router</h1>
-			<p>Boilerplate goes here.</p>
+			<p>IJW Router allows you to easily share an internet connection. 
+			It tracks how much data each person has downloaded, so when you get the bill,
+			it's easy to split fairly.</p>
+			<p>Let's take a moment to set up your account.</p>
 			<form>
-				<p>
-					<input type="radio" id="change_name_option" name="options" onclick="optionselect('#name_field', '#merge_select')" checked="checked"/>
-					<label for="change_name_option">Yes, I am a new user. My name is:</label>
-					<input type="text" id="name_field" name="name" />
-				</p>
-				<p>
-					<input type="radio" id="merge_user_option" name="options" onclick="optionselect('#merge_select', '#name_field')"/>
-					<label for="merge_user_option">I already have an account. It is:</label>
-					<select id="merge_select" name="name" disabled="disabled"></select>
-				</p>
-				<p style="text-align: center">
-					<input type="button" value="Submit" onclick="submit_form(); return false" />
-				</p>
+			<p align="center">
+			<table>
+				<tr>
+					<td style="width:50%">
+						<input type="radio" id="change_name_option" name="options" onclick="optionselect('#name_field', '#merge_select')"
+							checked="checked" />
+						<label for="change_name_option">
+							I'm new. My name is:</label>
+					</td>
+					<td style="width:50%">
+						<input type="text" id="name_field" name="name" style="width: 100%" />
+					</td>
+				</tr>
+				<tr>
+					<td>
+						<input type="radio" id="merge_user_option" name="options" onclick="optionselect('#merge_select', '#name_field')" />
+						<label for="merge_user_option">
+							I already have an account:</label>
+					</td>
+					<td>
+						<select id="merge_select" name="name" disabled="disabled" style="width: 100%">
+						</select>
+					</td>
+				</tr>
+			</table>
+			</p>
+			<p style="text-align: center">
+				<input type="button" value="Set up my account" onclick="submit_form(); return false" />
+			</p>
 			</form>
 			<form id="name_form" action="name" method="get" style="display: none">
 				<p><input id="hidden_name" name="name" type="hidden" /></p>
