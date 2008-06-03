@@ -209,6 +209,30 @@ static void httpapp_get_billing_info( tcp_sock sock )
 	logf( "200 OK %d bytes\n", content.len );
 }
 
+static void httpapp_get_csv( tcp_sock sock )
+{
+	str_t content = { 0, 0 };
+	str_t content_type = MAKE_STRING( "text/csv" );
+
+	user_t * u = 0;
+
+	str_t a = MAKE_STRING( "name,current_usage,last_usage,quota\n" );
+	append_string( &content, &a );
+	
+	while( 0 != ( u = get_next_user(u) ) )
+	{
+		char sz[128];
+		str_t temp = { 0, 0 };
+		temp.str = sz;
+		temp.len = sprintf( sz, "%s,%I64u,%I64u,%I64u\n",
+			u->name, u->credit, u->last_credit, u->quota );
+		append_string( &content, &temp );
+	}
+
+	httpserv_send_content( sock, content_type, content, 1, 0 );
+	logf( "200 OK %d bytes" );
+}
+
 u08 httpapp_dispatch_dynamic_request( tcp_sock sock, char const * uri )
 {
 	DISPATCH_ENDPOINT_V( "",				httpapp_handle_new_user );
@@ -221,5 +245,6 @@ u08 httpapp_dispatch_dynamic_request( tcp_sock sock, char const * uri )
 	DISPATCH_ENDPOINT_S( "merge?name=",		httpapp_merge_mac );
 	DISPATCH_ENDPOINT_S( "period?day=",		httpapp_set_billing_period );
 	DISPATCH_ENDPOINT_V( "commit",			httpapp_force_commit );
+	DISPATCH_ENDPOINT_V( "usage.csv",	httpapp_get_csv );
 	return 0;
 }

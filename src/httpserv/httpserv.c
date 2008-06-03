@@ -159,8 +159,6 @@ static void httpserv_get_request( tcp_sock sock, str_t const _uri, http_request_
 	struct file_entry const * entry;
 	char const * uri = _uri.str;
 
-	req;
-
 	uri_decode((char *)uri, _uri.len, uri);		// dirty but actually safe (decoded uri is never longer, and
 												// this buffer is always going to be in writable memory)
 	logf( "GET %s : ", uri );
