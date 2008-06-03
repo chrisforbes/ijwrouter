@@ -115,6 +115,7 @@ typedef struct persist_header_t
 	u32 num_mappings;
 	void * user_base;
 	void * mapping_base;
+	u08 rollover_day;	// for billing period
 } persist_header_t;
 
 void save_users( void )
@@ -125,7 +126,8 @@ void save_users( void )
 		NUM_ROWS( user_t, users ), 
 		NUM_ROWS( mac_mapping_t, mappings ),
 		users,
-		mappings
+		mappings,
+		get_rollover_day()
 	};
 #pragma warning( default: 4204 )
 
@@ -158,6 +160,9 @@ void restore_users( void )
 	}
 
 	fread( &h, sizeof( persist_header_t ), 1, f );
+
+	set_rollover_day( h.rollover_day );
+
 	fread( users, sizeof( user_t ), h.num_users, f );
 	fread( mappings, sizeof( mac_mapping_t ), h.num_mappings, f );
 
