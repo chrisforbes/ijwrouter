@@ -123,4 +123,65 @@ typedef struct hw_dma_t
 
 #define HW_DMA_BASE	((hw_dma_t volatile *) 0x8000e800 )
 
+typedef struct hw_uart_t
+{
+	u32 clock;
+	u32 reserved0[3];
+	u32 reserved1[0x210 - 4];
+	union 
+	{
+		u32 rbr;		// rx buffer
+		u32 thr;		// transmit holding register
+		u32 dll;
+	}
+
+	union
+	{
+		u32 ier;		// interrupt enable
+		u32 dlh;
+	}
+
+	union
+	{
+		u32 iir;
+		u32 fcr;
+	}
+
+	u32 lcr;
+	u32 mcr;
+	u32 lsr;
+	u32 scr;			// scratch
+} hw_uart_t;
+
+#define HW_UART_BASE ((hw_uart_t volatile *)0x8000c000 )
+
+typedef struct hw_gpio_t
+{
+	u32 select[2];
+	u32 bidi;
+	u32 out;
+	u32 in;
+	u32 edge_trigger;
+	u32 mask;
+	u32 reset_select;
+	u32 status;
+	u32 led_output_enable;
+	u32 cycle[4];
+	u32 duty_cycle[4];
+	u32 status_signal_enable;
+	u32 stretch_duration;
+	u32 link_active_cycle;
+} hw_gpio_t;
+
+#define HW_GPIO_BASE ((hw_gpio_t volatile *)0x8000d000 )
+
+typedef struct hw_watchdog_t
+{	// silicon rev b0+
+	u16 enable;
+	u16 interval;
+	u16 clear;
+} hw_watchdog_t;
+
+#define HW_WATCHDOG_BASE ((hw_watchdog_t volatile *)0x8000d800 )
+
 #endif
