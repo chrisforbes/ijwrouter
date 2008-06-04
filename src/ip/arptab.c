@@ -89,6 +89,24 @@ u08 arptab_query( u08 * iface, u32 net_addr, mac_addr * phys_addr )
 	}
 }
 
+// get interface from mac address
+u08 arptab_queryif( u08 * iface, mac_addr * phys_addr )
+{
+	u08 i;
+	for( i = 0; i < ARPTAB_SIZE; i++ )
+	{
+		arptab_entry const * e = &arptab[i];
+		if (!e->ttl) continue;
+		if (mac_equal( *phys_addr, e->phys_addr ))
+		{
+			*iface = e->iface;
+			return 1;
+		}
+	}
+
+	return 0;
+}
+
 void arptab_tick( void )
 {
 	u08 i;

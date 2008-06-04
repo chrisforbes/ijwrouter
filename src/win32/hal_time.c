@@ -1,5 +1,6 @@
 #include "../common.h"
 #include "../hal_time.h"
+#include "../hal_debug.h"
 
 #define _USE_32BIT_TIME_T
 
