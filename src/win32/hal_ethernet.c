@@ -17,10 +17,48 @@
 #pragma comment( lib, "packet.lib" )
 #pragma comment( lib, "wpcap.lib" )
 
+// recently-sent buffer, per interface. so we dont see our own transmissions..
+typedef struct buf_t
+{
+	u08 buf[2048];
+	u32 len;
+} buf_t;
+
+#define RSB_SIZE	8
+
+typedef struct rsb_t
+{
+	buf_t packets[RSB_SIZE];
+	u08 head, tail;
+} rsb_t;
+
+void rsb_insert( rsb_t * rsb, eth_packet * p )
+{
+	if (++rsb->head >= RSB_SIZE) rsb->head = 0;
+	if (rsb->tail == rsb->head)
+		if (++rsb->tail >= RSB_SIZE) rsb->tail = 0;
+
+	memcpy( rsb->packets[ rsb->head ].buf, p->packet, p->len );
+	rsb->packets[ rsb->head ].len = p->len;
+}
+
+u08 rsb_check( rsb_t * rsb, eth_packet * p )
+{
+	u08 x = rsb->tail;
+	while( x != rsb->head )
+	{
+		if (0 == memcmp( rsb->packets[x].buf, p->packet, __min( p->len, rsb->packets[x].len ) ) )
+			return 1;
+		if (++x >= RSB_SIZE) x = 0;
+	}
+
+	return 0;
+}
 
 #define MAXINTERFACES	5
 static pcap_t * interfaces[MAXINTERFACES];
 HANDLE interface_handles[MAXINTERFACES];
+static rsb_t sendbuf[MAXINTERFACES];
 int num_interfaces;
 u08 buf[2048];
 
@@ -168,6 +206,9 @@ u08 eth_getpacket( eth_packet * p )
 	p->dest_iface = eth_find_interface( p->packet->dest );
 	p->len = (u16)h.len;
 
+	if (rsb_check( &sendbuf[iface], p ))
+		return 0;	// our own transmission!
+
 	return 1;
 }
 
@@ -179,8 +220,8 @@ u08 eth_discard( eth_packet * p )
 
 u08 eth_forward( eth_packet * p )
 {
-	p;
-	return 0;	// didnt work
+	
+	return eth_inject(p);
 }
 
 u08 eth_inject( eth_packet * p )
@@ -205,6 +246,7 @@ u08 eth_inject( eth_packet * p )
 	if (-1 == pcap_sendpacket( interfaces[ p->dest_iface ], p->packet, p->len ))
 		return 0;
 
+	rsb_insert( &sendbuf[p->dest_iface], p );
 	stats_inc_counter(out_packet_counter, 1);
 
 	return 1;
@@ -220,5 +262,5 @@ u08 eth_find_interface( mac_addr dest )
 	if (mac_equal( dest, broadcast_mac ))
 		return IFACE_BROADCAST;
 
-	return IFACE_WAN;	// hack hack hack
+	return IFACE_WAN;
 }

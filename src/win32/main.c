@@ -4,6 +4,7 @@
 #include "../common.h"
 #include "../ip/rfc.h"
 #include "../ip/conf.h"
+#include "../ip/arptab.h"
 #include "../hal_ethernet.h"
 #include "../hal_debug.h"
 #include "../user.h"
@@ -20,25 +21,18 @@
 u08 charge_for_packet( eth_packet * p )
 {
 	mac_addr lanside = (p->dest_iface == IFACE_WAN) 
-		? p->packet->dest : p->packet->src;
+		? p->packet->src : p->packet->dest;
 
 	user_t * u = get_user( lanside );
 
 	if (!u)
 	{
-		logf("- (dropped, no user)\n");
+		logf("!!! user creation failed !!!\n");
 		return eth_discard( p );
 	}
 
-	if (u->credit >= p->len)
-	{
-		u->credit -= p->len;
-		logf("+ (ok)\n");
-		return eth_forward( p );
-	}
-	
-	logf("- (dropped, insufficient funds)\n");
-	return eth_discard( p );	// do not want
+	u->credit += p->len;
+	return eth_forward(p);
 }
 
 void eth_inject_packet( u08 iface, u08 const * data, u16 len )
@@ -54,35 +48,32 @@ void eth_inject_packet( u08 iface, u08 const * data, u16 len )
 
 u08 handle_packet( eth_packet * p )
 {
-	u16 ethertype = __ntohs(p->packet->ethertype);
-
-	// throw away packets from us (yes, we see them with winpcap!)
-	if (mac_equal( p->packet->src, get_macaddr()))
-		return eth_discard( p );
-
-//	dump_packet( p );
-
-	if (p->dest_iface == IFACE_INTERNAL || p->dest_iface == IFACE_BROADCAST)
+	if (p->dest_iface == IFACE_INTERNAL)
 	{
-	//	logf( "packet: internal or bcast\n" );
-		return ipstack_receive_packet( p->src_iface, (u08 const *)p->packet, p->len ) 
-			? eth_discard( p ) : eth_forward( p );
-	}
-
-	if (ethertype != ethertype_ipv4 )
-	{
-	//	logf( "- non-ip (ethertype=%x)\n", ethertype );
+		ipstack_receive_packet( p->src_iface, (u08 const *)p->packet, p->len );
 		return eth_discard( p );
 	}
 
-	if (p->src_iface == p->dest_iface)
+	if (p->dest_iface == IFACE_BROADCAST)
 	{
-	//	logf( "- self-route\n" );
-		return eth_discard( p );
+		ipstack_receive_packet( p->src_iface, (u08 const *)p->packet, p->len );
+		return eth_forward( p );
 	}
 
-	//logf( "+ pure lan\n" );
-	return eth_forward( p );	// not crossing from lan <-> wan	*/
+	if (!arptab_queryif( &p->dest_iface, &p->packet->dest ))
+		p->dest_iface = IFACE_BROADCAST;
+
+	//return eth_forward( p );
+
+	//p->dest_iface = IFACE_BROADCAST;
+
+/*	if (p->dest_iface != IFACE_WAN && p->src_iface != IFACE_WAN)
+	{
+		logf( "-- pure local --\n" );
+		return eth_forward( p );
+	}	*/
+
+	return charge_for_packet( p );
 }
 
 extern void dhcp_init( void );

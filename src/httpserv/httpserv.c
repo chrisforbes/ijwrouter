@@ -245,8 +245,12 @@ static void httpserv_handler( tcp_sock sock, tcp_event_e ev, void * data, u32 le
 		}
 		break;
 	case ev_closed:
-		free( tcp_get_user_data( sock ) );
-		break;
+		{
+			void * x = tcp_get_user_data( sock );
+			if (x) free(x);
+			tcp_set_user_data( sock, 0 );
+			break;
+		}
 	case ev_data:
 		{
 			http_request_t * req = tcp_get_user_data( sock );

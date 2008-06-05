@@ -21,8 +21,6 @@ static str_t httpapp_user_usage( user_t * u, u08 comma )
 	if (!u)
 		return MAKE_STRING("{}");
 
-	u->credit = u->quota ? ((u->credit + 2167425) % u->quota) : (u->credit + 2167425); //hack
-
 	str.len = sprintf(str.str, "{uname:\"%s\",current:%I64u,quota:%I64u,flags:%u}%c",
 		u->name, u->credit, u->quota, u->flags, comma ? ',' : ' ');
 	return str;
