@@ -21,8 +21,8 @@ static str_t httpapp_user_usage( user_t * u, u08 comma )
 	if (!u)
 		return MAKE_STRING("{}");
 
-	str.len = sprintf(str.str, "{uname:\"%s\",current:%I64u,quota:%I64u,flags:%u}%c",
-		u->name, u->credit, u->quota, u->flags, comma ? ',' : ' ');
+	str.len = sprintf(str.str, "{uname:\"%s\",current:%I64u,flags:%u}%c",
+		u->name, u->credit, u->flags, comma ? ',' : ' ');
 	return str;
 }
 
@@ -206,7 +206,7 @@ static void httpapp_get_csv( tcp_sock sock )
 
 	user_t * u = 0;
 
-	str_t a = MAKE_STRING( "name,current_usage,last_usage,quota\n" );
+	str_t a = MAKE_STRING( "name,current_usage,last_usage\n" );
 	append_string( &content, &a );
 	
 	while( 0 != ( u = get_next_user(u) ) )
@@ -214,8 +214,8 @@ static void httpapp_get_csv( tcp_sock sock )
 		char sz[128];
 		str_t temp = { 0, 0 };
 		temp.str = sz;
-		temp.len = sprintf( sz, "%s,%I64u,%I64u,%I64u\n",
-			u->name, u->credit, u->last_credit, u->quota );
+		temp.len = sprintf( sz, "%s,%I64u,%I64u\n",
+			u->name, u->credit, u->last_credit );
 		append_string( &content, &temp );
 	}
 

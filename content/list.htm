@@ -3,12 +3,6 @@
 		<title>Your Internet Usage</title>
 		<link type="text/css" rel="Stylesheet" href="main.css" />
 		<style type="text/css">
-			.barfill { background-color: #48b4eb; border: 0px; margin: 0px; height: 28px; width: 0% }
-			.bartext { position: absolute; color: black; margin-top: -3px; margin-left: 0.3em }
-			
-			.uname { width: 42%; }
-			.usage { border: 2px solid black; }
-			
 			#spin_button_top { width: 15px; height: 16px; background-image: url(spin.png); background-position: -17 0; background-repeat: no-repeat }
 			#spin_button_bottom { width: 15px; height: 16px; background-image: url(spin.png); background-position: -17 -16; background-repeat: no-repeat }
 		</style>
@@ -19,9 +13,7 @@
 			function format_row( d )
 			{
 				return "<tr class=\"user\"><td class=\"uname\">" + d.uname + "</td>"
-					+ "<td class=\"usage\" width=\"100%\">"
-					+ "<div class=\"bartext\" style=\"width:200px\">" + format_amount(d.current) + "</div>"
-					+ "<div class=\"barfill\" style=\"width:" + d.fill + "%\"></div></td></tr>"
+					+ "<td>" + format_amount(d.current) + "</td></tr>"
 			}
 			
 			function merge_data( d )

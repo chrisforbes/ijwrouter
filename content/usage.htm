@@ -2,10 +2,6 @@
 	<head>
 		<title>Your Internet Usage</title>
 		<link type="text/css" rel="Stylesheet" href="main.css" />
-		<style>
-			#bar { border: 2px solid black; margin: 1em; margin-top: 0; height: 28px }
-			#barfill { background-color: #48b4eb; border: 0px; margin: 0px; height: 28px; width: 0% }
-		</style>
 		<script src="jquery-1.2.3.min.js"></script>
 		<script src="common.js"></script>
 		<script>
@@ -14,8 +10,6 @@
 			{
 				for( var k in d ) $( "#" + k ).html(d[k]);
 				$("#current").html( format_amount( d.current ) );
-				$("#quota").html( format_amount( d.quota ) );
-				//$("#barfill").css("width", d.fill + "%");
 			}
 			
 			$(function()
@@ -56,15 +50,11 @@
 		</script>
 	</head>
 	<body>
-		<div id="foo" style="width: 600px; height: 320px; display: none">
+		<div id="foo" style="width: 600px; height: 300px; display: none">
 		<h1>Welcome, <span id="uname" class="field">---</span>!</h1>
 				<h2> Since <span id="start" class="field">---</span>, you've used<br/>
-				<span id="current" class="field">---</span> 
-					of your <span id="quota" class="field">---</span> quota.
+				<span id="current" class="field">---</span>.
 				<br/>(<span id="days" class="field">---</span> days remaining)</h2>
-			<table width="100%"><tr><td id="bar">
-				<div id="barfill"></div>
-			</td></tr></table>
 		<p><a href="new.htm">Click here</a>, if you are a new user, wish to rename your account or merge your account with another.</p>
 		</div>
 		<div id="error">

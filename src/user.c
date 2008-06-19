@@ -33,7 +33,6 @@ user_t * get_user( mac_addr eth_addr )
 
 		mac_to_str( u->name, &eth_addr );
 		u->credit = 0;
-		u->quota = 0;
 		u->references = 1;
 		u->flags = USER_NEW;
 		
