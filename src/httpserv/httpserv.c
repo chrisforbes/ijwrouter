@@ -132,7 +132,8 @@ static void httpserv_send_error_status( tcp_sock sock, u32 status, str_t error_m
 	msg.len = sprintf(msg.str, "HTTP/1.1 %d %s\r\nConnection: close\r\nContent-Length: %d\r\nContent-Type: text/html; charset=UTF-8\r\n\r\n", 
 		status, http_get_status_message(status), error_msg.len);
 	tcp_send(sock, msg.str, msg.len, 1);
-	tcp_send( sock, error_msg.str, error_msg.len, 0 );
+	if (error_msg.len)
+		tcp_send( sock, error_msg.str, error_msg.len, 0 );
 }
 
 void httpserv_redirect_to( tcp_sock sock, char const * uri )
@@ -185,7 +186,7 @@ static void httpserv_get_request( tcp_sock sock, str_t const _uri, http_request_
 	if ( req->has_digest && 0 == memcmp( fs_get_str( &entry->digest ).str, req->digest, 32 ) )
 	{
 		// the client already has this resource
-		httpserv_send_error_status( sock, HTTP_STATUS_NOT_MODIFIED, MAKE_STRING( "Not Modified" ) );
+		httpserv_send_error_status( sock, HTTP_STATUS_NOT_MODIFIED, MAKE_STRING("") );
 		logf( "304 Not Modified\n" );
 		return;
 	}

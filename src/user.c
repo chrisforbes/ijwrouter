@@ -146,6 +146,7 @@ void save_users( void )
 
 	// finally, atomic overwrite
 	CopyFileA( "../accounts.temp.dat", "../accounts.dat", 0 );
+	DeleteFileA( "../accounts.temp.dat" );
 }
 
 void restore_users( void )

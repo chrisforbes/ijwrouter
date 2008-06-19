@@ -14,8 +14,8 @@ void httpserv_init( void );
 	if (strncmp( uri, endpoint_uri, sizeof(endpoint_uri) - 1 ) == 0)\
 		{ endpoint_f( sock, uri + sizeof(endpoint_uri) - 1 ); return 1; }
 
-void httpserv_send_content( tcp_sock sock, str_t mime_type, str_t content, u32 flags, u08 is_gzipped );
-void httpserv_send_static_content( tcp_sock sock, str_t mime_type, str_t content, str_t _digest, u32 flags, u08 is_gzipped );
+void httpserv_send_content( tcp_sock sock, str_t mime_type, 
+						   str_t content, u32 flags, u08 is_gzipped );
 void httpserv_redirect_to( tcp_sock sock, char const * uri );
 
 // implemented by app:
