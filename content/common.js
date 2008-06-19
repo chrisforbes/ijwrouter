@@ -48,10 +48,13 @@ function format_amount(x)
 	x >>= 10;	// dont care about KB
 	
 	while( x > (1 << 20) * 9 / 10 )
-	{
-		x >>= 10;
-		n++;
-	}
+		{ x >>= 10; n++; }
 	
-	return $.sprintf( "%-7.2f %s", (x / 1024.0), units[n] );
+	var asString = "" + (x / 1024.0);
+	if (asString.indexOf(".") == 0)
+		asString = "0" + asString;
+		
+	var k = asString.indexOf(".");
+	if (k >= 0 && k <= asString.length - 2)
+		return asString.slice(0, k + 2) + " " + units[n];
 }
