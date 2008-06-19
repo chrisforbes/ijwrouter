@@ -38,7 +38,7 @@
 									"October", "November", "December" ];
 					
 					$("#start").html(d.getDate() + " " + months[d.getMonth()]);
-					$("#days").html($.sprintf( "%d", (q.end - q.now + 86399)/86400));	// time left
+					$("#days").html(Math.ceil((q.end - q.now)/86400));	// time left
 				}
 				
 				do_ajax("query/usage", f); 
@@ -52,8 +52,8 @@
 	<body>
 		<div id="foo" style="width: 600px; height: 300px; display: none">
 		<h1>Welcome, <span id="uname" class="field">---</span>!</h1>
-				<h2> Since <span id="start" class="field">---</span>, you've used<br/>
-				<span id="current" class="field">---</span>.
+				<h2> Since <span id="start" class="field">---</span>, you've used
+				 <span id="current" class="field">---</span>.
 				<br/>(<span id="days" class="field">---</span> days remaining)</h2>
 		<p><a href="new.htm">Click here</a>, if you are a new user, wish to rename your account or merge your account with another.</p>
 		</div>
