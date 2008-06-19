@@ -27,9 +27,9 @@
 				
 				var f = function(data)
 				{
-					show_dialog( $("#foo") );
 					if (data == "{}") return;
 					merge_data( eval( "(" + data + ")" ) );
+					show_dialog( $("#foo") );
 				};
 				
 				var g = function(data)

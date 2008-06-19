@@ -75,9 +75,9 @@
 				
 				var f = function(data)
 				{
-					show_dialog( $("#foo") );
 					if (data != "{}")
 						merge_data( eval("([" + data + "])") );
+					show_dialog( $("#foo") );
 				};
 				
 				do_ajax("query/list", f);
