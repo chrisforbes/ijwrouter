@@ -11,19 +11,28 @@
 #include "str.h"
 #include "billing.h"
 
+#include <stdarg.h>
+
 extern mac_addr str_to_mac( char const * buf );
 extern char * mac_to_str( char * buf, void * mac );
 
+static str_t fmt( int size, char const * format, ... )
+{
+	str_t str = { malloc( size ), 0 };
+	va_list vl;
+	va_start( vl, format );
+	str.len = vsprintf(str.str, format, vl );
+	va_end( vl );
+	return str;
+}
+
 static str_t httpapp_user_usage( user_t * u, u08 comma )
 {
-	str_t str = { malloc( 256 ), 0 };
-
 	if (!u)
 		return MAKE_STRING("{}");
 
-	str.len = sprintf(str.str, "{uname:\"%s\",current:%I64u,flags:%u}%c",
-		u->name, u->credit, u->flags, comma ? ',' : ' ');
-	return str;
+	return fmt( 256, "{uname:\"%s\",current:%I64u,flags:%u}%c",
+		u->name, u->credit, u->flags, comma ? ',' : ' ' );
 }
 
 static str_t httpapp_get_usage_from_sock( tcp_sock sock )
@@ -78,7 +87,6 @@ static void httpapp_get_usage( tcp_sock sock )
 
 static str_t httpapp_user_binding( user_t * u, u08 comma )
 {
-	str_t str = { malloc(256), 0 };
 	str_t macs = { 0, 0 };
 	mac_mapping_t * m = 0;
 
@@ -98,12 +106,8 @@ static str_t httpapp_user_binding( user_t * u, u08 comma )
 
 	macs.str[macs.len - 1] = 0;
 
-	str.len = sprintf(str.str, "{uname: \"%s\",macs: \"%s\"}%c",
-		u->name,
-		macs.str,
-		comma ? ',' : ' ');
-
-	return str;
+	return fmt( 256, "{uname: \"%s\",macs: \"%s\"}%c",
+		u->name, macs.str, comma ? ',' : ' ');
 }
 
 static void httpapp_send_user_bindings( tcp_sock sock )
@@ -126,16 +130,10 @@ static void httpapp_send_user_bindings( tcp_sock sock )
 
 static str_t httpapp_make_counter_json(void * counter, u08 comma)
 {
-	str_t str = { malloc(128), 0 };
-
-	if (!counter) return MAKE_STRING("{}");
-
-	str.len = sprintf(str.str, "{counter_name: \"%s\",count: %I64u}%c",
+	return fmt( 128, "{counter_name: \"%s\",count: %I64u}%c",
 		stats_get_counter_name(counter),
 		stats_get_counter_count(counter),
 		comma ? ',' : ' ');
-
-	return str;
 }
 
 static void httpapp_send_stat_counts( tcp_sock sock )
@@ -177,11 +175,9 @@ static void httpapp_set_billing_period( tcp_sock sock, char const * day )
 
 static void httpapp_get_billing_info( tcp_sock sock )
 {
-	str_t content = { malloc(128), 0 };
 	str_t content_type = MAKE_STRING( "application/x-json" );
 
-	content.len = sprintf( content.str, 
-		"{start: %u, end: %u, now: %u, day: %d}", 
+	str_t content = fmt( 128, "{start: %u, end: %u, now: %u, day: %d}", 
 		get_start_of_period(),
 		get_end_of_period(),
 		get_time(),
