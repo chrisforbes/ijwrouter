@@ -10,8 +10,8 @@ typedef struct user_t
 	u08 flags;
 } user_t;
 
-#define USER_NEW	0x01
 #define USER_CUSTOM_NAME	0x02
+#define USER_GUEST			0x01
 
 typedef struct mac_mapping_t
 {

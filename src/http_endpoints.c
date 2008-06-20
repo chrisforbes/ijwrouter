@@ -72,11 +72,6 @@ static void httpapp_get_usage( tcp_sock sock )
 {
 	str_t content_type = MAKE_STRING( "application/x-json" );
 	str_t content = httpapp_get_usage_from_sock(sock);
-
-	// this user is no longer "new"
-	user_t * u = get_user_by_ip( tcp_gethost( sock ) );
-	u->flags &= ~USER_NEW;
-
 	httpserv_send_content(sock, content_type, content, 1, 0);
 	logf( "200 OK %d bytes\n", content.len );
 }
@@ -169,11 +164,8 @@ static void httpapp_force_commit( tcp_sock sock )
 static void httpapp_handle_new_user( tcp_sock sock )
 {
 	user_t * u = get_user_by_ip( tcp_gethost( sock ) );
-
-	if (u->flags & USER_NEW)
-		httpserv_redirect_to( sock, "new.htm" );
-	else
-		httpserv_redirect_to( sock, "usage.htm" );
+	httpserv_redirect_to( sock, 
+		(u->flags & USER_CUSTOM_NAME) ? "usage.htm" : "new.htm");
 }
 
 static void httpapp_set_billing_period( tcp_sock sock, char const * day )
@@ -235,6 +227,6 @@ u08 httpapp_dispatch_dynamic_request( tcp_sock sock, char const * uri )
 	DISPATCH_ENDPOINT_S( "merge?name=",		httpapp_merge_mac );
 	DISPATCH_ENDPOINT_S( "period?day=",		httpapp_set_billing_period );
 	DISPATCH_ENDPOINT_V( "commit",			httpapp_force_commit );
-	DISPATCH_ENDPOINT_V( "usage.csv",	httpapp_get_csv );
+	DISPATCH_ENDPOINT_V( "usage.csv",		httpapp_get_csv );
 	return 0;
 }

@@ -26,10 +26,7 @@ function do_ajax2(url, f, t0, t1)
 		url: url,
 		timeout: t0,
 		success: f,
-		error: function(xhr, status, e)
-		{
-			show_dialog( $("#error") );
-		},
+		error: function() { show_dialog( $("#error") ); },
 		complete: function() { setTimeout( g, t1 ); }
 	});
 }
@@ -40,7 +37,9 @@ function do_ajax(url, f)
 }
 
 function format_float(x,prec)
-{	// todo: round appropriately, rather than the current (sucky) method
+{
+	var scale = Math.pow( 10, prec );
+	x = Math.round(x * scale) / scale;
 	var asString = x.toString();
 	
 	var k = asString.indexOf(".");
@@ -61,4 +60,16 @@ function format_amount(x)
 		{ x >>= 10; n++; }
 		
 	return format_float(x / 1024.0, 2) + " " + units[n];
+}
+
+function get_day_suffix(x)
+{
+	x = parseInt(x);
+	switch( x )
+	{
+	case 1: case 21: case 31: return "st";
+	case 2: case 22: return "nd";
+	case 3: case 23: return "rd";
+	default: return "th";
+	}
 }

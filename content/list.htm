@@ -33,7 +33,7 @@
 				var min = parseInt( $("#day").attr("min") );
 				if (n > max) n = min;
 				if (n < min) n = max;
-				$("#day").html(n);
+				$("#day").html(n + get_day_suffix(n));
 			}
 			
 			function spin_button_down(b)
@@ -55,7 +55,7 @@
 			function populate_day(data)
 			{
 				var d = eval("(" + data + ")");
-				$("#day").html(d.day);
+				$("#day").html(d.day + get_day_suffix(d.day));
 			}
 			
 			$(function()
@@ -88,7 +88,7 @@
 			<p style="text-align: center">Set the day of the month when the billing period ends:</p>
 			<p align="center"><table border="0">
 				<tr>
-					<td rowspan="2" style="width: 20px; border: solid 2px black; text-align: right; background-color: #ffffff" id="day" max="28" min="1"></td>
+					<td rowspan="2" style="width: 50px; border: solid 2px black; text-align: right; background-color: #ffffff" id="day" max="28" min="1"></td>
 					<td id="spin_button_top" onmousedown="spin_button_down(true)" onmouseup="spin_button_up(true)" onmouseout="spin_button_up(true)" onclick="change_day(1)"></td>
 				</tr>
 				<tr>
