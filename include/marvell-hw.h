@@ -122,6 +122,7 @@ typedef struct hw_dma_t
 } hw_dma_t;
 
 #define HW_DMA_BASE	((hw_dma_t volatile *) 0x8000e800 )
+#pragma warning( disable: 4201 )
 
 typedef struct hw_uart_t
 {
@@ -133,25 +134,27 @@ typedef struct hw_uart_t
 		u32 rbr;		// rx buffer
 		u32 thr;		// transmit holding register
 		u32 dll;
-	}
+	};
 
 	union
 	{
 		u32 ier;		// interrupt enable
 		u32 dlh;
-	}
+	};
 
 	union
 	{
 		u32 iir;
 		u32 fcr;
-	}
+	};
 
 	u32 lcr;
 	u32 mcr;
 	u32 lsr;
 	u32 scr;			// scratch
 } hw_uart_t;
+
+#pragma warning( default: 4201 )
 
 #define HW_UART_BASE ((hw_uart_t volatile *)0x8000c000 )
 
