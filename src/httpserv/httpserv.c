@@ -86,6 +86,7 @@ static void httpserv_parse2_ch( tcp_sock sock, http_state_t * s, http_header_f *
 			s->p = s->n;
 			return;
 		}
+		if (s->p - s->v >= 126) return;
 		OTHERWISE_APPEND();
 	}
 }
