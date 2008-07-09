@@ -387,6 +387,14 @@
 					>
 				</File>
 				<File
+					RelativePath="..\src\pack1.h"
+					>
+				</File>
+				<File
+					RelativePath="..\src\packdefault.h"
+					>
+				</File>
+				<File
 					RelativePath="..\src\str.c"
 					>
 				</File>
