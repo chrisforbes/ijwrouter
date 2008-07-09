@@ -49,13 +49,13 @@ u08 udp_receive_packet( ip_header * p, u16 len )
 	conn = udp_find_conn_by_port( port );
 	if (!conn || !conn->handler)
 	{
-//		logf( "udp: no conn for port=%u\n", port );
+//		log_printf( "udp: no conn for port=%u\n", port );
 		return 0;
 	}
 
 	sock = (udp_sock)(conn - udp_conns);
 
-//	logf( "udp: delivering datagram for port=%u to sock %u\n", port, sock );
+//	log_printf( "udp: delivering datagram for port=%u to sock %u\n", port, sock );
 
 	conn->handler( sock, 
 		UDP_EVENT_PACKET, 
@@ -88,13 +88,13 @@ udp_sock udp_new_sock( u16 port, void * ctx, udp_event_f * handler )
 	
 	if (!conn)
 	{
-		logf( "udp: too many sockets.\n" );
+		log_printf( "udp: too many sockets.\n" );
 		return INVALID_UDP_SOCK;
 	}
 
 	if (conn->handler)
 	{
-		logf( "udp: port already bound to another socket.\n" );
+		log_printf( "udp: port already bound to another socket.\n" );
 		return INVALID_UDP_SOCK;
 	}
 
@@ -102,20 +102,20 @@ udp_sock udp_new_sock( u16 port, void * ctx, udp_event_f * handler )
 	conn->ctx = ctx;
 	conn->port = port;
 
-	logf( "udp: bound port %u to socket %u\n", port, (conn - udp_conns) );
+	log_printf( "udp: bound port %u to socket %u\n", port, (conn - udp_conns) );
 
 	return (udp_sock)(conn - udp_conns);
 }
 
-#pragma pack( push, 1 )
+#include "../pack1.h"
 	static struct
 	{
 		eth_header eth;
 		ip_header ip;
 		udp_header udp;
 		u08 crap[2048];
-	} out;
-#pragma pack( pop )
+	} PACKED_STRUCT out;
+#include "../packdefault.h"
 
 void udp_send( udp_sock sock, u32 to_ip, u16 to_port, u08 const * data, u16 len )
 {
@@ -124,7 +124,7 @@ void udp_send( udp_sock sock, u32 to_ip, u16 to_port, u08 const * data, u16 len 
 
 	if (!conn->handler)
 	{
-		logf( "udp: not_sock in send\n" );
+		log_printf( "udp: not_sock in send\n" );
 		return;
 	}
 
@@ -160,7 +160,7 @@ void udp_close( udp_sock sock )
 
 	if ( !conn )
 	{
-		logf( "udp: not_sock in close\n" );
+		log_printf( "udp: not_sock in close\n" );
 		return;
 	}
 

@@ -126,15 +126,15 @@ static tcp_conn * tcp_find_connection( u32 remote_host, u16 remote_port, u16 por
 	return free;
 }
 
-#pragma pack( push, 1 )
+#include "../pack1.h"
 	static struct
 	{
 		eth_header eth;
 		ip_header ip;
 		tcp_header tcp;
 		u08 crap[2048];
-	} out;
-#pragma pack( pop )
+	} PACKED_STRUCT out;
+#include "../packdefault.h"
 
 static void tcp_unbuffer( tcp_conn * conn, u32 bytes )
 {
@@ -254,7 +254,7 @@ void tcp_close( tcp_sock sock )
 		conn->state = TCP_STATE_CLOSING;
 	}
 	else
-		logf( "tcp: tcp_close() on socket in bad state\n" );
+		log_printf( "tcp: tcp_close() on socket in bad state\n" );
 }
 
 static u32 get_earliest_unacked( tcp_conn const * conn )
@@ -277,7 +277,7 @@ static u08 handle_connection( tcp_conn * conn, ip_header * p, tcp_header * t, u1
 
 	if (t->flags & TCP_RST)
 	{
-		logf( "tcp: connection reset\n" );
+		log_printf( "tcp: connection reset\n" );
 		kill_connection( conn );
 		return 1;
 	}
@@ -350,7 +350,7 @@ tcp_sock tcp_new_listen_sock( u16 port, tcp_event_f * handler )
 
 	if( conn->state != TCP_STATE_CLOSED )
 	{
-		logf( "tcp: already listening on port %u", __ntohs( port ) );
+		log_printf( "tcp: already listening on port %u", __ntohs( port ) );
 		return INVALID_TCP_SOCK;
 	}
 

@@ -13,7 +13,7 @@ void const * fs_getimage( u32 * size )
 
 	if (INVALID_HANDLE_VALUE == h)
 	{
-		logf( "fs: cannot open content.blob\n" );
+		log_printf( "fs: cannot open content.blob\n" );
 		return 0;
 	}
 	*size = GetFileSize(h, 0);

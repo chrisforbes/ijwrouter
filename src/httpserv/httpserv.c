@@ -143,7 +143,7 @@ void httpserv_redirect_to( tcp_sock sock, char const * uri )
 	msg.len = sprintf(msg.str, "HTTP/1.1 302 Found\r\nLocation: /%s\r\n"
 		"Content-Length: 0\r\nConnection: close\r\n\r\n", uri);
 	tcp_send( sock, msg.str, msg.len, 1 );
-	logf( "302 %s\n", uri );
+	log_printf( "302 %s\n", uri );
 }
 
 typedef struct http_request_t
@@ -163,12 +163,12 @@ static void httpserv_get_request( tcp_sock sock, str_t const _uri, http_request_
 
 	uri_decode((char *)uri, _uri.len, uri);		// dirty but actually safe (decoded uri is never longer, and
 												// this buffer is always going to be in writable memory)
-	logf( "GET %s : ", uri );
+	log_printf( "GET %s : ", uri );
 
 	if (! *uri++)
 	{
 		httpserv_send_error_status( sock, HTTP_STATUS_SERVER_ERROR, MAKE_STRING("Internal server error") );
-		logf( "500 Internal Server Error\n" );
+		log_printf( "500 Internal Server Error\n" );
 		return;
 	}
 
@@ -179,7 +179,7 @@ static void httpserv_get_request( tcp_sock sock, str_t const _uri, http_request_
 		if (httpapp_dispatch_dynamic_request( sock, uri ))
 			return;
 
-		logf("404\n");
+		log_printf("404\n");
 		httpserv_send_error_status(sock, HTTP_STATUS_NOT_FOUND, MAKE_STRING("Webpage could not be found."));
 		return;
 	}
@@ -188,7 +188,7 @@ static void httpserv_get_request( tcp_sock sock, str_t const _uri, http_request_
 	{
 		// the client already has this resource
 		httpserv_send_error_status( sock, HTTP_STATUS_NOT_MODIFIED, MAKE_STRING("") );
-		logf( "304 Not Modified\n" );
+		log_printf( "304 Not Modified\n" );
 		return;
 	}
 
@@ -197,7 +197,7 @@ static void httpserv_get_request( tcp_sock sock, str_t const _uri, http_request_
 		fs_get_str( &entry->content ), 
 		fs_get_str( &entry->digest ), 0, fs_is_gzipped( entry ));
 
-	logf( "200 OK %d bytes\n", entry->content.length );
+	log_printf( "200 OK %d bytes\n", entry->content.length );
 }
 
 static void httpserv_header_handler( tcp_sock sock, char const * name, str_t const value )
@@ -273,5 +273,5 @@ static void httpserv_handler( tcp_sock sock, tcp_event_e ev, void * data, u32 le
 void httpserv_init( void )
 {
 	tcp_new_listen_sock(HTTP_PORT, httpserv_handler);
-	logf("http: listening on port %d\n", HTTP_PORT);
+	log_printf("http: listening on port %d\n", HTTP_PORT);
 }

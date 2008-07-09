@@ -1,7 +1,7 @@
 #ifndef RFC_H
 #define RFC_H
 
-#pragma pack( push, 1 )
+#include "../pack1.h"
 
 typedef enum ethertype
 {
@@ -16,7 +16,7 @@ typedef struct eth_header
 	mac_addr dest;
 	mac_addr src;
 	u16 ethertype;
-} eth_header;
+} PACKED_STRUCT eth_header;
 
 typedef struct ip_header
 {
@@ -30,7 +30,7 @@ typedef struct ip_header
 	u16 checksum;
 	u32 src_addr;
 	u32 dest_addr;
-} ip_header;
+} PACKED_STRUCT ip_header;
 
 // todo definitions for ip options
 
@@ -52,7 +52,7 @@ typedef struct arp_header
 	u32 spa;
 	mac_addr tha;
 	u32 tpa;
-} arp_header;
+} PACKED_STRUCT arp_header;
 
 #define ARP_REQUEST	0x0001
 #define ARP_REPLY	0x0002
@@ -63,7 +63,7 @@ typedef struct udp_header
 	u16 dest_port;
 	u16 length;
 	u16 checksum;
-} udp_header;
+} PACKED_STRUCT udp_header;
 
 enum tcp_flags
 {
@@ -88,7 +88,7 @@ typedef struct tcp_header
 	u16 urgent_pointer;
 
 	// todo: tcp options
-} tcp_header;
+} PACKED_STRUCT tcp_header;
 
 typedef struct icmp_header
 {
@@ -97,7 +97,7 @@ typedef struct icmp_header
 	u16 checksum;
 	u16 id;
 	u16 sequence;
-} icmp_header;
+} PACKED_STRUCT icmp_header;
 
 typedef struct ip_pseudoheader		// for tcp and udp checksum
 {
@@ -106,8 +106,8 @@ typedef struct ip_pseudoheader		// for tcp and udp checksum
 	u08 sbz;
 	u08 proto;
 	u16 len;
-} ip_pseudoheader;
+} PACKED_STRUCT ip_pseudoheader;
 
-#pragma pack( pop )
+#include "../packdefault.h"
 
 #endif

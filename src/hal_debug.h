@@ -1,6 +1,6 @@
 #ifndef HAL_DEBUG_H
 #define HAL_DEBUG_H
 
-void logf( char const * str, ... );
+void log_printf( char const * str, ... );
 
 #endif

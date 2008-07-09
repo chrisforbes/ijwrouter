@@ -12,7 +12,7 @@
 
 static udp_sock sock;
 
-#pragma pack( push, 1 )
+#include "pack1.h"
 
 typedef struct nbns_query
 {
@@ -22,7 +22,7 @@ typedef struct nbns_query
 	u16 answers;
 	u16 authority;
 	u16 additional;
-} nbns_query;
+} PACKED_STRUCT nbns_query;
 
 typedef struct nbns_record
 {
@@ -31,7 +31,7 @@ typedef struct nbns_record
 	u08 bs;
 	u16 type;
 	u16 clazz;
-} nbns_record;
+} PACKED_STRUCT nbns_record;
 
 typedef struct nbns_response
 {
@@ -39,9 +39,9 @@ typedef struct nbns_response
 	u16 length;	// 6
 	u16 flags;
 	u32 ip_addr;
-} nbns_response;
+} PACKED_STRUCT nbns_response;
 
-#pragma pack( pop )
+#include "packdefault.h"
 
 static void unpack_name( u08* out, u08 const * in )
 {
@@ -57,14 +57,14 @@ static void unpack_name( u08* out, u08 const * in )
 
 static void send_response( u32 from_ip, u16 from_port, nbns_query const * q, nbns_record const * r )
 {
-#pragma pack( push, 1 )
+#include "pack1.h"
 	struct
 	{
 		nbns_query q;
 		nbns_record r;
 		nbns_response rs;
-	} hax = { { 0, 0x85, 0, 0x100, 0, 0 } } ;
-#pragma pack( pop )
+	} PACKED_STRUCT hax = { { 0, 0x85, 0, 0x100, 0, 0 } } ;
+#include "packdefault.h"
 	hax.q.transaction = q->transaction;
 	hax.r = *r;
 	
@@ -97,7 +97,7 @@ static void nbns_event( udp_sock sock, udp_event_e evt,
 			unpack_name( name, r->name );
 			if( stricmp( (char const *)get_hostname(), (char const *)name ) == 0 )
 			{
-				logf( "nbns: got name request\n" );
+				log_printf( "nbns: got name request\n" );
 				send_response( from_ip, from_port, q, r );
 			}
 			++r;
@@ -110,11 +110,11 @@ void nbns_init( void )
 	sock = udp_new_sock( NBNS_PORT, 0, nbns_event );
 	if (sock == INVALID_UDP_SOCK)
 	{
-		logf( "nbns: unable to bind socket\n" );
+		log_printf( "nbns: unable to bind socket\n" );
 		return;
 	}
 
-	logf( "nbns: started successfully\n" );
+	log_printf( "nbns: started successfully\n" );
 }
 
 void nbns_process( void )

@@ -4,13 +4,15 @@
 #include "../hal_ethernet.h"
 #include "../../include/marvell-hw.h"
 
+#include "../pack1.h"
 typedef struct dma_descriptor_t
 {
 	u32 status;
 	u16 size, count;
 	void * data;
 	struct dma_descriptor_t * next;
-} dma_descriptor_t;
+} PACKED_STRUCT dma_descriptor_t;
+#include "../packdefault.h"
 
 #define NUM_DESCRIPTORS		16
 #define ETH_BUFFER_SIZE		2048
@@ -25,7 +27,7 @@ static void prepare_buffer_chain( dma_descriptor_t * p, u08 n )
 	{
 		p->data = malloc( ETH_BUFFER_SIZE );	// todo: 8-byte align
 		p->size = ETH_BUFFER_SIZE;
-		p->count = 0; 
+		p->count = 0;
 		p->status = (1 << 31) |	// unimac owns the buffer
 					(1 << 23);	// enable interrupt
 		p->next = n ? (p+1) : first;	// circular buffer for infinite DMA

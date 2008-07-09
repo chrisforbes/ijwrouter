@@ -18,13 +18,13 @@ u08 const * get_hostname( void ) { return __hostname; }
 void set_hostaddr( u32 x )
 { 
 	__hostaddr = x; 
-	logf( "conf: host address = %u.%u.%u.%u\n", 
+	log_printf( "conf: host address = %u.%u.%u.%u\n", 
 		(u08)(x >> 0), (u08)(x >> 8), (u08)(x >> 16), (u08)(x >> 24) );
 }
 void set_netmask( u32 x )
 { 
 	__netmask = x; 
-	logf( "conf: netmask = %u.%u.%u.%u\n", 
+	log_printf( "conf: netmask = %u.%u.%u.%u\n", 
 		(u08)(x >> 0), (u08)(x >> 8), (u08)(x >> 16), (u08)(x >> 24) );
 }
 
@@ -33,7 +33,7 @@ void set_macaddr( mac_addr x ) { __macaddr = x; }
 void set_default_router( u32 x ) 
 { 
 	__default_router = x; 
-	logf( "conf: router = %u.%u.%u.%u\n", 
+	log_printf( "conf: router = %u.%u.%u.%u\n", 
 		(u08)(x >> 0), (u08)(x >> 8), (u08)(x >> 16), (u08)(x >> 24) );
 }
 

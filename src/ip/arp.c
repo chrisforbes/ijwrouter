@@ -6,13 +6,13 @@
 #include "../hal_debug.h"
 #include "internal.h"
 
-#pragma pack( push, 1 )
+#include "../pack1.h"
 	static struct
 	{
 		eth_header eth;
 		arp_header arp;
-	} out;
-#pragma pack( pop )
+	} PACKED_STRUCT out;
+#include "../packdefault.h"
 
 	static mac_addr all_zero_mac = {{0,0,0,0,0,0}};
 
@@ -63,31 +63,31 @@ u08 handle_arp_packet( u08 iface, arp_header * arp )
 	{
 		if (arp->tpa == arp->spa)	// gratuitous arp
 		{
-//			logf( "arp: got gratuitous arp\n" );
+//			log_printf( "arp: got gratuitous arp\n" );
 			arptab_insert( iface, arp->spa, arp->sha );
 			return 0;
 		}
 
 		if (arp->tpa == get_hostaddr())
 		{
-//			logf( "arp: got request, replying.\n" );
+//			log_printf( "arp: got request, replying.\n" );
 			send_arp_reply( iface, arp );
 			return 1;
 		}
 
-//		logf( "arp: for someone else.\n" );
+//		log_printf( "arp: for someone else.\n" );
 		arptab_insert( iface, arp->spa, arp->sha );
 		return 0;
 	}
 
 	if (op == ARP_REPLY)
 	{
-//		logf( "arp: got reply\n" );
+//		log_printf( "arp: got reply\n" );
 		arptab_insert( iface, arp->spa, arp->sha );
 		return 1;
 	}
 
-//	logf( "arp: bogus oper=%d\n", op );
+//	log_printf( "arp: bogus oper=%d\n", op );
 	return 0;
 }
 
@@ -96,13 +96,13 @@ u08 arp_make_eth_header( eth_header * h, u32 destip, u08 * iface )
 
 	if (get_default_router() && !is_in_subnet( destip ))
 	{
-		logf( "arp: query for foreign address; giving default router\n" );
+		log_printf( "arp: query for foreign address; giving default router\n" );
 		destip = get_default_router();
 	}
 
 	if (!arptab_query( iface, destip, &h->dest ))
 	{
-		logf( "arp: no arp cache for host %u.%u.%u.%u, refreshing...\n",
+		log_printf( "arp: no arp cache for host %u.%u.%u.%u, refreshing...\n",
 			destip & 0xff,
 			destip >> 8 & 0xff,
 			destip >> 16 & 0xff,

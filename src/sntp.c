@@ -49,14 +49,14 @@ void sntp_send_request( void )
 	udp_send( sock, make_ip( timeserver[0], timeserver[1], timeserver[2], timeserver[3] ), 
 		SNTP_PORT, (u08 const *)&request, sizeof( sntp_t ) );
 
-	logf( "sntp: request sent\n" );
+	log_printf( "sntp: request sent\n" );
 }
 
 void sntp_get_response( sntp_t const * resp )
 {
 	if ((resp->version & 0x3) == 0x3)	// unsynchronized
 	{
-		logf( "sntp: time server reports it is unsynchronized\n" );
+		log_printf( "sntp: time server reports it is unsynchronized\n" );
 		return;
 	}
 
@@ -65,9 +65,9 @@ void sntp_get_response( sntp_t const * resp )
 	state = SNTP_IDLE;
 
 	// todo: set time offset
-	set_time( __ntohl(resp->txtime.seconds) - 2208984820 - 3600 - 360 - 13 );
+	set_time( __ntohl(resp->txtime.seconds) - 2208984820u - 3600 - 360 - 13 );
 
-	logf( "sntp: clock synchronized.\n" );
+	log_printf( "sntp: clock synchronized.\n" );
 }
 
 static void sntp_event( udp_sock sock, udp_event_e evt, 
@@ -78,7 +78,7 @@ static void sntp_event( udp_sock sock, udp_event_e evt,
 
 	if (len != sizeof(sntp_t))
 	{
-		logf( "sntp: bad response size (was %d, expected %d)\n", len, sizeof(sntp_t) );
+		log_printf( "sntp: bad response size (was %d, expected %d)\n", len, sizeof(sntp_t) );
 		return;
 	}
 
@@ -90,11 +90,11 @@ void sntp_init( void )
 	sock = udp_new_sock( SNTP_PORT, 0, sntp_event );
 	if (sock == INVALID_UDP_SOCK)
 	{
-		logf( "sntp: unable to bind socket\n" );
+		log_printf( "sntp: unable to bind socket\n" );
 		return;
 	}
 
-	logf( "sntp: started successfully\n" );
+	log_printf( "sntp: started successfully\n" );
 	state = SNTP_IDLE;
 }
 

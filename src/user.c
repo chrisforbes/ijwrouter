@@ -9,7 +9,9 @@
 #include "billing.h"
 
 #include <stdio.h>
+#ifdef WIN32
 #include <windows.h>
+#endif
 
 #define MAX_USERS	128
 #define MAX_MAPPINGS	512	// most people have <= 4 network cards
@@ -49,13 +51,13 @@ user_t * get_user_by_ip( u32 addr )
 	
 	if (!is_in_subnet( addr ))
 	{
-		logf( "user: ip not in subnet" );
+		log_printf( "user: ip not in subnet" );
 		return 0;	// horribly misconfigured
 	}
 
 	if (!arptab_query( 0, addr, &eth_addr ))
 	{
-		logf( "user: no arp cache for ip" );
+		log_printf( "user: no arp cache for ip" );
 		return 0;	// cant translate to mac address
 	}
 
@@ -92,11 +94,11 @@ void merge_users( user_t * from, user_t * to )
 {
 	if (from == to)
 	{
-		logf("user: tried to merge self\n");
+		log_printf("user: tried to merge self\n");
 		return;
 	}
 
-	logf("user: merged %s into %s\n", from->name, to->name);
+	log_printf("user: merged %s into %s\n", from->name, to->name);
 	to->credit += from->credit;
 	to->references += from->references;
 	to->last_credit += from->last_credit;
@@ -106,6 +108,7 @@ void merge_users( user_t * from, user_t * to )
 
 
 // --- NOT PORTABLE - WIN32 ONLY -------------------------
+#ifdef WIN32
 
 typedef struct persist_header_t
 {
@@ -132,7 +135,7 @@ void save_users( void )
 	FILE * f = fopen( "../accounts.temp.dat", "wb" );
 	if (!f)
 	{
-		logf( "failed persisting account db: cannot open ../accounts.temp.dat\n" );
+		log_printf( "failed persisting account db: cannot open ../accounts.temp.dat\n" );
 		return;
 	}
 
@@ -154,7 +157,7 @@ void restore_users( void )
 
 	if (!f)
 	{
-		logf( "failed restoring account db: cannot open ../accounts.dat\n" );
+		log_printf( "failed restoring account db: cannot open ../accounts.dat\n" );
 		return;
 	}
 
@@ -206,7 +209,7 @@ void do_periodic_save( void )
 				x->credit = 0;
 			}
 
-			logf("user: --- started new billing period ---\n");
+			log_printf("user: --- started new billing period ---\n");
 			last_period_end = period_end;
 		}
 
@@ -214,3 +217,5 @@ void do_periodic_save( void )
 		last_save = ticks();
 	}
 }
+
+#endif

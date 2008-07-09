@@ -22,6 +22,6 @@ void set_time( u32 time )
 {
 	time_offset = time - get_time();
 	// check that this (at least sortof) works:
-	logf( "time set to: localosc%+d = %s", 
+	log_printf( "time set to: localosc%+d = %s", 
 		time_offset, ctime( (time_t const *) &time ));
 }

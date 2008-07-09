@@ -7,15 +7,15 @@
 #include "arptab.h"
 #include "arp.h"
 
-#pragma pack( push, 1 )
+#include "../pack1.h"
 static struct
 {
 	eth_header eth;
 	ip_header ip;
 	icmp_header icmp;
 	u08 crap[ 1536 - sizeof(eth_header) - sizeof(ip_header) - sizeof(icmp_header) ];
-} out;
-#pragma pack( pop )
+} PACKED_STRUCT out;
+#include "../packdefault.h"
 
 static void icmp_send_reply( ip_header * reqip, icmp_header * reqping, u16 len )
 {
@@ -40,7 +40,7 @@ static void icmp_send_reply( ip_header * reqip, icmp_header * reqping, u16 len )
 u08 icmp_receive_packet( ip_header * p, u16 len )
 {
 	icmp_header * icmp = ( icmp_header * )__ip_payload( p );
-	logf( "icmp: got packet, type=%d code=%d\n", icmp->type, icmp->code );
+	log_printf( "icmp: got packet, type=%d code=%d\n", icmp->type, icmp->code );
 
 	if (icmp->type == 8 && icmp->code == 0)
 		icmp_send_reply( p, icmp, len );

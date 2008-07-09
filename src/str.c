@@ -11,7 +11,7 @@ u08 decode_hex( char c )
 		return c - 'A' + 10;
 	if (c >= '0' && c <= '9')
 		return c - '0';
-	logf("char %c is not a valid hex digit\n", c);
+	log_printf("char %c is not a valid hex digit\n", c);
 	return 0;
 }
 

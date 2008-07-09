@@ -17,7 +17,7 @@ void __send_packet( u08 iface, void const * buf, u16 len )
 	if (on_send)
 		on_send( iface, (u08 const *)buf, len );
 	else
-		logf( "ip: trying to send packet but no driver bound.\n" );
+		log_printf( "ip: trying to send packet but no driver bound.\n" );
 }
 
 void ipstack_init( send_packet_f * send_callback )
@@ -33,11 +33,11 @@ void ipstack_tick( void )
 
 static u08 ip_receive_packet( ip_header * p, u16 len )
 {
-//	logf( "ip: got ip packet, proto=%d\n", p->proto );
+//	log_printf( "ip: got ip packet, proto=%d\n", p->proto );
 
 	if (!__ip_validate_header( p ))
 	{
-		logf( "ip: bad ip checksum\n" );
+		log_printf( "ip: bad ip checksum\n" );
 		return 1;
 	}
 

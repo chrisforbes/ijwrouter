@@ -34,7 +34,7 @@ void dump_packet( eth_packet * p )
 	mac_to_str( srcbuf, &p->packet->src );
 	mac_to_str( destbuf, &p->packet->dest );
 
-	logf( "src=%s@%02x dest=%s@%02x type=%04x len=%u\n", 
+	log_printf( "src=%s@%02x dest=%s@%02x type=%04x len=%u\n", 
 		srcbuf, p->src_iface, 
 		destbuf, p->dest_iface, 
 		__ntohs(p->packet->ethertype), p->len );

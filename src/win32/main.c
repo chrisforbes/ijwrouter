@@ -27,7 +27,7 @@ u08 charge_for_packet( eth_packet * p )
 
 	if (!u)
 	{
-		logf("!!! user creation failed !!!\n");
+		log_printf("!!! user creation failed !!!\n");
 		return eth_discard( p );
 	}
 
@@ -69,7 +69,7 @@ u08 handle_packet( eth_packet * p )
 
 /*	if (p->dest_iface != IFACE_WAN && p->src_iface != IFACE_WAN)
 	{
-		logf( "-- pure local --\n" );
+		log_printf( "-- pure local --\n" );
 		return eth_forward( p );
 	}	*/
 
@@ -91,7 +91,7 @@ int main( void )
 	ipstack_init( eth_inject_packet );
 
 	if (!interfaces)
-		logf( "! no interfaces available\n" );
+		log_printf( "! no interfaces available\n" );
 
 	dhcp_init();
 	nbns_init();

@@ -6,7 +6,7 @@
 #include <stdarg.h>
 #include <stdio.h>
 
-void logf( char const * str, ... )
+void log_printf( char const * str, ... )
 {
 	va_list vl;
 

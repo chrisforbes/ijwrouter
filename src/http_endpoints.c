@@ -54,7 +54,7 @@ static void httpapp_send_all_usage( tcp_sock sock )
 	}
 
 	httpserv_send_content(sock, content_type, content, 1, 0 );
-	logf( "200 OK %d bytes\n", content.len );
+	log_printf( "200 OK %d bytes\n", content.len );
 }
 
 static void httpapp_set_name( tcp_sock sock, char const * name )
@@ -82,7 +82,7 @@ static void httpapp_get_usage( tcp_sock sock )
 	str_t content_type = MAKE_STRING( "application/x-json" );
 	str_t content = httpapp_get_usage_from_sock(sock);
 	httpserv_send_content(sock, content_type, content, 1, 0);
-	logf( "200 OK %d bytes\n", content.len );
+	log_printf( "200 OK %d bytes\n", content.len );
 }
 
 static str_t httpapp_user_binding( user_t * u, u08 comma )
@@ -125,7 +125,7 @@ static void httpapp_send_user_bindings( tcp_sock sock )
 	}
 
 	httpserv_send_content(sock, content_type, content, 1, 0);
-	logf( "200 OK %d bytes\n", content.len );
+	log_printf( "200 OK %d bytes\n", content.len );
 }
 
 static str_t httpapp_make_counter_json(void * counter, u08 comma)
@@ -150,7 +150,7 @@ static void httpapp_send_stat_counts( tcp_sock sock )
 	}
 
 	httpserv_send_content(sock, content_type, content, 1, 0);
-	logf( "200 OK %d bytes\n", content.len );
+	log_printf( "200 OK %d bytes\n", content.len );
 }
 
 static void httpapp_force_commit( tcp_sock sock )
@@ -169,7 +169,7 @@ static void httpapp_handle_new_user( tcp_sock sock )
 static void httpapp_set_billing_period( tcp_sock sock, char const * day )
 {
 	set_rollover_day( (u08)atoi(day) );
-	logf("Set billing period rollover day to %s\n", day);
+	log_printf("Set billing period rollover day to %s\n", day);
 	httpserv_redirect_to( sock, "list.htm" );
 }
 
@@ -184,7 +184,7 @@ static void httpapp_get_billing_info( tcp_sock sock )
 		get_rollover_day() );
 
 	httpserv_send_content(sock, content_type, content, 1, 0);
-	logf( "200 OK %d bytes\n", content.len );
+	log_printf( "200 OK %d bytes\n", content.len );
 }
 
 static void httpapp_get_csv( tcp_sock sock )
@@ -208,7 +208,7 @@ static void httpapp_get_csv( tcp_sock sock )
 	}
 
 	httpserv_send_content( sock, content_type, content, 1, 0 );
-	logf( "200 OK %d bytes" );
+	log_printf( "200 OK %d bytes" );
 }
 
 u08 httpapp_dispatch_dynamic_request( tcp_sock sock, char const * uri )

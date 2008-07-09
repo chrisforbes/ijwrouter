@@ -77,13 +77,13 @@ u08 eth_init_interface( u08 iface, u08 real_iface )
 
 	if (pcap_findalldevs( &alldevs, errbuf ) == -1)
 	{
-		logf( "hal: error in pcap_findalldevs: %s\n", errbuf );
+		log_printf( "hal: error in pcap_findalldevs: %s\n", errbuf );
 		return 0;
 	}
 
 	if (!alldevs)
 	{
-		logf( "hal: looks like there's no network cards, or pcap isnt running.\n" );
+		log_printf( "hal: looks like there's no network cards, or pcap isnt running.\n" );
 		return 0;
 	}
 
@@ -95,11 +95,11 @@ u08 eth_init_interface( u08 iface, u08 real_iface )
 
 	if (!interfaces[iface])
 	{
-		logf( "hal: failed opening interface %s\n", d->name );
+		log_printf( "hal: failed opening interface %s\n", d->name );
 		return 0;
 	}
 
-	logf( "hal: iface=%d -> %s\n", 
+	log_printf( "hal: iface=%d -> %s\n", 
 		iface, d->description );
 
 	pcap_setmintocopy( interfaces[iface], 1 );
@@ -162,13 +162,13 @@ u08 eth_getpacket( eth_packet * p )
 	
 	if (obj == WAIT_FAILED)
 	{
-		logf( "hal: WaitForMultipleObjects() failed with %u\n", GetLastError() );
+		log_printf( "hal: WaitForMultipleObjects() failed with %u\n", GetLastError() );
 		return 0;
 	}
 
 	if (obj == WAIT_TIMEOUT)
 	{
-		//logf( "hal: WaitForMultipleObject() timed out\n" );
+		//log_printf( "hal: WaitForMultipleObject() timed out\n" );
 		return 0;		// there was no packet
 	}
 
@@ -176,7 +176,7 @@ u08 eth_getpacket( eth_packet * p )
 
 	if ( !interfaces[iface] )
 	{
-		logf( "hal: no interface for iface=%d\n", iface );
+		log_printf( "hal: no interface for iface=%d\n", iface );
 		return 0;	// no interface??
 	}
 
@@ -187,14 +187,14 @@ u08 eth_getpacket( eth_packet * p )
 
 	if (h.len != h.caplen)
 	{
-		logf( "hal: incomplete ethernet frame (%u from %u)\n", 
+		log_printf( "hal: incomplete ethernet frame (%u from %u)\n", 
 			h.caplen, h.len );
 		return 0;
 	}
 
 	if (h.len > sizeof(buf))
 	{
-		logf( "hal: ethernet frame too large (%u bytes)\n", h.len );
+		log_printf( "hal: ethernet frame too large (%u bytes)\n", h.len );
 		return 0;
 	}
 
@@ -239,7 +239,7 @@ u08 eth_inject( eth_packet * p )
 
 	if (p->dest_iface == IFACE_INTERNAL )
 	{
-		logf( "hal: tried to inject packet into IFACE_INTERNAL\n" );
+		log_printf( "hal: tried to inject packet into IFACE_INTERNAL\n" );
 		return 0;
 	}
 
