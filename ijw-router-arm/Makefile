@@ -5,6 +5,7 @@
 CFLAGS := 
 INPUTS := billing dhcp ethernet nbns sntp stats str table user \
 			gcc-arm/hal_ethernet \
+			httpserv/httpserv \
 			ip/arp ip/arptab ip/conf ip/icmp ip/stack ip/tcp ip/udp
 
 ################################################################################

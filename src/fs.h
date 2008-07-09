@@ -11,7 +11,7 @@ typedef struct string_t
 	u32 length;
 } string_t;
 
-#pragma pack(push,1)
+#include "pack1.h"
 typedef struct file_entry
 {
 	string_t filename;
@@ -19,8 +19,8 @@ typedef struct file_entry
 	string_t content;
 	string_t digest;
 	u08 attribs;
-} file_entry;
-#pragma pack(pop)
+} PACKED_STRUCT file_entry;
+#include "packdefault.h"
 
 #define ATTRIB_AWESOME	0x80
 #define ATTRIB_GZIP		0x01
