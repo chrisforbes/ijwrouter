@@ -15,7 +15,6 @@
 #define MAX_MAPPINGS	512	// most people have <= 4 network cards
 
 char * mac_to_str( char * buf, void * _a );	// extern 
-extern u32 __stdcall inet_addr (char const * cp);
 
 DEFINE_TABLE( mac_mapping_t, mappings, MAX_MAPPINGS );
 DEFINE_TABLE( user_t, users, MAX_USERS );
