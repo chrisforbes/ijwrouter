@@ -39,15 +39,21 @@ function do_ajax(url, f)
 function format_float(x,prec)
 {
 	var scale = Math.pow( 10, prec );
-	x = Math.round(x * scale) / scale;
-	var asString = x.toString();
+	x = Math.round( x * scale ) / scale;
 	
-	var k = asString.indexOf(".");
-	if (k == 0) { asString = "0" + asString; ++k; }
-	if (k >= 0 && k < asString.length - prec)
-		asString = asString.slice(0, k + prec);
+	var val = Math.floor(x).toString();
+	x -= Math.floor(x);
 	
-	return asString;
+	if (prec)
+		val += '.';
+		while(prec--)
+		{
+			x *= 10;
+			val += Math.floor(x).toString();
+			x -= Math.floor(x);
+		}
+		
+	return val;
 }
 
 function format_amount(x)

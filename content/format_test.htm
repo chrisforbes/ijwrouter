@@ -1,0 +1,50 @@
+<html>
+	<head>
+		<title>unit tests: common.js:format_float()</title>
+		<style type="text/css">
+			.test_fail { background-color: Red; color: White }
+			.test_ok { background-color: Green; color: White }
+		</style>
+		<script src="jquery-1.2.3.min.js"></script>
+		<script src="common.js"></script>
+		<script type="text/javascript">
+		<!--
+			
+			var tests = 
+			[
+				// simple tests for not sucking
+				{expected: "0.00", actual: format_float( 0, 2 )},
+				{expected: "1.25", actual: format_float( 1.25, 2 )},
+				{expected: "3.08", actual: format_float( 3.08, 2 )},
+				{expected: "0.01", actual: format_float( 0.01, 2 )},
+				
+				// some rounding
+				{expected: "10.00", actual: format_float( 9.999, 2 )},
+				
+				// whole numbers only
+				{expected: "6", actual: format_float( 5.6, 0 )},
+			];
+			
+			$(function()
+			{
+				x = "<tr><td>Expected: </td><td>Actual: </td></tr>";
+				for ( var i = 0; i < tests.length; i++ )
+				{
+					var t = tests[i];
+					var failed = (t.actual != t.expected);
+					x += "<tr class='" + (failed ? "test_fail" : "test_ok") + "'><td>" +
+						t.expected + "</td><td>" + t.actual + "</td></tr>";
+				}
+				
+				$("table").html(x);
+			});
+			
+		// -->
+		</script>
+	</head>
+	<body>
+		<table>
+			<tr><td>Running tests...</td><td></td></tr>
+		</table>
+	</body>
+</html>

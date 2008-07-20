@@ -7,3 +7,4 @@ bindings.htm =		gzip
 stats.htm =		gzip
 new.htm =		gzip
 spin.png =		gzip
+format_test =	ignore
