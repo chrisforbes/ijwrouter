@@ -5,6 +5,7 @@
 #include "arp.h"
 #include "arptab.h"
 #include "../hal_debug.h"
+#include "../hal_time.h"
 #include "internal.h"
 #include "tcp.h"
 
@@ -59,7 +60,6 @@ static u32 tcp_commit_sequence_range( tcp_conn * conn, u32 count )
 }
 
 #define TCP_RETRANSMIT_TIMEOUT 100
-static u32 last_heartbeat_time = 0;
 
 static tcp_conn tcp_conns[ TCP_MAX_CONNS ];
 
@@ -388,7 +388,7 @@ void tcp_send( tcp_sock sock, void const * buf, u32 buf_len, u32 flags )
 	b->next = 0;	b->ofs = 0;		b->len = buf_len; 
 	b->data = buf;	b->flags = flags;
 	b->seq = tcp_commit_sequence_range( conn, buf_len );
-	b->last_send_time = last_heartbeat_time;
+	b->last_send_time = get_time();
 
 	tcp_append_buffer( conn, b );
 	tcp_send_buffer( conn, b );
@@ -414,5 +414,4 @@ void tcp_process( u32 current_time )
 			b->last_send_time = current_time;
 		}
 	}
-	last_heartbeat_time = current_time;
 }
