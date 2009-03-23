@@ -110,6 +110,7 @@ int main( void )
 		dhcp_process();
 		nbns_process();
 		sntp_process();
+		tcp_process( get_time() );
 
 		do_periodic_save();
 	}

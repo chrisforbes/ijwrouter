@@ -35,6 +35,7 @@ typedef struct tcp_buf
 	struct tcp_buf * next;
 	u32 flags;
 	u32 seq;
+	u32 last_send_time;
 } tcp_buf;
 
 typedef struct tcp_conn
@@ -56,6 +57,9 @@ static u32 tcp_commit_sequence_range( tcp_conn * conn, u32 count )
 	conn->next_outgoing_seq_no += count;
 	return ret;
 }
+
+#define TCP_RETRANSMIT_TIMEOUT 100
+static u32 last_heartbeat_time = 0;
 
 static tcp_conn tcp_conns[ TCP_MAX_CONNS ];
 
@@ -142,7 +146,7 @@ static void tcp_unbuffer( tcp_conn * conn, u32 bytes )
 	{
 		u32 n = __min( bytes, conn->sendbuf->len - conn->sendbuf->ofs );
 		bytes -= n;
-		
+
 		if (n < conn->sendbuf->len - conn->sendbuf->ofs)
 			conn->sendbuf->ofs += n;
 		else
@@ -289,14 +293,8 @@ static u08 handle_connection( tcp_conn * conn, ip_header * p, tcp_header * t, u1
 			kill_connection( conn );
 			return 1;
 		}
-		else
-		{
-			if (0 != (drop = __ntohl(t->ack_no) - get_earliest_unacked(conn) + 1)) 
-			{
-				tcp_unbuffer( conn, drop );
-				if (conn->sendbuf) tcp_send_buffer( conn, conn->sendbuf );
-			}
-		}
+		else if (0 != (drop = __ntohl(t->ack_no) - get_earliest_unacked(conn) + 1)) 
+			tcp_unbuffer( conn, drop );
 	}
 
 	if (t->flags & TCP_FIN)
@@ -390,6 +388,7 @@ void tcp_send( tcp_sock sock, void const * buf, u32 buf_len, u32 flags )
 	b->next = 0;	b->ofs = 0;		b->len = buf_len; 
 	b->data = buf;	b->flags = flags;
 	b->seq = tcp_commit_sequence_range( conn, buf_len );
+	b->last_send_time = last_heartbeat_time;
 
 	tcp_append_buffer( conn, b );
 	tcp_send_buffer( conn, b );
@@ -398,4 +397,22 @@ void tcp_send( tcp_sock sock, void const * buf, u32 buf_len, u32 flags )
 u32 tcp_gethost( tcp_sock sock )
 {
 	return tcp_conn_from_sock( sock )->remotehost;
+}
+
+void tcp_process( u32 current_time )
+{
+	u08 i;
+	for( i = 0; i < TCP_MAX_CONNS; i++ )
+	{
+		tcp_conn * conn = &tcp_conns[ i ];
+		if( conn->state && conn->sendbuf && conn->sendbuf->last_send_time + TCP_RETRANSMIT_TIMEOUT <= current_time )
+		{
+			tcp_buf * b = conn->sendbuf;
+			u32 chunklen = __min( b->len - b->ofs, MAXSEGSIZE );
+			if(chunklen)
+				tcp_sendpacket_ex( conn, (void const *)(b->data + b->ofs), (u16)chunklen, TCP_ACK, b->seq + b->ofs );
+			b->last_send_time = current_time;
+		}
+	}
+	last_heartbeat_time = current_time;
 }
