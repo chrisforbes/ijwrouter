@@ -294,7 +294,11 @@ static u08 handle_connection( tcp_conn * conn, ip_header * p, tcp_header * t, u1
 			return 1;
 		}
 		else if (0 != (drop = __ntohl(t->ack_no) - get_earliest_unacked(conn))) 
+		{
 			tcp_unbuffer( conn, drop );
+			if( conn->sendbuf )
+				conn->sendbuf->last_send_time = get_time() - TCP_RETRANSMIT_TIMEOUT;
+		}
 	}
 
 	if (t->flags & TCP_FIN)
