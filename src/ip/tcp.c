@@ -293,7 +293,7 @@ static u08 handle_connection( tcp_conn * conn, ip_header * p, tcp_header * t, u1
 			kill_connection( conn );
 			return 1;
 		}
-		else if (0 != (drop = __ntohl(t->ack_no) - get_earliest_unacked(conn) + 1)) 
+		else if (0 != (drop = __ntohl(t->ack_no) - get_earliest_unacked(conn))) 
 			tcp_unbuffer( conn, drop );
 	}
 
