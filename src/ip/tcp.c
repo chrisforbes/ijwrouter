@@ -227,7 +227,9 @@ static void handle_listen_port( tcp_conn * conn, ip_header * p, tcp_header * t )
 
 	newconn = tcp_find_unused();
 
-	assert( newconn );
+	if( !newconn )
+		// logf( "tcp: No more sockets available; ignoring SYN" );
+		return;
 
 	newconn->state = TCP_STATE_SYN;
 	newconn->localport = conn->localport;

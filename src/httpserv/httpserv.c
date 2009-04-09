@@ -114,6 +114,23 @@ void httpserv_send_static_content( tcp_sock sock, str_t mime_type, str_t content
 	tcp_send( sock, content.str, content.len, flags );
 }
 
+static void httpserv_send_401( tcp_sock sock )
+{
+	str_t str = { malloc(512), 0 };
+	const char* pageHtml = "<html><head><title>401</title></head><body><h1>401 Authorization Required</h1></body></html>";
+	size_t len = strlen( pageHtml );
+
+	str.len = sprintf(str.str, 
+		"HTTP/1.1 401 Authorization Required\r\n"
+		"Connection: close\r\n"
+		"WWW-Authenticate: Basic realm=\"IJW Router\"\r\n" // <---- adjust realm
+		"Content-Length: %d\r\n"
+		"\r\n", 
+		len );
+	tcp_send( sock, str.str, str.len, 1 );
+	tcp_send( sock, pageHtml, len, 0 );
+}
+
 void httpserv_send_content( tcp_sock sock, str_t mime_type, str_t content, u32 flags, u08 is_gzipped )
 {
 	str_t str = { malloc(256), 0 };
@@ -154,6 +171,7 @@ typedef struct http_request_t
 	u08 method;
 	u08 digest[32];
 	u08 has_digest;
+	u08 has_authorization;
 } http_request_t;
 
 static void httpserv_get_request( tcp_sock sock, str_t const _uri, http_request_t * req )
@@ -169,6 +187,13 @@ static void httpserv_get_request( tcp_sock sock, str_t const _uri, http_request_
 	{
 		httpserv_send_error_status( sock, HTTP_STATUS_SERVER_ERROR, MAKE_STRING("Internal server error") );
 		log_printf( "500 Internal Server Error\n" );
+		return;
+	}
+
+	if( !req->has_authorization )
+	{
+		httpserv_send_401( sock );
+		log_printf( "401\n" );
 		return;
 	}
 
@@ -198,6 +223,30 @@ static void httpserv_get_request( tcp_sock sock, str_t const _uri, http_request_
 		fs_get_str( &entry->digest ), 0, fs_is_gzipped( entry ));
 
 	log_printf( "200 OK %d bytes\n", entry->content.length );
+}
+
+static u08 http_check_user( const char* user, const char* password )
+{
+	if( strcmp( user, "admin" ) == 0 && strcmp( password, "admin" ) == 0 )
+		return 1;
+	return 0;
+}
+
+static u32 base64_char_to_num( char c )
+{
+	if( c >= 'A' && c <= 'Z' )
+		return c - 'A';
+	if( c >= 'a' && c <= 'z' )
+		return 26 + c - 'a';
+	if( c >= '0' && c <= '9' )
+		return 52 + c - '0';
+	if( c == '+' )
+		return 62;
+	if( c == '/' )
+		return 63;
+	if( c == '=' )
+		return 0;
+	return (u32)-1;
 }
 
 static void httpserv_header_handler( tcp_sock sock, char const * name, str_t const value )
@@ -232,6 +281,45 @@ static void httpserv_header_handler( tcp_sock sock, char const * name, str_t con
 			memcpy( req->digest, value.str + 1, 32 );
 			req->has_digest = 1;
 		}
+		else if( strcmp( name, "Authorization" ) == 0 )
+		{
+			if( value.len >= 6 && memcmp( value.str, "Basic ", 6 ) == 0 )
+			{
+				size_t len = value.len - 6;
+				const char* encoded = value.str + 6;
+
+				char decoded[128];
+				char* decoded_next = decoded;
+				while( len >= 4 && decoded_next < decoded+126 )
+				{
+					u32 c, d, e, f;
+					c = base64_char_to_num( *encoded++ ); if( c == -1 ) break;
+					d = base64_char_to_num( *encoded++ ); if( d == -1 ) break;
+					e = base64_char_to_num( *encoded++ ); if( e == -1 ) break;
+					f = base64_char_to_num( *encoded++ ); if( f == -1 ) break;
+					c = c << 6 | d;
+					c = c << 6 | e;
+					c = c << 6 | f;
+
+					*decoded_next++ = (c>>16) & 0xff;
+					*decoded_next++ = (c>>8) & 0xff;
+					*decoded_next++ = c & 0xff;
+
+					len -= 4;
+				}
+				*decoded_next = 0; // null terminate
+
+				for( decoded_next = decoded ; *decoded_next != 0 ; decoded_next++ )
+					if( *decoded_next == ':' )
+					{
+						*decoded_next = 0;
+						if( http_check_user( decoded, decoded_next + 1 ) )
+							req->has_authorization = 1;
+						break;
+					}
+			}
+			//else if( value starts with "Digest " ....
+		}
 	}
 }
 
@@ -248,7 +336,7 @@ static void httpserv_handler( tcp_sock sock, tcp_event_e ev, void * data, u32 le
 		break;
 	case ev_closed:
 		{
-			void * x = tcp_get_user_data( sock );
+			void* x = tcp_get_user_data( sock );
 			if (x) free(x);
 			tcp_set_user_data( sock, 0 );
 			break;
@@ -256,6 +344,7 @@ static void httpserv_handler( tcp_sock sock, tcp_event_e ev, void * data, u32 le
 	case ev_data:
 		{
 			http_request_t * req = tcp_get_user_data( sock );
+			memset( req, 0, sizeof( http_request_t ) );
 			httpserv_parse2( sock, &req->parser_state,
 				(u08 const *)data, len, httpserv_header_handler);
 
