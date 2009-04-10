@@ -6,6 +6,11 @@
 #include "httpserv.h"
 #include "httpcommon.h"
 
+// The "realm" displayed in the login box on the client
+#define HTTP_REALM "IJW Router"
+// THe authentication method: "Basic" or "Digest"
+#define HTTP_AUTH_METHOD "Digest"
+
 #pragma warning( disable: 4204 )
 
 // http pseudoheaders from request line
@@ -123,7 +128,7 @@ static void httpserv_send_401( tcp_sock sock )
 	str.len = sprintf(str.str, 
 		"HTTP/1.1 401 Authorization Required\r\n"
 		"Connection: close\r\n"
-		"WWW-Authenticate: Basic realm=\"IJW Router\"\r\n" // <---- adjust realm
+		"WWW-Authenticate: " HTTP_AUTH_METHOD " realm=\"" HTTP_REALM "\"\r\n"
 		"Content-Length: %d\r\n"
 		"\r\n", 
 		len );
@@ -330,7 +335,7 @@ static void httpserv_handler( tcp_sock sock, tcp_event_e ev, void * data, u32 le
 	case ev_opened:
 		{
 			http_request_t * req = malloc( sizeof( http_request_t ) );
-			memset( req, 0, sizeof(req) );
+			memset( req, 0, sizeof(http_request_t) );
 			tcp_set_user_data( sock, req );
 		}
 		break;
@@ -344,7 +349,6 @@ static void httpserv_handler( tcp_sock sock, tcp_event_e ev, void * data, u32 le
 	case ev_data:
 		{
 			http_request_t * req = tcp_get_user_data( sock );
-			memset( req, 0, sizeof( http_request_t ) );
 			httpserv_parse2( sock, &req->parser_state,
 				(u08 const *)data, len, httpserv_header_handler);
 
