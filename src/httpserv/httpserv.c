@@ -5,6 +5,7 @@
 #include "../hal_debug.h"
 #include "httpserv.h"
 #include "httpcommon.h"
+#include "../md5/md5.h"
 
 // The "realm" displayed in the login box on the client
 #define HTTP_REALM "IJW Router"
@@ -168,6 +169,14 @@ void httpserv_redirect_to( tcp_sock sock, char const * uri )
 	log_printf( "302 %s\n", uri );
 }
 
+typedef struct http_authentication_t
+{
+	char username[128];
+	char realm[128];
+	char url[128];
+	char response[128];
+} http_authentication_t;
+
 typedef struct http_request_t
 {
 	http_state_t parser_state;
@@ -177,7 +186,67 @@ typedef struct http_request_t
 	u08 digest[32];
 	u08 has_digest;
 	u08 has_authorization;
+	http_authentication_t* auth_info;
 } http_request_t;
+
+static void md5sum( char* buf, const char* input, size_t len )
+{
+	const char md5_chars[] = "0123456789abcdef";
+	int i;
+	int j = 0;
+	u08 hash[16];
+	md5_state_t md5state;
+	md5_init( &md5state );
+	md5_append( &md5state, (u08*)input, len );
+	md5_finish( &md5state, hash );
+
+	for( i = 0 ; i < 16 ; i++ )
+	{
+		buf[j++] = md5_chars[ (hash[i] >> 4) & 0xf ];
+		buf[j++] = md5_chars[ hash[i] & 0xf ];
+	}
+	buf[j] = 0;
+}
+
+static const char* http_get_user_password( const char* user )
+{
+	if( strcmp( user, "admin" ) == 0 )
+		return "admin";
+
+	return 0;
+}
+
+static u08 http_check_user( const char* user, const char* password )
+{
+	const char* p = http_get_user_password( user );
+	if( p && strcmp( password, p ) == 0 )
+		return 1;
+	return 0;
+}
+
+static void http_process_auth( http_request_t* req, const char* method )
+{
+	http_authentication_t* auth = req->auth_info;
+	if( auth )
+	{
+		const char* password = http_get_user_password( auth->username );
+		if( password != NULL )
+		{
+			char HA1[256], HA2[256], buf[256];
+			size_t len = sprintf( HA1, "%s:%s:%s", auth->username, auth->realm, password );
+			md5sum( HA1, HA1, len );
+
+			len = sprintf( HA2, "%s:%s", method, auth->url );
+			md5sum( HA2, HA2, len );
+
+			len = sprintf( buf, "%s::%s", HA1, HA2 );
+			md5sum( buf, buf, len );
+
+			if( _strnicmp( buf, auth->response, 32 ) == 0 )
+				req->has_authorization = 1;
+		}
+	}
+}
 
 static void httpserv_get_request( tcp_sock sock, str_t const _uri, http_request_t * req )
 {
@@ -194,6 +263,8 @@ static void httpserv_get_request( tcp_sock sock, str_t const _uri, http_request_
 		log_printf( "500 Internal Server Error\n" );
 		return;
 	}
+
+	http_process_auth( req, "GET" );
 
 	if( !req->has_authorization )
 	{
@@ -230,11 +301,14 @@ static void httpserv_get_request( tcp_sock sock, str_t const _uri, http_request_
 	log_printf( "200 OK %d bytes\n", entry->content.length );
 }
 
-static u08 http_check_user( const char* user, const char* password )
+static http_authentication_t* http_get_auth( http_request_t* req )
 {
-	if( strcmp( user, "admin" ) == 0 && strcmp( password, "admin" ) == 0 )
-		return 1;
-	return 0;
+	if( !req->auth_info )
+	{
+		req->auth_info = malloc( sizeof( http_authentication_t ) );
+		memset( req->auth_info, 0, sizeof( http_authentication_t ) );
+	}
+	return req->auth_info;
 }
 
 static u32 base64_char_to_num( char c )
@@ -252,6 +326,38 @@ static u32 base64_char_to_num( char c )
 	if( c == '=' )
 		return 0;
 	return (u32)-1;
+}
+
+static char* http_process_auth_value( http_request_t * req, char* v, char* v_end, const char* key )
+{
+	const char* value = v;
+	if( *v == '"' )
+	{
+		++value;
+		++v;
+		while( v < v_end && *v != '"' )
+			++v;
+	}
+	else
+	{
+		while( v < v_end && *v != ' ' )
+			++v;
+	}
+	*v = 0; // null-terminate `value`
+	++v;
+
+	if( strcmp( key, "username" ) == 0 )
+		strncpy( http_get_auth( req )->username, value, 128 );
+	else if( strcmp( key, "realm" ) == 0 )
+		strncpy( http_get_auth( req )->realm, value, 128 );
+	else if( strcmp( key, "uri" ) == 0 )
+		strncpy( http_get_auth( req )->url, value, 128 );
+	else if( strcmp( key, "response" ) == 0 )
+		strncpy( http_get_auth( req )->response, value, 128 );
+
+	while( *v == ' ' || *v == ',' )
+		++v;
+	return v;
 }
 
 static void httpserv_header_handler( tcp_sock sock, char const * name, str_t const value )
@@ -323,7 +429,22 @@ static void httpserv_header_handler( tcp_sock sock, char const * name, str_t con
 						break;
 					}
 			}
-			//else if( value starts with "Digest " ....
+			if( value.len >= 7 && memcmp( value.str, "Digest ", 7 ) == 0 )
+			{
+				char* encoded = value.str + 7;
+				char* encoded_end = value.str + value.len;
+				const char* k = encoded;
+				while( *encoded && encoded < encoded_end )
+				{
+					if( *encoded == '=' )
+					{
+						*encoded = 0;
+						encoded = http_process_auth_value( req, encoded + 1, encoded_end, k );
+						k = encoded;
+					}
+					++encoded;
+				}
+			}
 		}
 	}
 }
@@ -341,7 +462,8 @@ static void httpserv_handler( tcp_sock sock, tcp_event_e ev, void * data, u32 le
 		break;
 	case ev_closed:
 		{
-			void* x = tcp_get_user_data( sock );
+			http_request_t* x = tcp_get_user_data( sock );
+			if( x->auth_info ) free( x->auth_info );
 			if (x) free(x);
 			tcp_set_user_data( sock, 0 );
 			break;
