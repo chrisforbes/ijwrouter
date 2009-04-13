@@ -411,6 +411,18 @@
 					>
 				</File>
 			</Filter>
+			<Filter
+				Name="md5"
+				>
+				<File
+					RelativePath="..\src\md5\md5.c"
+					>
+				</File>
+				<File
+					RelativePath="..\src\md5\md5.h"
+					>
+				</File>
+			</Filter>
 		</Filter>
 		<Filter
 			Name="content"
