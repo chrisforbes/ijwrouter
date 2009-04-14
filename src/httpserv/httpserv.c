@@ -31,7 +31,7 @@ typedef enum http_state_e
 typedef struct http_state_t
 {
 	http_state_e state;
-	char n[128], v[128];
+	char n[128], v[256];
 	char * p;
 } http_state_t;
 
@@ -92,7 +92,7 @@ static void httpserv_parse2_ch( tcp_sock sock, http_state_t * s, http_header_f *
 			s->p = s->n;
 			return;
 		}
-		if (s->p - s->v >= 126) return;
+		if (s->p - s->v >= 254) return;
 		OTHERWISE_APPEND();
 	}
 }
@@ -128,9 +128,9 @@ static void httpserv_send_401( tcp_sock sock )
 
 	str.len = sprintf(str.str, 
 		"HTTP/1.1 401 Authorization Required\r\n"
-		"Connection: close\r\n"
-		"WWW-Authenticate: " HTTP_AUTH_METHOD " realm=\"" HTTP_REALM "\"\r\n"
+		"WWW-Authenticate: " HTTP_AUTH_METHOD " realm=\"" HTTP_REALM "\", nonce=\"12345\", algorithm=MD5, qop=\"auth\", stale=\"true\"\r\n"
 		"Content-Length: %d\r\n"
+		"Connection: Close\r\n"
 		"\r\n", 
 		len );
 	tcp_send( sock, str.str, str.len, 1 );
@@ -175,6 +175,8 @@ typedef struct http_authentication_t
 	char realm[128];
 	char url[128];
 	char response[128];
+	char cnonce[128];
+	char nonceCount[128];
 } http_authentication_t;
 
 typedef struct http_request_t
@@ -239,7 +241,7 @@ static void http_process_auth( http_request_t* req, const char* method )
 			len = sprintf( HA2, "%s:%s", method, auth->url );
 			md5sum( HA2, HA2, len );
 
-			len = sprintf( buf, "%s::%s", HA1, HA2 );
+			len = sprintf( buf, "%s:12345:%s:%s:auth:%s", HA1, auth->nonceCount, auth->cnonce, HA2 );
 			md5sum( buf, buf, len );
 
 			if( _strnicmp( buf, auth->response, 32 ) == 0 )
@@ -340,7 +342,7 @@ static char* http_process_auth_value( http_request_t * req, char* v, char* v_end
 	}
 	else
 	{
-		while( v < v_end && *v != ' ' )
+		while( v < v_end && *v != ' ' && *v != ',' )
 			++v;
 	}
 	*v = 0; // null-terminate `value`
@@ -354,6 +356,10 @@ static char* http_process_auth_value( http_request_t * req, char* v, char* v_end
 		strncpy( http_get_auth( req )->url, value, 128 );
 	else if( strcmp( key, "response" ) == 0 )
 		strncpy( http_get_auth( req )->response, value, 128 );
+	else if( strcmp( key, "cnonce" ) == 0 )
+		strncpy( http_get_auth( req )->cnonce, value, 128 );
+	else if( strcmp( key, "nc" ) == 0 )
+		strncpy( http_get_auth( req )->nonceCount, value, 128 );
 
 	while( *v == ' ' || *v == ',' )
 		++v;
