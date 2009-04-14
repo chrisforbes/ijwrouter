@@ -128,7 +128,7 @@ static void httpserv_send_401( tcp_sock sock )
 
 	str.len = sprintf(str.str, 
 		"HTTP/1.1 401 Authorization Required\r\n"
-		"WWW-Authenticate: " HTTP_AUTH_METHOD " realm=\"" HTTP_REALM "\", nonce=\"12345\", algorithm=MD5, qop=\"auth\", stale=\"true\"\r\n"
+		"WWW-Authenticate: " HTTP_AUTH_METHOD " realm=\"" HTTP_REALM "\", nonce=\"12345\", algorithm=MD5, qop=\"auth\"\r\n"
 		"Content-Length: %d\r\n"
 		"Connection: Close\r\n"
 		"\r\n", 
